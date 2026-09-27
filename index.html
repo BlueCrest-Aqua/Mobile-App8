@@ -964,7 +964,19 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                             <span class="text-xs font-bold text-slate-500 uppercase">Feed Codes & Quantities (Max 2 Mix)</span>
                             <button type="button" onclick="addFeedRow()" class="text-xs text-blue-600 font-semibold hover:underline">+ Mix Second Feed</button>
                         </div>
-                        <div id="feedRowsContainer" class="space-y-2"></div>
+                        <div id="feedRowsContainer" class="space-y-2">
+                            <div class="feed-row-item flex gap-2 items-center bg-slate-50 p-2 rounded-lg border border-slate-200 relative" style="z-index:1">
+                                <div class="relative w-7/12 feed-searchable-dropdown">
+                                    <input type="hidden" class="feed-code-value" value="" required>
+                                    <div class="relative flex items-center">
+                                        <input type="text" class="feed-search-input w-full border border-slate-200 p-2.5 sm:p-2 pr-6 rounded text-sm sm:text-xs bg-white outline-none focus:ring-1 focus:ring-blue-500 font-medium text-slate-700" placeholder="Tap to pick feed..." value="" autocomplete="off" onfocus="openFeedDropdown(this)" onclick="openFeedDropdown(this)" oninput="filterFeedOptions(this)">
+                                        <span class="absolute right-2 text-slate-400 pointer-events-none text-[10px]">▼</span>
+                                    </div>
+                                    <div class="feed-options-list dropdown-scroll-list absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-2xl z-50 hidden divide-y divide-slate-100"></div>
+                                </div>
+                                <input type="number" step="0.1" placeholder="Qty (kg)" value="" class="feed-qty-input w-4/12 border border-slate-200 p-2.5 sm:p-2 rounded text-sm sm:text-xs bg-white outline-none focus:ring-1 focus:ring-blue-500 font-bold text-slate-700" required oninput="updateSupplementCalculations()">
+                            </div>
+                        </div>
                     </div>
 
                     <div id="supplementProductsSection" class="space-y-2 border-t pt-3 relative z-10">
@@ -4215,7 +4227,14 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                 selectedHour = selectedHour % 12 || 12;
                 selectedMinute = now.getMinutes();
                 updateDigitalDisplay();
-                document.getElementById('feedRowsContainer').innerHTML = '';
+                const feedRows = document.getElementById('feedRowsContainer');
+                const firstFeedRow = feedRows.querySelector('.feed-row-item');
+                Array.from(feedRows.children).slice(1).forEach(row => row.remove());
+                if (firstFeedRow) {
+                    firstFeedRow.querySelector('.feed-code-value').value = '';
+                    firstFeedRow.querySelector('.feed-search-input').value = '';
+                    firstFeedRow.querySelector('.feed-qty-input').value = '';
+                }
                 document.getElementById('singleSuppCode').value = '';
                 document.getElementById('singleSuppSearchInput').value = '';
                 document.getElementById('singleSuppDose').value = '';
@@ -4224,7 +4243,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                 document.getElementById('notes').value = '';
                 document.querySelector('input[name="fasting"][value="No"]').checked = true;
                 toggleFasting(false);
-                if (!document.getElementById('feedRowsContainer').children.length) addFeedRow();
+                if (!feedRows.children.length) addFeedRow();
             }
         }
 
