@@ -921,8 +921,8 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
         </div>
 
         <!-- Add/Edit Feed Data Modal -->
-        <div id="feedModal" class="fixed inset-0 bg-black/50 hidden flex items-end sm:items-center justify-center z-50">
-            <div class="bg-white w-full max-w-md rounded-t-2xl sm:rounded-2xl max-h-[90vh] overflow-y-auto p-5 shadow-2xl">
+        <div id="feedModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-50">
+            <div class="bg-white w-full h-full max-w-none max-h-none overflow-y-auto p-5 shadow-2xl">
                 <div class="flex justify-between items-center border-b pb-3 mb-4">
                     <div>
                         <h2 id="modalTitleText" class="text-base font-bold text-slate-800">Add Feed Data</h2>
@@ -4186,6 +4186,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                         const container = document.getElementById('feedRowsContainer');
                         container.innerHTML = '';
                         (entry.feeds || []).forEach(f => addFeedRow(f.code, f.qty));
+                        if (!container.children.length) addFeedRow();
                         if (entry.supplement?.code) {
                             document.getElementById('singleSuppCode').value = entry.supplement.code;
                             document.getElementById('singleSuppSearchInput').value = entry.supplement.code;
@@ -4215,7 +4216,6 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                 selectedMinute = now.getMinutes();
                 updateDigitalDisplay();
                 document.getElementById('feedRowsContainer').innerHTML = '';
-                addFeedRow();
                 document.getElementById('singleSuppCode').value = '';
                 document.getElementById('singleSuppSearchInput').value = '';
                 document.getElementById('singleSuppDose').value = '';
@@ -4224,6 +4224,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                 document.getElementById('notes').value = '';
                 document.querySelector('input[name="fasting"][value="No"]').checked = true;
                 toggleFasting(false);
+                if (!document.getElementById('feedRowsContainer').children.length) addFeedRow();
             }
         }
 
