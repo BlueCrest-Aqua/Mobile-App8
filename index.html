@@ -3032,9 +3032,12 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             const costOf = item => treatmentReporting
                 ? Number(treatmentReporting.rowFifoCosts[String(item.id)])
                 : null;
+            const filteredTotalCost = treatmentReporting
+                ? filteredEntries.reduce((total, item) => total + costOf(item), 0)
+                : null;
             const totalEl = document.getElementById('treatmentMobileTotalCost');
             if (totalEl) totalEl.textContent = treatmentReporting
-                ? `₹${Math.round(Number(treatmentReporting.totalFifoCost)).toLocaleString('en-IN')}`
+                ? `₹${Math.round(filteredTotalCost).toLocaleString('en-IN')}`
                 : 'FIFO unavailable';
             if (!filteredEntries.length) { container.innerHTML = '<div class="p-6 text-center text-slate-400 text-sm">No treatment records found.</div>'; return; }
             const badge = pond => { const n = Number(String(pond).match(/\d+/)?.[0] || 0); const colors=['bg-sky-100 text-sky-700','bg-amber-100 text-amber-700','bg-emerald-100 text-emerald-700','bg-cyan-100 text-cyan-700','bg-violet-100 text-violet-700']; return colors[(Math.max(1,n)-1)%colors.length]; };
