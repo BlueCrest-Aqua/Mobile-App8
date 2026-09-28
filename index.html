@@ -975,6 +975,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                                     <div class="feed-options-list dropdown-scroll-list absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-2xl z-50 hidden divide-y divide-slate-100"></div>
                                 </div>
                                 <input type="number" step="0.1" placeholder="Qty (kg)" value="" class="feed-qty-input w-4/12 border border-slate-200 p-2.5 sm:p-2 rounded text-sm sm:text-xs bg-white outline-none focus:ring-1 focus:ring-blue-500 font-bold text-slate-700" required oninput="updateSupplementCalculations()">
+                                 <button type="button" onclick="clearFeedRow(this.closest('.feed-row-item'))" class="text-slate-400 hover:text-rose-500 active:text-rose-600 font-bold px-1 text-lg leading-none" aria-label="Clear feed code and quantity" title="Clear feed">&times;</button>
                             </div>
                         </div>
                     </div>
@@ -985,7 +986,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                             <span class="text-[11px] text-slate-400">Dose × Total Feed</span>
                         </div>
                         <div class="flex gap-2 items-center bg-amber-50/50 p-2.5 rounded-xl border border-amber-200">
-                            <div class="relative w-6/12 supp-searchable-dropdown">
+                            <div class="relative w-5/12 supp-searchable-dropdown">
                                 <input type="hidden" id="singleSuppCode" value="">
                                 <div class="relative flex items-center">
                                     <input type="text"
@@ -1004,6 +1005,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
 
                             <input type="number" step="0.1" id="singleSuppDose" placeholder="Dose (gm/ml)" oninput="updateSupplementCalculations()" class="w-3/12 border border-slate-200 p-2.5 sm:p-2 rounded text-sm sm:text-xs bg-white outline-none focus:ring-1 focus:ring-blue-500 font-medium text-slate-700">
                             <input type="text" id="singleSuppCalcQty" placeholder="Auto" readonly class="w-3/12 border border-slate-200 p-2 rounded text-xs bg-slate-100 text-slate-700 font-bold outline-none text-right">
+                            <button type="button" onclick="clearSupplementFields()" class="w-1/12 flex-none text-amber-600 hover:text-rose-500 active:text-rose-600 font-bold px-1 text-lg leading-none" aria-label="Clear supplement" title="Clear supplement">&times;</button>
                         </div>
                     </div>
 
@@ -3381,8 +3383,14 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                 }
 
                 const suppCode = document.getElementById('singleSuppCode').value;
-                const suppDose = parseFloat(document.getElementById('singleSuppDose').value) || 0;
-                if (suppCode && suppDose > 0) {
+                const suppDoseInput = document.getElementById('singleSuppDose').value.trim();
+                const suppDose = Number(suppDoseInput);
+                if (suppCode) {
+                    const calculatedSuppQty = totalQty * suppDose;
+                    if (!suppDoseInput || !Number.isFinite(suppDose) || suppDose <= 0 || !Number.isFinite(calculatedSuppQty) || calculatedSuppQty <= 0) {
+                        alert('Enter supplement quantity/dose before saving.');
+                        return;
+                    }
                     const resolution = resolveMobileMasterProduct(selectedSupplementProductId, suppCode);
                     if (!resolution.product) {
                         alert(resolution.error);
@@ -3392,7 +3400,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                         alert('Product is no longer enabled for Feed Supplement.');
                         return;
                     }
-                    supplement = { code: suppCode, dose: suppDose, qty: totalQty * suppDose };
+                    supplement = { code: suppCode, dose: suppDose, qty: calculatedSuppQty };
                 }
             }
 
@@ -3429,7 +3437,13 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                 supplement
             };
 
-            saveFeedToDb(entryObj).then(() => closeModal()).catch(err => {
+            saveFeedToDb(entryObj).then(() => {
+                if (editingEntryId === null) {
+                    clearSupplementFields();
+                } else {
+                    closeModal();
+                }
+            }).catch(err => {
                 console.error('Feed save error:', err);
                 alert('Feed record could not be saved to cloud. Please try again.');
             });
@@ -4316,13 +4330,8 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             clearOpt.innerHTML = '<span>🚫</span> No Supplement (Clear)';
             clearOpt.onclick = (e) => {
                 e.preventDefault(); e.stopPropagation();
-                document.getElementById('singleSuppCode').value = '';
-                selectedSupplementProductId = null;
-                document.getElementById('singleSuppSearchInput').value = '';
-                document.getElementById('singleSuppDose').value = '';
-                document.getElementById('singleSuppCalcQty').value = '';
+                clearSupplementFields();
                 listEl.classList.add('hidden');
-                updateSupplementCalculations();
             };
             listEl.appendChild(clearOpt);
 
@@ -4364,9 +4373,30 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                     <div class="feed-options-list dropdown-scroll-list absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-2xl z-50 hidden divide-y divide-slate-100"></div>
                 </div>
                 <input type="number" step="0.1" placeholder="Qty (kg)" value="${preselectQty}" class="feed-qty-input w-4/12 border border-slate-200 p-2.5 sm:p-2 rounded text-sm sm:text-xs bg-white outline-none focus:ring-1 focus:ring-blue-500 font-bold text-slate-700" required oninput="updateSupplementCalculations()" />
-                ${idx > 0 ? `<button type="button" onclick="this.parentElement.remove(); updateSupplementCalculations();" class="text-rose-500 font-bold px-2 text-base">×</button>` : ''}
+                <button type="button" onclick="clearFeedRow(this.closest('.feed-row-item'))" class="text-slate-400 hover:text-rose-500 active:text-rose-600 font-bold px-1 text-lg leading-none" aria-label="Clear feed code and quantity" title="Clear feed">&times;</button>
             `;
             container.appendChild(row);
+            updateSupplementCalculations();
+        }
+
+        function clearFeedRow(row) {
+            if (!row) return;
+            row.querySelector('.feed-code-value').value = '';
+            row.querySelector('.feed-search-input').value = '';
+            row.querySelector('.feed-qty-input').value = '';
+            row.querySelector('.feed-options-list')?.classList.add('hidden');
+            row.style.zIndex = '1';
+            updateSupplementCalculations();
+        }
+
+        function clearSupplementFields() {
+            document.getElementById('singleSuppCode').value = '';
+            selectedSupplementProductId = null;
+            document.getElementById('singleSuppSearchInput').value = '';
+            document.getElementById('singleSuppDose').value = '';
+            document.getElementById('singleSuppCalcQty').value = '';
+            document.getElementById('suppOptionsList')?.classList.add('hidden');
+            document.getElementById('supplementProductsSection').style.zIndex = '10';
             updateSupplementCalculations();
         }
 
