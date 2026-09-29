@@ -123,12 +123,6 @@
 .mobile-farm-summary > div:first-child{margin-bottom:.68rem!important;}
 .mobile-farm-summary > div:first-child h3{font-size:.94rem!important;font-weight:900!important;letter-spacing:.045em!important;}
 .mobile-farm-summary > div:first-child span{font-size:.68rem!important;}
-.mobile-home-cycle-slot{margin-top:0;margin-bottom:.68rem;}
-.mobile-home-cycle-slot #headerCycleControls{display:grid!important;grid-template-columns:1fr 1fr;gap:.65rem!important;margin:0!important;min-width:0!important;}
-.mobile-home-cycle-slot #mobileYearSelector,.mobile-home-cycle-slot #mobileCropSelector{display:block!important;width:100%!important;min-width:0!important;max-width:none!important;height:3.55rem!important;appearance:none!important;-webkit-appearance:none!important;background-color:#fff!important;background-repeat:no-repeat!important;background-size:1.35rem 1.35rem,.82rem .82rem!important;background-position:left .78rem center,right .78rem center!important;color:var(--bc-text)!important;border:1px solid #dbe5ef!important;border-radius:13px!important;padding:.7rem 2.1rem .7rem 2.78rem!important;font-size:.96rem!important;font-weight:850!important;line-height:1.2!important;box-shadow:0 3px 10px rgba(15,39,66,.055)!important;}
-.mobile-home-cycle-slot #mobileYearSelector{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23075eae' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='5' width='18' height='16' rx='2'/%3E%3Cpath d='M16 3v4M8 3v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01'/%3E%3C/svg%3E"),url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2315263d' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")!important;}
-.mobile-home-cycle-slot #mobileCropSelector{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231b8a4a' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 21V10'/%3E%3Cpath d='M12 13c-4.5 0-7-2.5-7-7 4.5 0 7 2.5 7 7Z'/%3E%3Cpath d='M12 17c4.5 0 7-2.5 7-7-4.5 0-7 2.5-7 7Z'/%3E%3C/svg%3E"),url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2315263d' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")!important;}
-.mobile-home-cycle-slot #mobileYearSelector:focus,.mobile-home-cycle-slot #mobileCropSelector:focus{outline:none!important;border-color:#60a5fa!important;box-shadow:0 0 0 3px rgba(59,130,246,.14),0 5px 14px rgba(15,39,66,.07)!important;}
 .mobile-farm-summary .grid{gap:.65rem!important;}
 .mobile-home-kpi{height:4.78rem!important;min-height:4.78rem!important;display:flex!important;flex-direction:column!important;align-items:flex-start!important;justify-content:center!important;padding:.62rem .72rem!important;border-radius:13px!important;}
 .mobile-expense-kpi{background:#f8fbff!important;border:1px solid #bfdbfe!important;}
@@ -142,7 +136,7 @@
 .mobile-kpi-value{display:block;margin:0;font-size:clamp(.92rem,3.7vw,1.2rem)!important;font-weight:850!important;letter-spacing:-.025em;line-height:1.05;white-space:nowrap;}
 .mobile-expense-kpi .mobile-kpi-value{color:#0f172a!important;}
 .mobile-feed-kpi .mobile-kpi-value{color:#145ce8!important;}
-@media(max-width:380px){.mobile-farm-summary{padding:.85rem!important}.mobile-home-cycle-slot #headerCycleControls,.mobile-farm-summary .grid{gap:.55rem!important}.mobile-home-cycle-slot #mobileYearSelector,.mobile-home-cycle-slot #mobileCropSelector{height:3.4rem!important;background-position:left .7rem center,right .7rem center!important;padding-left:2.55rem!important;padding-right:1.9rem!important;font-size:.88rem!important}.mobile-home-kpi{height:4.62rem!important;min-height:4.62rem!important;padding:.58rem!important}.mobile-kpi-label{font-size:.67rem}.mobile-kpi-icon{width:1.42rem;height:1.42rem}.mobile-kpi-value{font-size:.88rem!important}}
+@media(max-width:380px){.mobile-farm-summary{padding:.85rem!important}.mobile-farm-summary .grid{gap:.55rem!important}.mobile-home-kpi{height:4.62rem!important;min-height:4.62rem!important;padding:.58rem!important}.mobile-kpi-label{font-size:.67rem}.mobile-kpi-icon{width:1.42rem;height:1.42rem}.mobile-kpi-value{font-size:.88rem!important}}
 .mobile-pond-performance{display:flex;flex:1 1 auto;flex-direction:column;min-height:0;gap:.42rem;}
 .mobile-pond-performance-heading{font-size:.72rem;font-weight:900;letter-spacing:.07em;color:#173b68;background:#eef5fb;border:1px solid #dce9f4;border-radius:10px;padding:.48rem .68rem;text-transform:uppercase;}
 .mobile-pond-list{display:flex;flex:1 1 auto;flex-direction:column;gap:.42rem;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:.05rem .1rem 1rem;}
@@ -1525,11 +1519,9 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
 
         function placeMobileCycleControls() {
             const controls = document.getElementById('headerCycleControls');
-            const homeSlot = document.getElementById('mobileHomeCycleSlot');
             const headerTitle = document.getElementById('headerHomeTitle');
             if (!controls || !headerTitle) return;
-            if (currentMobileTab === 'home' && homeSlot) homeSlot.appendChild(controls);
-            else headerTitle.insertAdjacentElement('afterend', controls);
+            headerTitle.insertAdjacentElement('afterend', controls);
         }
 
         function formatMobileFinancialValue(value) {
@@ -2812,15 +2804,6 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
 
         function renderAllPondsSummary() {
             const container = document.getElementById('allPondsDashboardContainer');
-            // The existing cycle controls are moved into the generated Home card.
-            // Return that same DOM node to the persistent header before replacing
-            // the card, otherwise innerHTML would detach it and the controls would
-            // no longer be discoverable by placeMobileCycleControls().
-            const cycleControls = document.getElementById('headerCycleControls');
-            const headerTitle = document.getElementById('headerHomeTitle');
-            if (cycleControls && headerTitle) {
-                headerTitle.insertAdjacentElement('afterend', cycleControls);
-            }
             container.innerHTML = '';
 
             const latestSystemDate = getSystemLatestDate();
@@ -2842,7 +2825,6 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                     <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wide">FARM SUMMARY</h3>
                     <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">All Ponds</span>
                 </div>
-                <div id="mobileHomeCycleSlot" class="mobile-home-cycle-slot"></div>
                 <div class="grid grid-cols-2 gap-3">
                     <button type="button" onclick="openMobileFinancialSummary()" class="mobile-home-kpi mobile-expense-kpi text-left active:bg-blue-50" aria-label="Open financial summary">
                         <span class="mobile-kpi-heading"><span class="mobile-kpi-icon" aria-hidden="true"></span><span class="mobile-kpi-label">Total Expense</span><b class="mobile-kpi-chevron" aria-hidden="true">›</b></span>
@@ -2855,8 +2837,6 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                 </div>
             `;
             container.appendChild(farmSummaryCard);
-            placeMobileCycleControls();
-
             const pondPerformance = document.createElement('section');
             pondPerformance.className = 'mobile-pond-performance';
             pondPerformance.innerHTML = '<h3 class="mobile-pond-performance-heading">Pond Performance</h3>';
