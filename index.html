@@ -303,25 +303,16 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
         <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Loading Farm Hub...</p>
     </div>
 
-    <!-- 1-Time Setup PIN Lock Screen -->
+    <!-- Elite account sign-in bridge -->
     <div id="pinAuthScreen" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] hidden flex items-center justify-center p-4">
         <div class="bg-white w-full max-w-xs rounded-2xl p-6 shadow-2xl text-center border border-slate-100">
             <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-3 text-2xl">
                 🔒
             </div>
-            <h2 class="text-lg font-black text-slate-800">Elite Aqualines</h2>
-            <p class="text-xs text-slate-500 mt-0.5 mb-5">Enter Owner PIN or View-Only PIN</p>
-            
-            <input type="password" 
-                   id="authPinInput" 
-                   maxlength="6" 
-                   pattern="[0-9]*" 
-                   inputmode="numeric" 
-                   placeholder="••••••" 
-                   autofocus
-                   class="w-full text-center text-2xl font-black tracking-widest py-3 border-2 border-slate-200 rounded-xl outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition">
-            
-            <div id="authStatusText" class="text-xs font-semibold mt-3 min-h-[18px]"></div>
+            <h2 id="mobileFarmName" class="text-lg font-black text-slate-800">Elite Aqualines</h2>
+            <p class="text-xs text-slate-500 mt-0.5 mb-5">Sign in with your Elite owner account</p>
+            <form id="mobileAuthForm" class="space-y-3"><input id="authEmailInput" type="email" autocomplete="email" placeholder="Email" required class="w-full px-3 py-3 border-2 border-slate-200 rounded-xl outline-none focus:border-blue-600"><input id="authPasswordInput" type="password" autocomplete="current-password" placeholder="Password" required class="w-full px-3 py-3 border-2 border-slate-200 rounded-xl outline-none focus:border-blue-600"><button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-xl font-black">Sign In</button></form>
+            <button id="mobileForgotPassword" type="button" class="mt-3 text-xs font-bold text-blue-600">Forgot Password?</button><button id="mobileAuthSignOut" type="button" class="mt-2 ml-3 text-xs font-bold text-slate-500">Sign Out</button><div id="authStatusText" class="text-xs font-semibold mt-3 min-h-[18px]"></div>
         </div>
     </div>
 
@@ -1065,10 +1056,270 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             appId: "1:958454959822:web:b291de038e674b933f4a9f"
         };
 
-        const FIXED_USER_EMAIL = "jangidaquafarms@gmail.com";
-        // One shared read-only PIN for friends/viewers. Change this value if you want a different PIN.
-        const VIEW_ONLY_PIN = "123456";
-        let isViewOnlyMode = sessionStorage.getItem("bc_view_only_mode") === "1";
+        const LEGACY_ELITE_FARM_ID = '5a7a4AYQ1o3Jf69VZ1Mx';
+        let blueCrestSession = null;
+
+        // PHASE 2B — FUTURE FARM-SCOPED FIRESTORE INFRASTRUCTURE
+        // Existing operational collections remain legacy top-level until a separately
+        // approved migration/cutover phase.
+        const blueCrestFarmListenerUnsubscribes = new Set();
+        function getActiveFarmId() {
+            const farmId = blueCrestSession?.farmId;
+            if (typeof farmId !== 'string' || !farmId.trim()) throw new Error('A validated BlueCrest farm session is required.');
+            return farmId.trim();
+        }
+        function farmCollection(collectionName) {
+            if (typeof collectionName !== 'string' || !collectionName.trim()) throw new Error('A non-empty farm collection name is required.');
+            if (!db || typeof db.collection !== 'function') throw new Error('Firebase Firestore is unavailable.');
+            return db.collection('farms').doc(getActiveFarmId()).collection(collectionName.trim());
+        }
+        function registerFarmUnsubscribe(unsubscribe) {
+            if (typeof unsubscribe !== 'function') return unsubscribe;
+            blueCrestFarmListenerUnsubscribes.add(unsubscribe);
+            return unsubscribe;
+        }
+        function stopFarmListeners() {
+            const unsubscribes = Array.from(blueCrestFarmListenerUnsubscribes);
+            blueCrestFarmListenerUnsubscribes.clear();
+            unsubscribes.forEach(unsubscribe => { try { unsubscribe(); } catch (error) { console.warn('Farm listener teardown failed:', error); } });
+        }
+
+        // PHASE 2D-2 — FUTURE FOUNDATION ROUTING/TEARDOWN METADATA ONLY.
+        // Current operational paths remain legacy top-level until an approved cutover.
+        // STAGE 3C-1 — dormant non-Foundation operational migration infrastructure.
+        const BLUECREST_OPERATIONAL_COLLECTIONS = Object.freeze(['feeds','sampling','treatments','harvests','stockTransfers','purchases','stockReturns','vendorTransactions','ledgerEntries','cropFinancialSummaries','farmBackup','crop1ClosingPackedStock','crop2ClosingPackedStock','physicalInventorySettlements','feedCropClosingAdjustments','feedCropClosingAdjustmentHistory']);
+        const OPERATIONAL_MIGRATION_GROUPS = Object.freeze({ biological:Object.freeze(['feeds','sampling','harvests','stockTransfers']), accountingSource:Object.freeze(['treatments','purchases','stockReturns','vendorTransactions','ledgerEntries']), closingDerived:Object.freeze(['cropFinancialSummaries','crop1ClosingPackedStock','crop2ClosingPackedStock','physicalInventorySettlements','feedCropClosingAdjustments','feedCropClosingAdjustmentHistory']), backup:Object.freeze(['farmBackup']) });
+        const OPERATIONAL_GROUP_STATES = Object.freeze(['legacy','freeze','scoped-read','scoped-active']); const OPERATIONAL_WRITE_MODE=Object.freeze({LEGACY:'legacy',VERIFY_READ_ONLY:'verify-read-only',SCOPED_WRITABLE:'scoped-writable'}); const OPERATIONAL_MIGRATION_ROUTING_ENABLED=true;
+        let blueCrestOperationalMigrationControl=null, blueCrestOperationalMigrationControlUnsubscribe=null, blueCrestOperationalMigrationControlFarmId=null, blueCrestOperationalMigrationControlStartPromise=null, blueCrestOperationalBiologicalBoundRoute=null; const blueCrestOperationalGroupListeners=new Map(), blueCrestOperationalGroupGeneration=new Map(Object.keys(OPERATIONAL_MIGRATION_GROUPS).map(g=>[g,0])), blueCrestOperationalGroupReadiness=new Map(Object.keys(OPERATIONAL_MIGRATION_GROUPS).map(g=>[g,{route:'legacy',expected:new Set(),snapshots:new Set(),verified:false,generation:0}])), blueCrestOperationalBiologicalListenerBinders=new Map();
+        function getOperationalMigrationGroup(name){for(const [group,collections] of Object.entries(OPERATIONAL_MIGRATION_GROUPS))if(collections.includes(name))return group;throw new Error('Operational collection is invalid.');}
+        function operationalControlIsValid(c){if(!(c&&typeof c==='object'&&c.version===1&&c.farmId===blueCrestSession?.farmId&&c.groups&&typeof c.groups==='object'))return false;const expected=Object.keys(OPERATIONAL_MIGRATION_GROUPS),supplied=Object.keys(c.groups);return supplied.length===expected.length&&!supplied.some(g=>!expected.includes(g))&&expected.every(g=>{const e=c.groups[g];return e&&typeof e==='object'&&OPERATIONAL_GROUP_STATES.includes(e.state)&&['legacy','scoped'].includes(e.routing)&&((e.state==='legacy'||e.state==='freeze')?e.routing==='legacy':e.routing==='scoped');});}
+        function applyOperationalMigrationControl(c){blueCrestOperationalMigrationControl=operationalControlIsValid(c)?Object.freeze({...c,groups:{...c.groups}}):null;return blueCrestOperationalMigrationControl;}
+        function getOperationalGroupState(g){if(!OPERATIONAL_MIGRATION_GROUPS[g])throw new Error('Operational migration group is invalid.');return blueCrestOperationalMigrationControl?.groups?.[g]?.state||'legacy';}
+        function isOperationalGroupScoped(name){const g=getOperationalMigrationGroup(name);return OPERATIONAL_MIGRATION_ROUTING_ENABLED===true&&['scoped-read','scoped-active'].includes(getOperationalGroupState(g))&&blueCrestOperationalMigrationControl?.groups?.[g]?.routing==='scoped';}
+        function isOperationalGroupFrozen(name){return getOperationalGroupState(getOperationalMigrationGroup(name))==='freeze';}
+        function farmOperationalCollection(name){getOperationalMigrationGroup(name);if(!db||typeof db.collection!=='function')throw new Error('Firebase Firestore is unavailable.');return isOperationalGroupScoped(name)?db.collection('farms').doc(getActiveFarmId()).collection(name):db.collection(name);}
+        function group1OperationalCollectionOrLegacy(name){return OPERATIONAL_MIGRATION_GROUPS.biological.includes(name)?farmOperationalCollection(name):db.collection(name);}
+        function getOperationalWriteMode(name){const g=getOperationalMigrationGroup(name),state=getOperationalGroupState(g);if(state==='freeze'||(isOperationalGroupScoped(name)&&state==='scoped-read'))return OPERATIONAL_WRITE_MODE.VERIFY_READ_ONLY;return isOperationalGroupScoped(name)&&state==='scoped-active'&&blueCrestOperationalGroupReadiness.get(g)?.verified?OPERATIONAL_WRITE_MODE.SCOPED_WRITABLE:(isOperationalGroupScoped(name)?OPERATIONAL_WRITE_MODE.VERIFY_READ_ONLY:OPERATIONAL_WRITE_MODE.LEGACY);}
+        function registerOperationalGroupUnsubscribe(g,u){if(!OPERATIONAL_MIGRATION_GROUPS[g]||typeof u!=='function')return u;const s=blueCrestOperationalGroupListeners.get(g)||new Set();s.add(u);blueCrestOperationalGroupListeners.set(g,s);return u;}
+        function bindGroup1OperationalListener(name,onSnapshot,onError,generation){return registerOperationalGroupUnsubscribe('biological',farmOperationalCollection(name).onSnapshot(s=>{recordOperationalGroupHydration('biological',name,generation);onSnapshot(s);},onError));} function listenGroup1OperationalCollection(name,onSnapshot,onError){const binder=generation=>bindGroup1OperationalListener(name,onSnapshot,onError,generation);blueCrestOperationalBiologicalListenerBinders.set(name,binder);if(blueCrestOperationalBiologicalBoundRoute===null){blueCrestOperationalBiologicalBoundRoute=isOperationalGroupScoped(name)?'scoped':'legacy';beginOperationalGroupHydration('biological',OPERATIONAL_MIGRATION_GROUPS.biological);}return binder(blueCrestOperationalGroupReadiness.get('biological').generation);}
+        function stopOperationalGroupListeners(g){if(!OPERATIONAL_MIGRATION_GROUPS[g])throw new Error('Operational migration group is invalid.');const s=blueCrestOperationalGroupListeners.get(g)||new Set();s.forEach(u=>{try{u();}catch(e){console.warn('Operational listener teardown failed:',e);}});s.clear();const n=(blueCrestOperationalGroupGeneration.get(g)||0)+1;blueCrestOperationalGroupGeneration.set(g,n);const state=blueCrestOperationalGroupReadiness.get(g);blueCrestOperationalGroupReadiness.set(g,{...state,snapshots:new Set(),verified:false,generation:n});return n;}
+        function beginOperationalGroupHydration(g,expected=[]){if(!OPERATIONAL_MIGRATION_GROUPS[g])throw new Error('Operational migration group is invalid.');const n=(blueCrestOperationalGroupGeneration.get(g)||0)+1;blueCrestOperationalGroupGeneration.set(g,n);blueCrestOperationalGroupReadiness.set(g,{route:isOperationalGroupScoped(OPERATIONAL_MIGRATION_GROUPS[g][0])?'scoped':'legacy',expected:new Set(expected),snapshots:new Set(),verified:false,generation:n});return n;}
+        function recordOperationalGroupHydration(g,source,n){const s=blueCrestOperationalGroupReadiness.get(g);if(!s||n!==s.generation||s.route!=='scoped'||!s.expected.has(source))return s;s.snapshots.add(source);s.verified=[...s.expected].every(x=>s.snapshots.has(x));return s;}
+        function rebindOperationalBiologicalListeners(){stopOperationalGroupListeners('biological');const n=beginOperationalGroupHydration('biological',OPERATIONAL_MIGRATION_GROUPS.biological);blueCrestOperationalBiologicalListenerBinders.forEach(binder=>binder(n));blueCrestOperationalBiologicalBoundRoute=isOperationalGroupScoped('feeds')?'scoped':'legacy';return n;} function stopOperationalMigrationControlListener(){if(typeof blueCrestOperationalMigrationControlUnsubscribe==='function')try{blueCrestOperationalMigrationControlUnsubscribe();}catch(e){console.warn('Operational migration-control teardown failed:',e);}blueCrestOperationalMigrationControlUnsubscribe=null;blueCrestOperationalMigrationControlFarmId=null;blueCrestOperationalMigrationControlStartPromise=null;applyOperationalMigrationControl(null);stopOperationalGroupListeners('biological');blueCrestOperationalBiologicalListenerBinders.clear();blueCrestOperationalBiologicalBoundRoute=null;} function startOperationalMigrationControlListener(){const farmId=getActiveFarmId();if(blueCrestOperationalMigrationControlUnsubscribe&&blueCrestOperationalMigrationControlFarmId===farmId)return blueCrestOperationalMigrationControlStartPromise||Promise.resolve();stopOperationalMigrationControlListener();blueCrestOperationalMigrationControlFarmId=farmId;blueCrestOperationalMigrationControlStartPromise=new Promise(resolve=>{let settled=false;const done=()=>{if(!settled){settled=true;resolve();}},applySnapshot=data=>{const previous=blueCrestOperationalBiologicalBoundRoute;applyOperationalMigrationControl(data);const next=isOperationalGroupScoped('feeds')?'scoped':'legacy';if(previous===null){blueCrestOperationalBiologicalBoundRoute=next;beginOperationalGroupHydration('biological',OPERATIONAL_MIGRATION_GROUPS.biological);}else if(previous!==next&&blueCrestOperationalBiologicalListenerBinders.size)rebindOperationalBiologicalListeners();else blueCrestOperationalBiologicalBoundRoute=next;};blueCrestOperationalMigrationControlUnsubscribe=db.collection('farms').doc(farmId).collection('migrationControl').doc('operational-v1').onSnapshot(s=>{applySnapshot(s.exists?s.data():null);done();},e=>{console.warn('Operational migration-control listener error:',e);applySnapshot(null);done();});});return blueCrestOperationalMigrationControlStartPromise;}
+        const BLUECREST_FOUNDATION_COLLECTIONS = Object.freeze(['farmCycles', 'ponds', 'pondLocks', 'cropLocks', 'lockAudit']);
+        const FOUNDATION_CUTOVER_VERSION = 1;
+        const blueCrestFoundationUnsubscribes = new Set();
+        const blueCrestFoundationListenerBinders = new Map();
+        let blueCrestFoundationBoundRoute = null;
+        const FOUNDATION_READINESS = Object.freeze({ UNRESOLVED: 'UNRESOLVED', MIGRATION_REQUIRED: 'MIGRATION_REQUIRED', CACHE_VERIFIED: 'CACHE_VERIFIED', FIRESTORE_VERIFIED: 'FIRESTORE_VERIFIED', HYDRATING: 'HYDRATING', READY_READ_ONLY: 'READY_READ_ONLY', CORRUPT_OR_UNKNOWN: 'CORRUPT_OR_UNKNOWN' });
+        const FOUNDATION_HYDRATION_SOURCES = Object.freeze(['farmCycles', 'ponds', 'pondLocks', 'cropLocks']);
+        let blueCrestFoundationReadiness = FOUNDATION_READINESS.UNRESOLVED;
+        let blueCrestFoundationHydrationEpoch = 0;
+        let blueCrestFoundationHydration = { route: null, epoch: blueCrestFoundationHydrationEpoch, expected: new Set(FOUNDATION_HYDRATION_SOURCES), snapshots: new Set(), verified: false };
+        function setFoundationReadiness(nextState) { if (!Object.values(FOUNDATION_READINESS).includes(nextState)) throw new Error('Unknown Foundation readiness state.'); blueCrestFoundationReadiness = nextState; if (typeof refreshFoundationWriteMode === 'function') refreshFoundationWriteMode(); return nextState; }
+        function getFoundationReadiness() { return { state: blueCrestFoundationReadiness, route: blueCrestFoundationHydration.route, expected: [...blueCrestFoundationHydration.expected], snapshots: [...blueCrestFoundationHydration.snapshots], verified: blueCrestFoundationHydration.verified }; }
+        function foundationCollection(collectionName) { if (!BLUECREST_FOUNDATION_COLLECTIONS.includes(collectionName)) throw new Error('Foundation collection is invalid.'); if (!db || typeof db.collection !== 'function') throw new Error('Firebase Firestore is unavailable.'); return isFoundationScopedRoutingEnabled() ? farmCollection(collectionName) : db.collection(collectionName); }
+        function foundationStorageKey(legacyKey) { if (!FOUNDATION_STORAGE_LEGACY_KEYS.includes(legacyKey)) throw new Error('Foundation storage key is invalid.'); return isFoundationScopedRoutingEnabled() ? farmStorageKey(legacyKey) : legacyKey; }
+        function registerFoundationUnsubscribe(unsubscribe) { if (typeof unsubscribe !== 'function') return unsubscribe; blueCrestFoundationUnsubscribes.add(unsubscribe); return unsubscribe; }
+        function stopFoundationListeners() { const unsubscribes = Array.from(blueCrestFoundationUnsubscribes); blueCrestFoundationUnsubscribes.clear(); unsubscribes.forEach(unsubscribe => { try { unsubscribe(); } catch (error) { console.warn('Foundation listener teardown failed:', error); } }); blueCrestFoundationBoundRoute = null; }
+        function beginFoundationHydration() { blueCrestFoundationHydration = { route: isFoundationScopedRoutingEnabled() ? 'scoped' : 'legacy', epoch: ++blueCrestFoundationHydrationEpoch, expected: new Set(FOUNDATION_HYDRATION_SOURCES), snapshots: new Set(), verified: false }; setFoundationReadiness(FOUNDATION_READINESS.HYDRATING); return blueCrestFoundationHydration.epoch; }
+        function prepareFoundationListenerBinding() { stopFoundationListeners(); beginFoundationHydration(); return foundationCollection; }
+        function bindFoundationListeners(bindListeners) { if (typeof bindListeners !== 'function') throw new Error('A Foundation listener binder is required.'); return bindListeners(prepareFoundationListenerBinding(), registerFoundationUnsubscribe); }
+        function registerFoundationListenerBinder(collectionName, binder) { if (!BLUECREST_FOUNDATION_COLLECTIONS.includes(collectionName) || typeof binder !== 'function') throw new Error('Foundation listener binder is invalid.'); blueCrestFoundationListenerBinders.set(collectionName, binder); registerFoundationUnsubscribe(binder(foundationCollection(collectionName), blueCrestFoundationHydration.epoch)); blueCrestFoundationBoundRoute = isFoundationScopedRoutingEnabled() ? 'scoped' : 'legacy'; }
+        function rebindRegisteredFoundationListeners() { return bindFoundationListeners((resolveCollection, register) => { const hydrationEpoch = blueCrestFoundationHydration.epoch; blueCrestFoundationListenerBinders.forEach((binder, collectionName) => register(binder(resolveCollection(collectionName), hydrationEpoch))); blueCrestFoundationBoundRoute = isFoundationScopedRoutingEnabled() ? 'scoped' : 'legacy'; }); }
+        function applyFoundationMigrationControl(control) { const frozen = control.state === 'freeze'; const desiredRoute = control.routing; blueCrestFoundationValidatedControl = { ...control }; FOUNDATION_MIGRATION_FREEZE = frozen; if (blueCrestFoundationBoundRoute === desiredRoute && FOUNDATION_SCOPED_ROUTING === (desiredRoute === 'scoped')) { refreshFoundationWriteMode(); return; } stopFoundationListeners(); FOUNDATION_SCOPED_ROUTING = desiredRoute === 'scoped'; if (blueCrestFoundationListenerBinders.size) rebindRegisteredFoundationListeners(); else if (desiredRoute === 'scoped') beginFoundationHydration(); refreshFoundationWriteMode(); }
+        function recordFoundationHydration(collectionName, hydrationEpoch) { if (!BLUECREST_FOUNDATION_COLLECTIONS.includes(collectionName)) throw new Error('Foundation collection is invalid.'); if (!blueCrestFoundationHydration.expected.has(collectionName)) throw new Error('Foundation hydration source is not expected for this app.'); if (blueCrestFoundationHydration.route !== 'scoped' || hydrationEpoch !== blueCrestFoundationHydration.epoch) return getFoundationReadiness(); blueCrestFoundationHydration.snapshots.add(collectionName); if ([...blueCrestFoundationHydration.expected].every(source => blueCrestFoundationHydration.snapshots.has(source))) { blueCrestFoundationHydration.verified = true; setFoundationReadiness(FOUNDATION_READINESS.FIRESTORE_VERIFIED); } return getFoundationReadiness(); }
+        const FOUNDATION_WRITE_MODE = Object.freeze({ LEGACY: 'legacy', VERIFY_READ_ONLY: 'verify-read-only', SCOPED_WRITABLE: 'scoped-writable' });
+        let blueCrestFoundationWriteMode = FOUNDATION_WRITE_MODE.LEGACY;
+        let blueCrestFoundationValidatedControl = null;
+        let FOUNDATION_MIGRATION_FREEZE=false, FOUNDATION_SCOPED_ROUTING=false, blueCrestFoundationMigrationControlUnsubscribe=null, blueCrestFoundationMigrationControlStartPromise=null, blueCrestFoundationMigrationControlFarmId=null, blueCrestFoundationFreezeConfirmed=false;
+        let blueCrestFoundationMigrationControlStatus={farmId:null,controlVersion:null,freezeId:null,controlState:'legacy',migrationFrozen:false,scopedRouting:false,writeMode:FOUNDATION_WRITE_MODE.LEGACY,lastConfirmedAt:null,controlHealthy:true,reason:'No control document has been observed.'};
+        function isFoundationMigrationFrozen(){return FOUNDATION_MIGRATION_FREEZE===true;} function isFoundationScopedRoutingEnabled(){return FOUNDATION_SCOPED_ROUTING===true;}
+        function setFoundationWriteMode(nextMode) { if (!Object.values(FOUNDATION_WRITE_MODE).includes(nextMode)) throw new Error('Unknown Foundation write mode.'); blueCrestFoundationWriteMode = nextMode; return nextMode; }
+        function foundationCacheIsVerified() { try { const result = inspectFoundationStorageMigrationState({ farmId: getActiveFarmId(), mode: 'post-cutover' }); return result?.classification === 'verified' && Array.isArray(result.failures) && result.failures.length === 0; } catch (error) { return false; } }
+        function isFoundationScopedWritableAuthorized() { const control = blueCrestFoundationValidatedControl, session = blueCrestSession, readiness = getFoundationReadiness(); if (!control || blueCrestFoundationMigrationControlStatus.controlHealthy !== true || control.version !== 1 || control.state !== 'active' || control.routing !== 'scoped') return false; if (isFoundationMigrationFrozen() || !isFoundationScopedRoutingEnabled() || blueCrestFoundationMigrationControlFarmId !== control.farmId) return false; if (!session || session.farmId !== control.farmId || session.membershipStatus !== 'active' || session.role !== 'owner' || session.canWrite !== true || session.entitlementStatus !== 'active' || session.plan !== 'activated' || session.setupStatus !== FARM_SETUP_STATUS.ACTIVE) return false; if (readiness.state !== FOUNDATION_READINESS.FIRESTORE_VERIFIED || readiness.route !== 'scoped' || readiness.verified !== true || !Array.isArray(readiness.expected) || !Array.isArray(readiness.snapshots) || readiness.expected.length !== FOUNDATION_HYDRATION_SOURCES.length || FOUNDATION_HYDRATION_SOURCES.some(source => !readiness.expected.includes(source) || !readiness.snapshots.includes(source))) return false; return foundationCacheIsVerified(); }
+        function refreshFoundationWriteMode() { const control = blueCrestFoundationValidatedControl; const nextMode = control?.state === 'freeze' && control?.routing === 'scoped' ? FOUNDATION_WRITE_MODE.VERIFY_READ_ONLY : (isFoundationScopedWritableAuthorized() ? FOUNDATION_WRITE_MODE.SCOPED_WRITABLE : FOUNDATION_WRITE_MODE.LEGACY); return setFoundationWriteMode(nextMode); }
+        function isFoundationVerifyReadOnly() { return isFoundationMigrationFrozen() || blueCrestFoundationWriteMode !== FOUNDATION_WRITE_MODE.SCOPED_WRITABLE || !isFoundationScopedWritableAuthorized(); }
+        function canWriteFoundation() { return isFoundationScopedWritableAuthorized() && blueCrestFoundationWriteMode === FOUNDATION_WRITE_MODE.SCOPED_WRITABLE; }
+        function assertFoundationWriteAllowed() { refreshFoundationWriteMode(); if (!canWriteFoundation()) throw new Error('Foundation writes are not authorized.'); }
+        function canPersistSyntheticFoundationState() { return canWriteFoundation(); }
+        function getFoundationMigrationControlStatus(){return {...blueCrestFoundationMigrationControlStatus,migrationFrozen:isFoundationMigrationFrozen(),scopedRouting:isFoundationScopedRoutingEnabled(),writeMode:blueCrestFoundationWriteMode};}
+        function stopFoundationMigrationControlListener(){if(typeof blueCrestFoundationMigrationControlUnsubscribe==='function')try{blueCrestFoundationMigrationControlUnsubscribe();}catch(e){console.warn('Foundation migration-control teardown failed:',e);}blueCrestFoundationMigrationControlUnsubscribe=null;blueCrestFoundationMigrationControlStartPromise=null;blueCrestFoundationMigrationControlFarmId=null;blueCrestFoundationFreezeConfirmed=false;blueCrestFoundationValidatedControl=null;FOUNDATION_MIGRATION_FREEZE=false;FOUNDATION_SCOPED_ROUTING=false;setFoundationWriteMode(FOUNDATION_WRITE_MODE.LEGACY);blueCrestFoundationMigrationControlStatus={farmId:null,controlVersion:null,freezeId:null,controlState:'legacy',migrationFrozen:false,scopedRouting:false,writeMode:blueCrestFoundationWriteMode,lastConfirmedAt:null,controlHealthy:true,reason:'Migration control listener stopped.'};}
+        function startFoundationMigrationControlListener(){const farmId=getActiveFarmId();if(blueCrestFoundationMigrationControlUnsubscribe&&blueCrestFoundationMigrationControlFarmId===farmId)return blueCrestFoundationMigrationControlStartPromise||Promise.resolve(getFoundationMigrationControlStatus());stopFoundationMigrationControlListener();blueCrestFoundationMigrationControlFarmId=farmId;blueCrestFoundationMigrationControlStartPromise=new Promise(resolve=>{let settled=false;const done=()=>{if(!settled){settled=true;resolve(getFoundationMigrationControlStatus());}},valid=d=>d&&typeof d==='object'&&d.version===1&&d.farmId===farmId&&['freeze','legacy'].includes(d.state)&&d.routing==='legacy'&&(d.state!=='freeze'||(typeof d.freezeId==='string'&&d.freezeId.trim())),apply=d=>{FOUNDATION_MIGRATION_FREEZE=d.state==='freeze';FOUNDATION_SCOPED_ROUTING=false;blueCrestFoundationFreezeConfirmed=FOUNDATION_MIGRATION_FREEZE;blueCrestFoundationMigrationControlStatus={farmId,controlVersion:d.version,freezeId:d.freezeId||null,controlState:d.state,migrationFrozen:FOUNDATION_MIGRATION_FREEZE,scopedRouting:false,writeMode:blueCrestFoundationWriteMode,lastConfirmedAt:new Date().toISOString(),controlHealthy:true,reason:'Valid migration control document observed.'};};blueCrestFoundationMigrationControlUnsubscribe=db.collection('farms').doc(farmId).collection('migrationControl').doc('foundation-v1').onSnapshot(s=>{if(s.exists&&valid(s.data()))apply(s.data());else if(!blueCrestFoundationFreezeConfirmed){FOUNDATION_MIGRATION_FREEZE=false;FOUNDATION_SCOPED_ROUTING=false;blueCrestFoundationMigrationControlStatus={...blueCrestFoundationMigrationControlStatus,farmId,controlState:'legacy',migrationFrozen:false,scopedRouting:false,controlHealthy:!s.exists,reason:s.exists?'Migration control data is invalid.':'No migration control document exists.'};}else blueCrestFoundationMigrationControlStatus={...blueCrestFoundationMigrationControlStatus,controlHealthy:false,reason:'Invalid or missing control data after a confirmed freeze; remaining frozen.'};done();},e=>{if(!blueCrestFoundationFreezeConfirmed)FOUNDATION_MIGRATION_FREEZE=false;blueCrestFoundationMigrationControlStatus={...blueCrestFoundationMigrationControlStatus,farmId,migrationFrozen:FOUNDATION_MIGRATION_FREEZE,scopedRouting:false,controlHealthy:false,reason:`Migration control listener error: ${e.message||e}`};done();});});return blueCrestFoundationMigrationControlStartPromise;}
+
+        // PHASE 2C-2 — DORMANT ELITE LOCALSTORAGE MIGRATION INFRASTRUCTURE ONLY.
+        // This is deliberately not called by startup or operational storage paths.
+        // PHASE 2D-8B — strict control-driven Foundation route rebinding.
+        function startFoundationMigrationControlListener() {
+            const farmId = getActiveFarmId();
+            if (blueCrestFoundationMigrationControlUnsubscribe && blueCrestFoundationMigrationControlFarmId === farmId) return blueCrestFoundationMigrationControlStartPromise || Promise.resolve(getFoundationMigrationControlStatus());
+            stopFoundationMigrationControlListener();
+            blueCrestFoundationMigrationControlFarmId = farmId;
+            blueCrestFoundationMigrationControlStartPromise = new Promise(resolve => {
+                let settled = false;
+                const done = () => { if (!settled) { settled = true; resolve(getFoundationMigrationControlStatus()); } };
+                const valid = d => d && typeof d === 'object' && d.version === 1 && d.farmId === farmId && ((d.state === 'freeze' && ['legacy', 'scoped'].includes(d.routing) && typeof d.freezeId === 'string' && d.freezeId.trim()) || (d.state === 'active' && d.routing === 'scoped'));
+                const apply = d => {
+                    applyFoundationMigrationControl(d);
+                    blueCrestFoundationFreezeConfirmed = d.state === 'freeze';
+                    blueCrestFoundationMigrationControlStatus = { farmId, controlVersion: d.version, freezeId: d.freezeId || null, controlState: d.state, requestedRouting: d.routing, migrationFrozen: isFoundationMigrationFrozen(), scopedRouting: isFoundationScopedRoutingEnabled(), writeMode: blueCrestFoundationWriteMode, foundationReadiness: getFoundationReadiness(), lastConfirmedAt: new Date().toISOString(), controlHealthy: true, reason: 'Valid migration control document observed.' };
+                    refreshFoundationWriteMode();
+                };
+                blueCrestFoundationMigrationControlUnsubscribe = db.collection('farms').doc(farmId).collection('migrationControl').doc('foundation-v1').onSnapshot(snapshot => {
+                    if (snapshot.exists && valid(snapshot.data())) apply(snapshot.data());
+                    else if (!blueCrestFoundationFreezeConfirmed) {
+                        FOUNDATION_MIGRATION_FREEZE = false;
+                        FOUNDATION_SCOPED_ROUTING = false;
+                        blueCrestFoundationValidatedControl = null;
+                        setFoundationWriteMode(FOUNDATION_WRITE_MODE.LEGACY);
+                        blueCrestFoundationMigrationControlStatus = { ...blueCrestFoundationMigrationControlStatus, farmId, requestedRouting: null, controlState: 'legacy', migrationFrozen: false, scopedRouting: false, foundationReadiness: getFoundationReadiness(), controlHealthy: !snapshot.exists, reason: snapshot.exists ? 'Migration control data is invalid.' : 'No migration control document exists.' };
+                    } else { setFoundationWriteMode(FOUNDATION_WRITE_MODE.VERIFY_READ_ONLY); blueCrestFoundationMigrationControlStatus = { ...blueCrestFoundationMigrationControlStatus, controlHealthy: false, foundationReadiness: getFoundationReadiness(), reason: 'Invalid or missing control data after a confirmed freeze; remaining frozen.' }; }
+                    done();
+                }, error => {
+                    if (!blueCrestFoundationFreezeConfirmed) { FOUNDATION_MIGRATION_FREEZE = false; blueCrestFoundationValidatedControl = null; setFoundationWriteMode(FOUNDATION_WRITE_MODE.LEGACY); }
+                    blueCrestFoundationMigrationControlStatus = { ...blueCrestFoundationMigrationControlStatus, farmId, migrationFrozen: isFoundationMigrationFrozen(), scopedRouting: isFoundationScopedRoutingEnabled(), foundationReadiness: getFoundationReadiness(), controlHealthy: false, reason: `Migration control listener error: ${error.message || error}` };
+                    done();
+                });
+            });
+            return blueCrestFoundationMigrationControlStartPromise;
+        }
+        function getFoundationMigrationControlStatus() { return { ...blueCrestFoundationMigrationControlStatus, requestedRouting: blueCrestFoundationMigrationControlStatus.requestedRouting || 'legacy', migrationFrozen: isFoundationMigrationFrozen(), scopedRouting: isFoundationScopedRoutingEnabled(), writeMode: blueCrestFoundationWriteMode, foundationReadiness: getFoundationReadiness() }; }
+
+        const ELITE_FARM_STORAGE_LEGACY_KEYS = ['bc_ponds', 'bc_feeds', 'bc_sampling', 'bc_treatments', 'bc_harvests', 'bc_stockTransfers', 'bc_farmCycles', 'bc_activeCycle', 'bc_vendorTransactions', 'bc_ledgerEntries', 'bc_pondLocks', 'bc_cropLocks'];
+        const ELITE_FARM_STORAGE_MIGRATION_APP = 'mobile';
+        const ELITE_FARM_STORAGE_OWNER_UID = 'RE7sNdENZ5YgKTgzU2X8Sacs9xG2';
+        function farmStorageKey(legacyKey) {
+            if (typeof legacyKey !== 'string' || !legacyKey.trim()) throw new Error('A non-empty legacy storage key is required.');
+            return `bluecrest:${getActiveFarmId()}:${legacyKey.trim()}`;
+        }
+        function farmStorageMigrationMarkerKey() {
+            return `bluecrest:${getActiveFarmId()}:migration:localStorage:v1:${ELITE_FARM_STORAGE_MIGRATION_APP}`;
+        }
+        function migrateEliteLocalStorageToFarmScope() {
+            let farmId;
+            try { farmId = getActiveFarmId(); } catch (error) { return { status: 'failed', reason: error.message, keys: {} }; }
+            if (farmId !== LEGACY_ELITE_FARM_ID || blueCrestSession?.uid !== ELITE_FARM_STORAGE_OWNER_UID) return { status: 'failed', reason: 'Elite farm-owner session is required.', keys: {} };
+            const markerKey = farmStorageMigrationMarkerKey(); let prior = null;
+            try { const rawMarker = localStorage.getItem(markerKey); prior = rawMarker ? JSON.parse(rawMarker) : null; if (rawMarker && (!prior || typeof prior !== 'object')) throw new Error('Migration marker is invalid.'); }
+            catch (error) { return { status: 'failed', reason: `Migration marker could not be read: ${error.message}`, keys: {} }; }
+            const keys = {};
+            ELITE_FARM_STORAGE_LEGACY_KEYS.forEach(legacyKey => {
+                try {
+                    const source = localStorage.getItem(legacyKey);
+                    if (source === null) { keys[legacyKey] = { state: 'absent', verified: true }; return; }
+                    const destinationKey = farmStorageKey(legacyKey); const destination = localStorage.getItem(destinationKey);
+                    if (destination !== null) { keys[legacyKey] = destination === source ? { state: 'already-present', verified: true } : { state: 'failed', verified: false, reason: 'Scoped value conflicts with legacy value.' }; return; }
+                    localStorage.setItem(destinationKey, source);
+                    const verified = localStorage.getItem(destinationKey) === source;
+                    keys[legacyKey] = verified ? { state: 'copied', verified: true } : { state: 'failed', verified: false, reason: 'Scoped copy failed readback verification.' };
+                } catch (error) { keys[legacyKey] = { state: 'failed', verified: false, reason: error.message || 'Storage operation failed.' }; }
+            });
+            const complete = Object.values(keys).every(entry => entry.verified === true);
+            const marker = { version: 1, farmId, app: ELITE_FARM_STORAGE_MIGRATION_APP, status: complete ? 'complete' : 'partial', keys, completedAt: complete ? new Date().toISOString() : null, previousStatus: prior?.status || null };
+            try { localStorage.setItem(markerKey, JSON.stringify(marker)); }
+            catch (error) { return { ...marker, status: 'failed', reason: `Migration marker could not be written: ${error.message}` }; }
+            return marker;
+        }
+
+        // PHASE 2C-6B — READ-ONLY FUTURE MIGRATION DIAGNOSTIC. Not used by startup.
+        function inspectFarmStorageMigrationState({ farmId, mode } = {}) {
+            const result = (classification, reason, marker = null, keyResults = {}, failures = []) => ({ classification, reason, marker, keyResults, failures });
+            if (typeof farmId !== 'string' || !farmId.trim()) return result('corrupt', 'A validated non-empty farm ID is required.', null, {}, ['invalid requested farm ID']);
+            if (!['pre-cutover', 'post-cutover'].includes(mode)) return result('corrupt', 'Inspection mode must be pre-cutover or post-cutover.', null, {}, ['invalid inspection mode']);
+            try {
+                if (farmId.trim() !== getActiveFarmId()) return result('corrupt', 'Requested farm ID does not match the active farm session.', null, {}, ['farm identity mismatch']);
+                const markerKey = `bluecrest:${farmId.trim()}:migration:localStorage:v1:${ELITE_FARM_STORAGE_MIGRATION_APP}`; const rawMarker = localStorage.getItem(markerKey);
+                if (rawMarker === null) return result('missing', 'No migration marker exists for this farm and app.');
+                let parsed; try { parsed = JSON.parse(rawMarker); } catch (error) { return result('corrupt', 'Migration marker is not valid JSON.', null, {}, [error.message]); }
+                if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return result('corrupt', 'Migration marker must be an object.');
+                const marker = { version: parsed.version, farmId: parsed.farmId, app: parsed.app, status: parsed.status };
+                if (parsed.version !== 1 || parsed.farmId !== farmId.trim() || parsed.app !== ELITE_FARM_STORAGE_MIGRATION_APP) return result('corrupt', 'Migration marker identity is invalid.', marker, {}, ['version, farm ID, or app mismatch']);
+                if (!['complete', 'partial'].includes(parsed.status) || !parsed.keys || typeof parsed.keys !== 'object' || Array.isArray(parsed.keys)) return result('corrupt', 'Migration marker status or key results are invalid.', marker);
+                const actualKeys = Object.keys(parsed.keys).sort(), expectedKeys = [...ELITE_FARM_STORAGE_LEGACY_KEYS].sort();
+                if (actualKeys.length !== expectedKeys.length || actualKeys.some((key, index) => key !== expectedKeys[index])) return result('corrupt', 'Migration marker allowlist coverage is invalid.', marker, {}, ['missing or unexpected key result']);
+                const keyResults = {}, failures = []; let hasFailedKey = false;
+                for (const legacyKey of ELITE_FARM_STORAGE_LEGACY_KEYS) {
+                    const entry = parsed.keys[legacyKey];
+                    if (!entry || typeof entry !== 'object' || Array.isArray(entry) || !['copied', 'already-present', 'absent', 'failed'].includes(entry.state) || typeof entry.verified !== 'boolean') return result('corrupt', `Migration result for ${legacyKey} is invalid.`, marker, keyResults, [...failures, legacyKey]);
+                    const accepted = ['copied', 'already-present', 'absent'].includes(entry.state);
+                    if ((accepted && entry.verified !== true) || (entry.state === 'failed' && entry.verified !== false)) return result('corrupt', `Migration verification for ${legacyKey} is invalid.`, marker, keyResults, [...failures, legacyKey]);
+                    keyResults[legacyKey] = { state: entry.state, verified: entry.verified };
+                    if (entry.state === 'failed') { hasFailedKey = true; failures.push(`${legacyKey}: ${entry.reason || 'migration failed'}`); }
+                }
+                if (parsed.status === 'partial') return result('partial', 'Migration marker records partial completion.', marker, keyResults, failures);
+                if (hasFailedKey) return result('corrupt', 'Complete migration marker contains failed keys.', marker, keyResults, failures);
+                if (mode === 'post-cutover') return result('verified', 'Completed migration provenance is structurally valid.', marker, keyResults);
+                for (const legacyKey of ELITE_FARM_STORAGE_LEGACY_KEYS) {
+                    const entry = parsed.keys[legacyKey], legacyValue = localStorage.getItem(legacyKey), scopedValue = localStorage.getItem(farmStorageKey(legacyKey));
+                    if (entry.state === 'absent') { keyResults[legacyKey].scopedPresent = scopedValue !== null; if (legacyValue !== null) failures.push(`${legacyKey}: legacy value appeared after migration.`); }
+                    else if (legacyValue === null || scopedValue === null || legacyValue !== scopedValue) failures.push(`${legacyKey}: scoped value no longer exactly matches legacy value.`);
+                }
+                return failures.length ? result('partial', 'Migration marker is valid but scoped cache is stale.', marker, keyResults, failures) : result('verified', 'Completed migration marker and pre-cutover cache equality are valid.', marker, keyResults);
+            } catch (error) { return result('corrupt', 'Storage inspection failed.', null, {}, [error.message || 'Storage access failed.']); }
+        }
+
+        // PHASE 2D-5B — DORMANT FOUNDATION-ONLY LOCALSTORAGE MIGRATION.
+        // Deliberately separate from the frozen app-wide migration above; no automatic callers.
+        const FOUNDATION_STORAGE_LEGACY_KEYS = Object.freeze(['bc_farmCycles', 'bc_activeCycle', 'bc_ponds', 'bc_pondLocks', 'bc_cropLocks']);
+        const FOUNDATION_STORAGE_MIGRATION_GROUP = 'foundation-v1';
+        function foundationStorageMigrationMarkerKey(farmId = getActiveFarmId()) { if (typeof farmId !== 'string' || !farmId.trim()) throw new Error('A non-empty farm ID is required.'); return `bluecrest:${farmId.trim()}:migration:localStorage:foundation:v1:${ELITE_FARM_STORAGE_MIGRATION_APP}`; }
+        function migrateFoundationStorageToFarmScope() {
+            let farmId; try { farmId = getActiveFarmId(); } catch (error) { return { status: 'failed', reason: error.message, keys: {} }; }
+            if (farmId !== LEGACY_ELITE_FARM_ID || blueCrestSession?.uid !== ELITE_FARM_STORAGE_OWNER_UID) return { status: 'failed', reason: 'Elite farm-owner session is required.', keys: {} };
+            const markerKey = foundationStorageMigrationMarkerKey(farmId); let prior = null;
+            try { const rawMarker = localStorage.getItem(markerKey); prior = rawMarker ? JSON.parse(rawMarker) : null; if (rawMarker && (!prior || typeof prior !== 'object' || Array.isArray(prior))) throw new Error('Foundation migration marker is invalid.'); } catch (error) { return { status: 'failed', reason: `Foundation migration marker could not be read: ${error.message}`, keys: {} }; }
+            const keys = {};
+            FOUNDATION_STORAGE_LEGACY_KEYS.forEach(legacyKey => { try { const source = localStorage.getItem(legacyKey), destinationKey = farmStorageKey(legacyKey), destination = localStorage.getItem(destinationKey); if (source === null && destination === null) { keys[legacyKey] = { state: 'absent', verified: true }; return; } if (source === null) { keys[legacyKey] = { state: 'failed', verified: false, reason: 'Scoped value exists without a legacy source value.' }; return; } if (destination !== null) { keys[legacyKey] = destination === source ? { state: 'already-present', verified: true } : { state: 'failed', verified: false, reason: 'Scoped value conflicts with legacy value.' }; return; } localStorage.setItem(destinationKey, source); keys[legacyKey] = localStorage.getItem(destinationKey) === source ? { state: 'copied', verified: true } : { state: 'failed', verified: false, reason: 'Scoped copy failed readback verification.' }; } catch (error) { keys[legacyKey] = { state: 'failed', verified: false, reason: error.message || 'Storage operation failed.' }; } });
+            const complete = Object.values(keys).every(entry => entry.verified === true);
+            const marker = { version: 1, farmId, app: ELITE_FARM_STORAGE_MIGRATION_APP, group: FOUNDATION_STORAGE_MIGRATION_GROUP, status: complete ? 'complete' : 'partial', keys, completedAt: complete ? new Date().toISOString() : null, previousStatus: ['complete', 'partial'].includes(prior?.status) ? prior.status : null };
+            try { localStorage.setItem(markerKey, JSON.stringify(marker)); } catch (error) { return { ...marker, status: 'failed', reason: `Foundation migration marker could not be written: ${error.message}` }; }
+            return marker;
+        }
+        function inspectFoundationStorageMigrationState({ farmId, mode } = {}) {
+            const result = (classification, reason, marker = null, keyResults = {}, failures = []) => ({ classification, reason, marker, keyResults, failures });
+            if (typeof farmId !== 'string' || !farmId.trim() || !['pre-cutover', 'post-cutover'].includes(mode)) return result('corrupt', 'A valid farm ID and inspection mode are required.', null, {}, ['invalid request']);
+            try {
+                const requestedFarmId = farmId.trim(); if (requestedFarmId !== getActiveFarmId()) return result('corrupt', 'Requested farm ID does not match the active farm session.', null, {}, ['farm identity mismatch']);
+                const rawMarker = localStorage.getItem(foundationStorageMigrationMarkerKey(requestedFarmId)); if (rawMarker === null) return result('missing', 'No Foundation migration marker exists for this farm and app.');
+                let parsed; try { parsed = JSON.parse(rawMarker); } catch (error) { return result('corrupt', 'Foundation migration marker is not valid JSON.', null, {}, [error.message]); }
+                if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return result('corrupt', 'Foundation migration marker must be an object.');
+                const marker = { version: parsed.version, farmId: parsed.farmId, app: parsed.app, group: parsed.group, status: parsed.status };
+                if (parsed.version !== 1 || parsed.farmId !== requestedFarmId || parsed.app !== ELITE_FARM_STORAGE_MIGRATION_APP || parsed.group !== FOUNDATION_STORAGE_MIGRATION_GROUP) return result('corrupt', 'Foundation migration marker identity is invalid.', marker, {}, ['version, farm ID, app, or group mismatch']);
+                if (!['complete', 'partial'].includes(parsed.status) || !parsed.keys || typeof parsed.keys !== 'object' || Array.isArray(parsed.keys)) return result('corrupt', 'Foundation migration marker status or key results are invalid.', marker);
+                const actualKeys = Object.keys(parsed.keys).sort(), expectedKeys = [...FOUNDATION_STORAGE_LEGACY_KEYS].sort(); if (actualKeys.length !== expectedKeys.length || actualKeys.some((key, index) => key !== expectedKeys[index])) return result('corrupt', 'Foundation migration marker key coverage is invalid.', marker, {}, ['missing or unexpected key result']);
+                const keyResults = {}, failures = [];
+                for (const legacyKey of FOUNDATION_STORAGE_LEGACY_KEYS) { const entry = parsed.keys[legacyKey]; if (!entry || typeof entry !== 'object' || Array.isArray(entry) || !['copied', 'already-present', 'absent', 'failed'].includes(entry.state) || typeof entry.verified !== 'boolean') return result('corrupt', `Foundation migration result for ${legacyKey} is invalid.`, marker, keyResults, [...failures, legacyKey]); keyResults[legacyKey] = { state: entry.state, verified: entry.verified }; if (entry.state === 'failed' || entry.verified !== true) failures.push(`${legacyKey}: marker records an unverified result.`); }
+                if (parsed.status === 'partial') return result('partial', 'Foundation migration marker records partial completion.', marker, keyResults, failures);
+                if (failures.length) return result('corrupt', 'Complete Foundation migration marker contains an unverified result.', marker, keyResults, failures);
+                for (const legacyKey of FOUNDATION_STORAGE_LEGACY_KEYS) { const entry = parsed.keys[legacyKey], legacyValue = localStorage.getItem(legacyKey), scopedValue = localStorage.getItem(farmStorageKey(legacyKey)); if (mode === 'pre-cutover') { if (entry.state === 'absent') { if (legacyValue !== null || scopedValue !== null) failures.push(`${legacyKey}: absent provenance no longer matches current storage.`); } else if (legacyValue === null || scopedValue === null || legacyValue !== scopedValue) failures.push(`${legacyKey}: scoped value no longer exactly matches legacy value.`); } else if (entry.state === 'absent') { if (scopedValue !== null) failures.push(`${legacyKey}: absent provenance contradicts current scoped storage.`); } else if (scopedValue === null) failures.push(`${legacyKey}: required scoped value is missing.`); }
+                return failures.length ? result('partial', 'Foundation migration provenance is valid but current storage does not verify.', marker, keyResults, failures) : result('verified', mode === 'pre-cutover' ? 'Foundation migration marker and cache equality are valid.' : 'Foundation migration provenance and scoped cache are valid.', marker, keyResults);
+            } catch (error) { return result('corrupt', 'Foundation storage inspection failed.', null, {}, [error.message || 'Storage access failed.']); }
+        }
+
+        // PHASE 2C-4 — FUTURE FARM CACHE READINESS INFRASTRUCTURE.
+        // Infrastructure only: it is not active in current startup. Operational behavior
+        // remains legacy until a separately approved Foundation cutover.
+        const FARM_CACHE_STATE = Object.freeze({ UNRESOLVED: 'UNRESOLVED', ELITE_MIGRATION_REQUIRED: 'ELITE_MIGRATION_REQUIRED', ELITE_MIGRATION_PARTIAL: 'ELITE_MIGRATION_PARTIAL', SCOPED_CACHE_VERIFIED: 'SCOPED_CACHE_VERIFIED', NEW_FARM_SETUP_REQUIRED: 'NEW_FARM_SETUP_REQUIRED', CORRUPT_OR_UNKNOWN: 'CORRUPT_OR_UNKNOWN' });
+        const FARM_SETUP_STATUS = Object.freeze({ REQUIRED: 'required', ACTIVE: 'active', UNKNOWN: 'unknown' });
+        const BLUECREST_FOUNDATION_SCOPED_CUTOVER = false;
+        const BLUECREST_FOUNDATION_CUTOVER_GROUP = Object.freeze(['farmCycles', 'activeCycle', 'ponds', 'pondLocks', 'cropLocks']);
+        let blueCrestFarmCacheState = FARM_CACHE_STATE.UNRESOLVED;
+        function getFarmCacheState() { return blueCrestFarmCacheState; }
+        function setFarmCacheState(nextState) { if (!Object.values(FARM_CACHE_STATE).includes(nextState)) throw new Error('Unknown farm cache state.'); blueCrestFarmCacheState = nextState; return blueCrestFarmCacheState; }
+        function canBindFarmScopedListeners() { return blueCrestFarmCacheState === FARM_CACHE_STATE.SCOPED_CACHE_VERIFIED || blueCrestFarmCacheState === FARM_CACHE_STATE.NEW_FARM_SETUP_REQUIRED; }
+        function canRunFarmReconciliation() { return blueCrestFarmCacheState === FARM_CACHE_STATE.SCOPED_CACHE_VERIFIED; }
+        function canWriteFarmBackup() { return blueCrestFarmCacheState === FARM_CACHE_STATE.SCOPED_CACHE_VERIFIED; }
+        function isFarmSetupRequired() { return blueCrestFarmCacheState === FARM_CACHE_STATE.NEW_FARM_SETUP_REQUIRED; }
+        function resolveFarmSetupStatus(farmData) { const setupStatus = farmData && typeof farmData === 'object' ? farmData.setupStatus : null; if (setupStatus === FARM_SETUP_STATUS.REQUIRED) return FARM_SETUP_STATUS.REQUIRED; if (setupStatus === FARM_SETUP_STATUS.ACTIVE) return FARM_SETUP_STATUS.ACTIVE; return FARM_SETUP_STATUS.UNKNOWN; }
+        function resolveFutureFarmCacheState({ setupStatus, isEliteFarm, migrationMarkerStatus, migrationVerified, scopedCacheVerified } = {}) {
+            if (isEliteFarm === true) { if (migrationMarkerStatus === 'complete' && migrationVerified === true) return FARM_CACHE_STATE.SCOPED_CACHE_VERIFIED; if (migrationMarkerStatus === 'partial' || migrationMarkerStatus === 'failed') return FARM_CACHE_STATE.ELITE_MIGRATION_PARTIAL; return FARM_CACHE_STATE.ELITE_MIGRATION_REQUIRED; }
+            if (setupStatus === FARM_SETUP_STATUS.REQUIRED) return FARM_CACHE_STATE.NEW_FARM_SETUP_REQUIRED;
+            if (setupStatus === FARM_SETUP_STATUS.ACTIVE && scopedCacheVerified === true) return FARM_CACHE_STATE.SCOPED_CACHE_VERIFIED;
+            return FARM_CACHE_STATE.CORRUPT_OR_UNKNOWN;
+        }
+        // Retained only for existing operational handlers; the retired PIN path
+        // no longer sets this flag, so authenticated users remain writable.
+        let isViewOnlyMode = false;
 
         let db = null;
         let isFirebaseConnected = false;
@@ -1086,102 +1337,32 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             console.warn("Running in local browser fallback mode.", err);
         }
 
-        const pinInput = document.getElementById('authPinInput');
+        const authEmailInput = document.getElementById('authEmailInput');
+        const authPasswordInput = document.getElementById('authPasswordInput');
         const authStatus = document.getElementById('authStatusText');
         const authLoading = document.getElementById('authLoadingScreen');
         const authScreen = document.getElementById('pinAuthScreen');
         const mainApp = document.getElementById('mainAppContainer');
 
-        function enterViewOnlyMode() {
-            isViewOnlyMode = true;
-            sessionStorage.setItem("bc_view_only_mode", "1");
-            document.body.classList.add("view-only-mode");
-            authScreen.classList.add('hidden');
-            mainApp.classList.remove('hidden');
-            applyViewOnlyRestrictions();
-            requestAnimationFrame(() => { syncAppLayout(); setTimeout(syncAppLayout, 100); });
-            ensureActiveMobileCycle();
-            populateMobileCycleSelectors();
-            if (!isSyncInitialized) {
-                isSyncInitialized = true;
-                initRealtimeSync();
-            }
+        async function resolveLegacyEliteSession(user) {
+            const farm=await db.collection('farms').doc(LEGACY_ELITE_FARM_ID).get(); const membership=await db.collection('farms').doc(LEGACY_ELITE_FARM_ID).collection('members').doc(user.uid).get(); const entitlement=await db.collection('farms').doc(LEGACY_ELITE_FARM_ID).collection('entitlement').doc('current').get();
+            const farmData=farm.data()||{}; const membershipData=membership.data()||{}; const entitlementData=entitlement.data()||{};
+            if(!farm.exists||farmData.status!=='active') throw new Error('Elite farm is unavailable.'); if(!membership.exists||membershipData.status!=='active'||membershipData.role!=='owner') throw new Error('This account is not an active Elite owner.'); if(!entitlement.exists||entitlementData.plan!=='activated'||entitlementData.status!=='active') throw new Error('Elite entitlement is inactive.');
+            const normalizedSetupStatus=resolveFarmSetupStatus(farmData);
+            // Provisioning metadata for future startup routing; it does not alter current startup behavior.
+            blueCrestSession={uid:user.uid,email:user.email||'',farmId:LEGACY_ELITE_FARM_ID,farmName:farmData.farmName||'Elite Aqualines',role:membershipData.role,membershipStatus:membershipData.status,plan:entitlementData.plan||'',entitlementStatus:entitlementData.status,setupStatus:normalizedSetupStatus,canWrite:true};
+            document.getElementById('mobileFarmName').textContent=blueCrestSession.farmName;
         }
+        async function mobileBridgeSignOut() { stopOperationalMigrationControlListener(); stopFoundationMigrationControlListener(); blueCrestSession=null; isSyncInitialized=false; if (mobileCropFinancialSummaryUnsubscribe) { mobileCropFinancialSummaryUnsubscribe(); mobileCropFinancialSummaryUnsubscribe=null; } stopFarmListeners(); await firebase.auth().signOut(); location.reload(); }
+        document.getElementById('mobileAuthForm')?.addEventListener('submit',async e=>{e.preventDefault();try{await firebase.auth().signInWithEmailAndPassword(authEmailInput.value.trim(),authPasswordInput.value);authStatus.textContent='';}catch(err){authStatus.textContent=err.message||'Sign in failed.';}});
+        document.getElementById('mobileForgotPassword')?.addEventListener('click',async()=>{const email=authEmailInput.value.trim();if(!email)return authStatus.textContent='Enter your email first.';try{await firebase.auth().sendPasswordResetEmail(email);authStatus.textContent='Password-reset email sent.';}catch(err){authStatus.textContent=err.message||'Could not send reset email.';}});
+        document.getElementById('mobileAuthSignOut')?.addEventListener('click',mobileBridgeSignOut);
 
-        function applyViewOnlyRestrictions() {
-            if (!isViewOnlyMode) return;
-            document.body.classList.add("view-only-mode");
-            document.querySelectorAll('form').forEach(form => {
-                if (form.dataset.viewOnlySubmitBlocker === "1") return;
-                form.dataset.viewOnlySubmitBlocker = "1";
-                form.addEventListener('submit', function(e) {
-                    if (!isViewOnlyMode) return;
-                    e.preventDefault(); e.stopImmediatePropagation(); alert('View-Only mode: data changes are disabled.');
-                }, true);
-            });
-            document.querySelectorAll('button').forEach(btn => {
-                const text = (btn.innerText || btn.textContent || '').trim().toLowerCase();
-                const onclick = (btn.getAttribute('onclick') || '').toLowerCase();
-                if (/\b(add|save|delete|edit|update|submit|remove|mix second feed)\b/.test(text) || /\b(delete|save|submit|handleformsubmit|handlesamplingsubmit|handletreatmentsubmit|handleharvestsubmit|handlepondsubmit)\b/.test(onclick)) {
-                    if (btn.dataset.viewOnlyDisabled !== "1") {
-                        btn.dataset.viewOnlyDisabled = "1";
-                        btn.dataset.viewOnlyDisplay = btn.style.display;
-                    }
-                    btn.disabled = true;
-                    btn.style.display = 'none';
-                }
-            });
-        }
-
-        function removeViewOnlyRestrictions() {
-            document.body.classList.remove("view-only-mode");
-            document.querySelectorAll('[data-view-only-disabled="1"]').forEach(btn => {
-                btn.disabled = false;
-                btn.style.display = btn.dataset.viewOnlyDisplay || '';
-                delete btn.dataset.viewOnlyDisabled;
-                delete btn.dataset.viewOnlyDisplay;
-            });
-        }
-
-        pinInput.addEventListener('input', async () => {
-            const pin = pinInput.value.trim();
-            if (pin.length === 6) {
-                authStatus.textContent = "Verifying PIN...";
-                authStatus.className = "text-xs font-semibold mt-3 min-h-[18px] text-blue-600";
-
-                // Shared View-Only PIN does not expose the owner Firebase password.
-                if (pin === VIEW_ONLY_PIN) {
-                    pinInput.value = "";
-                    enterViewOnlyMode();
-                    return;
-                }
-
-                try {
-                    await firebase.auth().signInWithEmailAndPassword(FIXED_USER_EMAIL, pin);
-                    isViewOnlyMode = false;
-                    sessionStorage.removeItem("bc_view_only_mode");
-                    removeViewOnlyRestrictions();
-                    authStatus.textContent = "";
-                    pinInput.value = "";
-                } catch (err) {
-                    authStatus.textContent = "Incorrect PIN. Try again.";
-                    authStatus.className = "text-xs font-semibold mt-3 min-h-[18px] text-rose-600";
-                    pinInput.value = "";
-                }
-            }
-        });
-
-        firebase.auth().onAuthStateChanged((user) => {
+        firebase.auth().onAuthStateChanged(async (user) => {
             authLoading.classList.add('hidden');
 
-            if (isViewOnlyMode) {
-                enterViewOnlyMode();
-                return;
-            }
-
             if (user) {
-                authScreen.classList.add('hidden');
-                mainApp.classList.remove('hidden');
+                try { await resolveLegacyEliteSession(user); await startFoundationMigrationControlListener(); await startOperationalMigrationControlListener(); authScreen.classList.add('hidden'); mainApp.classList.remove('hidden'); } catch(err) { stopOperationalMigrationControlListener(); stopFoundationMigrationControlListener(); blueCrestSession=null; authStatus.textContent=err.message||'Access denied.'; authScreen.classList.remove('hidden'); mainApp.classList.add('hidden'); return; }
                 // The header was hidden before authentication, so measure it only
                 // after the main app becomes visible.
                 requestAnimationFrame(() => {
@@ -1195,33 +1376,26 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                     initRealtimeSync();
                 }
             } else {
+                stopOperationalMigrationControlListener();
+                stopFoundationMigrationControlListener();
                 authScreen.classList.remove('hidden');
                 mainApp.classList.add('hidden');
-                pinInput.value = "";
-                pinInput.focus();
+                authPasswordInput.value = "";
+                authEmailInput.focus();
             }
         });
 
         function lockDevice() {
-            if (confirm("Lock this device? You will need your PIN to re-enter.")) {
-                if (isViewOnlyMode) {
-                    isViewOnlyMode = false;
-                    sessionStorage.removeItem("bc_view_only_mode");
-                    document.body.classList.remove("view-only-mode");
-                    location.reload();
-                } else {
-                    firebase.auth().signOut();
-                }
-            }
+            if (confirm("Sign out of this device? You will need to sign in again.")) mobileBridgeSignOut();
         }
 
-        let ponds = JSON.parse(localStorage.getItem('bc_ponds')) || [
+        let ponds = JSON.parse(localStorage.getItem(foundationStorageKey('bc_ponds'))) || (canPersistSyntheticFoundationState() ? [
             { id: 'P1', length: 100, breadth: 50, area: 5000, stockingDate: '2026-07-28', stockingCount: 150000 },
             { id: 'P2', length: 100, breadth: 60, area: 6000, stockingDate: '2026-07-28', stockingCount: 180000 },
             { id: 'P3', length: 80, breadth: 50, area: 4000, stockingDate: '2026-08-01', stockingCount: 120000 },
             { id: 'P4', length: 120, breadth: 60, area: 7200, stockingDate: '2026-08-05', stockingCount: 200000 },
             { id: 'P5', length: 90, breadth: 50, area: 4500, stockingDate: '2026-08-10', stockingCount: 135000 }
-        ];
+        ] : []);
 
         // Legacy pond records are treated as 2026 Crop 1 until explicitly assigned.
         ponds = ponds.map(p => ({
@@ -1230,7 +1404,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             crop: p.crop || 'Crop 1',
             cycleId: p.cycleId || `${Number(p.year || 2026)}|${String(p.crop || 'Crop 1').toLowerCase()}`
         }));
-        localStorage.setItem('bc_ponds', JSON.stringify(ponds));
+        if (canPersistSyntheticFoundationState()) localStorage.setItem(foundationStorageKey('bc_ponds'), JSON.stringify(ponds));
 
         let feedEntries = JSON.parse(localStorage.getItem('bc_feeds')) || [];
         let samplingEntries = JSON.parse(localStorage.getItem('bc_sampling')) || [];
@@ -1306,12 +1480,12 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
         // Year + Crop is the foundational operational context.
         const DEFAULT_CYCLE_YEAR = 2026;
         const DEFAULT_CYCLE_CROP = 'Crop 1';
-        let farmCycles = JSON.parse(localStorage.getItem('bc_farmCycles')) || [
+        let farmCycles = JSON.parse(localStorage.getItem(foundationStorageKey('bc_farmCycles'))) || (canPersistSyntheticFoundationState() ? [
             { id: '2026|crop 1', year: 2026, crop: 'Crop 1', name: '2026 Crop 1' }
-        ];
-        let activeMobileCycle = JSON.parse(localStorage.getItem('bc_activeCycle')) || {
+        ] : []);
+        let activeMobileCycle = JSON.parse(localStorage.getItem(foundationStorageKey('bc_activeCycle'))) || (canPersistSyntheticFoundationState() ? {
             id: '2026|crop 1', year: 2026, crop: 'Crop 1'
-        };
+        } : null);
         // Financial results are calculated and published by the Laptop. Mobile
         // only displays the selected crop's published summary.
         let mobileCropFinancialSummary = null;
@@ -1324,7 +1498,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             if (!valid.length) {
                 // Safe legacy fallback only; mobile never creates/writes a master cycle.
                 activeMobileCycle = { id: `${DEFAULT_CYCLE_YEAR}|crop 1`, year: DEFAULT_CYCLE_YEAR, crop: DEFAULT_CYCLE_CROP };
-                localStorage.setItem('bc_activeCycle', JSON.stringify(activeMobileCycle));
+                if (canPersistSyntheticFoundationState()) localStorage.setItem(foundationStorageKey('bc_activeCycle'), JSON.stringify(activeMobileCycle));
                 return;
             }
             const currentId = activeMobileCycle && activeMobileCycle.id
@@ -1333,8 +1507,8 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             const found = valid.find(c => String(c.id) === currentId);
             const selected = found || [...valid].sort((a,b) => Number(b.year) - Number(a.year) || String(b.crop).localeCompare(String(a.crop)))[0];
             activeMobileCycle = { id: selected.id, year: Number(selected.year), crop: selected.crop };
-            localStorage.setItem('bc_farmCycles', JSON.stringify(farmCycles));
-            localStorage.setItem('bc_activeCycle', JSON.stringify(activeMobileCycle));
+            localStorage.setItem(foundationStorageKey('bc_farmCycles'), JSON.stringify(farmCycles));
+            localStorage.setItem(foundationStorageKey('bc_activeCycle'), JSON.stringify(activeMobileCycle));
         }
 
         function getActiveCycle() {
@@ -1488,7 +1662,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                 populateMobileCycleSelectors();
                 return;
             }
-            localStorage.setItem('bc_activeCycle', JSON.stringify(activeMobileCycle));
+            localStorage.setItem(foundationStorageKey('bc_activeCycle'), JSON.stringify(activeMobileCycle));
             refreshForMobileCycleChange();
         }
 
@@ -1503,7 +1677,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                 populateMobileCycleSelectors();
                 return;
             }
-            localStorage.setItem('bc_activeCycle', JSON.stringify(activeMobileCycle));
+            localStorage.setItem(foundationStorageKey('bc_activeCycle'), JSON.stringify(activeMobileCycle));
             refreshForMobileCycleChange();
         }
         let editingPondId = null;
@@ -1611,10 +1785,11 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                 console.error('Mobile Product Master sync error:', err);
             });
 
-            db.collection('farmCycles').onSnapshot(snap => {
+            registerFoundationListenerBinder('farmCycles', (collection, hydrationEpoch) => collection.onSnapshot(snap => {
+                recordFoundationHydration('farmCycles', hydrationEpoch);
                 if (!snap.empty) {
                     farmCycles = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                    localStorage.setItem('bc_farmCycles', JSON.stringify(farmCycles));
+                    localStorage.setItem(foundationStorageKey('bc_farmCycles'), JSON.stringify(farmCycles));
                     ensureActiveMobileCycle();
                     populateMobileCycleSelectors();
                 } else {
@@ -1625,23 +1800,24 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                 syncPondDropdown();
                 renderPondList();
                 renderAllPondsSummary();
-            }, err => console.error("Farm cycles sync error:", err));
+            }, err => console.error("Farm cycles sync error:", err)));
 
-            db.collection('ponds').onSnapshot(snap => {
+            registerFoundationListenerBinder('ponds', (collection, hydrationEpoch) => collection.onSnapshot(snap => {
+                recordFoundationHydration('ponds', hydrationEpoch);
                 if (!snap.empty) {
                     const rawPonds = snap.docs.map(doc => normalizePondRecord(doc.data(), doc.id));
                     ponds = dedupePondsByCycleAndName(rawPonds);
-                    localStorage.setItem('bc_ponds', JSON.stringify(ponds));
-                } else if (ponds.length > 0) {
+                    localStorage.setItem(foundationStorageKey('bc_ponds'), JSON.stringify(ponds));
+                } else if (ponds.length > 0 && canPersistSyntheticFoundationState()) {
                     ponds = dedupePondsByCycleAndName(ponds);
                     ponds.forEach(p => savePondToDb(p));
                 }
                 syncPondDropdown();
                 renderPondList();
                 renderAllPondsSummary();
-            }, err => console.error("Ponds sync error:", err));
+            }, err => console.error("Ponds sync error:", err)));
 
-            db.collection('feeds').onSnapshot(snap => {
+            listenGroup1OperationalCollection('feeds', snap => {
                 feedEntries = snap.docs.map(doc => {
                     const d = doc.data() || {};
                     return { ...d, id: doc.id, firestoreId: doc.id, legacyRecordId: d.id != null && String(d.id) !== String(doc.id) ? d.id : null };
@@ -1651,7 +1827,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                 refreshForMobileCycleChange();
             }, err => console.error("Feeds sync error:", err));
 
-            db.collection('sampling').onSnapshot(snap => {
+            listenGroup1OperationalCollection('sampling', snap => {
                 samplingEntries = snap.docs.map(doc => {
                     const d = doc.data() || {};
                     const year = Number(d.year || d.cropYear || DEFAULT_CYCLE_YEAR);
@@ -1714,7 +1890,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                 renderTreatmentList();
             }, err => console.error("Treatments sync error:", err));
 
-            db.collection('harvests').onSnapshot(snap => {
+            listenGroup1OperationalCollection('harvests', snap => {
                 harvestEntries = snap.docs.map(doc => {
                     const d = doc.data() || {};
                     const year = Number(d.year || d.cropYear || DEFAULT_CYCLE_YEAR);
@@ -1757,7 +1933,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             // Stock transfers are written by the laptop and shared through the
             // same Firestore collection. Mobile is read-only for this module,
             // but must keep the transfer records in sync for Transfer-in ponds.
-            db.collection('stockTransfers').onSnapshot(snap => {
+            listenGroup1OperationalCollection('stockTransfers', snap => {
                 stockTransfers = snap.docs.map(doc => ({
                     id: doc.id,
                     ...doc.data()
@@ -1872,6 +2048,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
         }
 
         function savePondToDb(pondObj) {
+            assertFoundationWriteAllowed();
             const c = getActiveCycle();
             const normalized = normalizePondRecord({
                 ...pondObj,
@@ -1883,13 +2060,13 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             normalized.firestoreId = canonicalPondFirestoreId(normalized.cycleId, normalized.id);
 
             if (isFirebaseConnected && db) {
-                return db.collection('ponds').doc(normalized.firestoreId).set(normalized, { merge: true });
+                return foundationCollection('ponds').doc(normalized.firestoreId).set(normalized, { merge: true });
             }
 
             const idx = ponds.findIndex(p => pondLogicalKey(p) === pondLogicalKey(normalized));
             if (idx >= 0) ponds[idx] = normalized; else ponds.push(normalized);
             ponds = dedupePondsByCycleAndName(ponds);
-            localStorage.setItem('bc_ponds', JSON.stringify(ponds));
+            localStorage.setItem(foundationStorageKey('bc_ponds'), JSON.stringify(ponds));
             syncPondDropdown();
             renderPondList();
             renderAllPondsSummary();
@@ -1897,6 +2074,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
         }
 
         function deletePondFromDb(pondId) {
+            assertFoundationWriteAllowed();
             const c = getActiveCycle();
             const matches = ponds.filter(p =>
                 String(p.id || '').toUpperCase() === String(pondId || '').toUpperCase() &&
@@ -1911,7 +2089,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
 
             if (isFirebaseConnected && db) {
                 return Promise.all(Array.from(refs).map(id =>
-                    db.collection('ponds').doc(id).delete()
+                    foundationCollection('ponds').doc(id).delete()
                 ));
             }
 
@@ -1919,7 +2097,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                 String(p.id || '').toUpperCase() === String(pondId || '').toUpperCase() &&
                 String(p.cycleId) === String(c.id)
             ));
-            localStorage.setItem('bc_ponds', JSON.stringify(ponds));
+            localStorage.setItem(foundationStorageKey('bc_ponds'), JSON.stringify(ponds));
             syncPondDropdown();
             renderPondList();
             renderAllPondsSummary();
@@ -1955,7 +2133,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                 cycleId: entryObj.cycleId || c.id
             };
             if (isFirebaseConnected && db) {
-                await db.collection('feeds').doc(firestoreId).set(normalized);
+                await farmOperationalCollection('feeds').doc(firestoreId).set(normalized);
             } else {
                 const idx = feedEntries.findIndex(item =>
                     String(item.id) === String(sourceId) ||
@@ -1987,7 +2165,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
         async function deleteCloudRecord(collectionName, recordId, records, localSetter) {
             const firestoreId = resolveFirestoreRecordId(collectionName, recordId, records);
             if (isFirebaseConnected && db) {
-                await db.collection(collectionName).doc(firestoreId).delete();
+                await group1OperationalCollectionOrLegacy(collectionName).doc(firestoreId).delete();
             }
             if (typeof localSetter === 'function') localSetter();
         }
@@ -2036,7 +2214,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             };
             if (isFirebaseConnected && db) {
                 try {
-                    await db.collection('sampling').doc(String(firestoreId)).set(normalized, { merge: true });
+                await farmOperationalCollection('sampling').doc(String(firestoreId)).set(normalized, { merge: true });
                     return true;
                 } catch (err) {
                     console.error('Firestore sampling write error:', err);
@@ -2159,7 +2337,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                 cycleId: c.id
             };
             if (isFirebaseConnected && db) {
-                await db.collection('harvests').doc(normalized.id.toString()).set(normalized);
+                await farmOperationalCollection('harvests').doc(normalized.id.toString()).set(normalized);
             } else {
                 const idx = harvestEntries.findIndex(item => item.id === normalized.id);
                 if (idx >= 0) harvestEntries[idx] = normalized;
@@ -4505,7 +4683,6 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             }
         });
         document.addEventListener('DOMContentLoaded', () => {
-            applyViewOnlyRestrictions();
             syncAppLayout();
             setTimeout(syncAppLayout, 100);
             setTimeout(syncAppLayout, 500);
@@ -4582,8 +4759,8 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
 <script id="bluecrest-lock-system">
 (function(){
   const DEVICE = 'mobile';
-  let pondLocks = JSON.parse(localStorage.getItem('bc_pondLocks') || '{}');
-  let cropLocks = JSON.parse(localStorage.getItem('bc_cropLocks') || '{}');
+  let pondLocks = JSON.parse(localStorage.getItem(foundationStorageKey('bc_pondLocks')) || '{}');
+  let cropLocks = JSON.parse(localStorage.getItem(foundationStorageKey('bc_cropLocks')) || '{}');
   let initialPondLocksSnapshotReady = false;
   let initialHarvestSnapshotReady = window.__bcMobileInitialHarvestSnapshotReady === true;
   let initialHarvestReconciliationDone = false;
@@ -4626,7 +4803,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
   }
   function isPondClosed(pid,cid){ return effectivePondLock(cid,pid)?.closed===true; }
   function isCropClosed(cid){ return !!cropLocks[String(cid)]?.closed; }
-  function saveLocal(){ localStorage.setItem('bc_pondLocks',JSON.stringify(pondLocks)); localStorage.setItem('bc_cropLocks',JSON.stringify(cropLocks)); }
+  function saveLocal(){ localStorage.setItem(foundationStorageKey('bc_pondLocks'),JSON.stringify(pondLocks)); localStorage.setItem(foundationStorageKey('bc_cropLocks'),JSON.stringify(cropLocks)); }
   function deny(msg){ alert(msg); return false; }
   window.blueCrestIsPondClosed=isPondClosed;
   window.blueCrestIsCropClosed=isCropClosed;
@@ -4661,21 +4838,25 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
     const arr=typeof harvests!=='undefined'&&Array.isArray(harvests)?harvests:(typeof harvestEntries!=='undefined'&&Array.isArray(harvestEntries)?harvestEntries:[]);
     return arr.some(h=>cycleOf(h)===String(p.cycleId) && pondIdOf(h)===String(p.id) && ['full','final harvest'].includes(String(h.type||h.harvestType||'').trim().toLowerCase()));
   }
-  async function cloudSet(col,id,data){ if(typeof db!=='undefined'&&db) await db.collection(col).doc(String(id)).set(data,{merge:true}); }
+  async function cloudSet(col,id,data){ if(BLUECREST_FOUNDATION_COLLECTIONS.includes(col)) assertFoundationWriteAllowed(); if(typeof db!=='undefined'&&db) await (BLUECREST_FOUNDATION_COLLECTIONS.includes(col) ? foundationCollection(col) : db.collection(col)).doc(String(id)).set(data,{merge:true}); }
   async function writeAudit(action,r,reason){
     if(typeof db==='undefined'||!db) return;
-    await db.collection('lockAudit').doc(`${Date.now()}_${Math.random().toString(36).slice(2,8)}`).set({action,scope:r.pondId?'pond':'crop',cycleId:r.cycleId,year:Number(r.year),crop:r.crop,pondId:r.pondId||null,pondName:r.pondName||null,reason,device:DEVICE,timestamp:todayIso()});
+    assertFoundationWriteAllowed();
+    await foundationCollection('lockAudit').doc(`${Date.now()}_${Math.random().toString(36).slice(2,8)}`).set({action,scope:r.pondId?'pond':'crop',cycleId:r.cycleId,year:Number(r.year),crop:r.crop,pondId:r.pondId||null,pondName:r.pondName||null,reason,device:DEVICE,timestamp:todayIso()});
   }
   async function closePond(p,reason){
+    assertFoundationWriteAllowed();
     const cid=canonicalCycleId(p.cycleId || cycleOf(p)), subject=resolveLockPondSubject(p.id||p.name,cid), key=lockBusinessKey(cid,subject);
     const rec={closed:true,cycleId:cid,year:Number(p.year||p.cropYear||activeC().year),crop:p.crop||p.cropCycle||activeC().crop,pondId:subject,pondName:p.name||subject,closedAt:todayIso(),closedBy:DEVICE,reason:reason||'Full/Final harvest recorded'};
     pondLocks[key]=rec; saveLocal(); await cloudSet('pondLocks',key,rec);
   }
   async function closeCrop(c,reason){
+    assertFoundationWriteAllowed();
     const rec={closed:true,cycleId:String(c.id),year:Number(c.year),crop:c.crop,closedAt:todayIso(),closedBy:DEVICE,reason:reason||'All relevant ponds completed Full/Final Harvest'};
     cropLocks[String(c.id)]=rec; saveLocal(); await cloudSet('cropLocks',String(c.id),rec);
   }
   async function autoCloseForHarvest(h,opts={}){
+    if(isFoundationVerifyReadOnly()) return;
     const type=String(h?.type||h?.harvestType||'').trim().toLowerCase(); if(!['full','final harvest'].includes(type)) return;
     const context=getPondForHarvestLock(h);
     if(!context){ console.warn('Full/Final Harvest lock reconciliation skipped: exact Pond/Crop linkage could not be resolved', h); return; }
@@ -4697,6 +4878,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
     renderLockStatus(); refreshMobileRecordButtons();
   }
   async function reconcileExisting(){
+    if(isFoundationVerifyReadOnly()) return;
     const arr=typeof harvests!=='undefined'&&Array.isArray(harvests)?harvests:(typeof harvestEntries!=='undefined'&&Array.isArray(harvestEntries)?harvestEntries:[]);
     for(const h of arr){ try{ await autoCloseForHarvest(h,{mode:'reconcile'}); }catch(e){ console.error('Lock reconciliation error:',e); } }
   }
@@ -4733,7 +4915,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
       document.getElementById('bcReactivateCrop')?.addEventListener('click',async()=>{
         if(!confirm(`Reactivate ${c.year} • ${c.crop}?`))return;
         const reason=prompt('Mandatory reason for crop reactivation:','');if(!reason||!reason.trim()){alert('A reason is mandatory.');return;}
-        try{const rec={...cropLocks[String(c.id)],closed:false,reactivatedAt:todayIso(),reactivatedBy:DEVICE,reactivationReason:reason.trim()};cropLocks[String(c.id)]=rec;saveLocal();await cloudSet('cropLocks',String(c.id),rec);await writeAudit('CROP_REACTIVATED',c,reason.trim());renderLockStatus();}catch(e){console.error(e);alert('Crop reactivation failed.');}
+        try{assertFoundationWriteAllowed();const rec={...cropLocks[String(c.id)],closed:false,reactivatedAt:todayIso(),reactivatedBy:DEVICE,reactivationReason:reason.trim()};cropLocks[String(c.id)]=rec;saveLocal();await cloudSet('cropLocks',String(c.id),rec);await writeAudit('CROP_REACTIVATED',c,reason.trim());renderLockStatus();}catch(e){console.error(e);alert('Crop reactivation failed.');}
       });
       document.getElementById('bcManagePondLocks')?.addEventListener('click',()=>managePonds(c,rel));
     }
@@ -4759,6 +4941,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
     const reason=prompt(`Mandatory reason for reactivating ${p.name||p.id}:`,'');
     if(!reason||!reason.trim()){alert('A reason is mandatory.');return;}
     try{
+      assertFoundationWriteAllowed();
       const subject=resolveLockPondSubject(p.id||p.name,cid),key=lockBusinessKey(cid,subject),rec={...effectivePondLock(cid,p.id),closed:false,cycleId:cid,pondId:subject,pondName:p.name||subject,reactivatedAt:todayIso(),reactivatedBy:DEVICE,reactivationReason:reason.trim()};
       pondLocks[key]=rec;saveLocal();await cloudSet('pondLocks',key,rec);
       await writeAudit('POND_REACTIVATED',{...c,cycleId:cid,pondId:p.id,pondName:p.name,year:p.year||c.year,crop:p.crop||c.crop},reason.trim());
@@ -5024,8 +5207,8 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
   }
   function init(){
     if(typeof db!=='undefined'&&db){
-      db.collection('pondLocks').onSnapshot(s=>{pondLocks={};s.docs.forEach(d=>pondLocks[d.id]={id:d.id,...d.data()});saveLocal();initialPondLocksSnapshotReady=true;maybeReconcileInitialHarvestLocks();renderLockStatus();refreshMobileRecordButtons();});
-      db.collection('cropLocks').onSnapshot(s=>{cropLocks={};s.docs.forEach(d=>cropLocks[d.id]={id:d.id,...d.data()});saveLocal();renderLockStatus();refreshMobileRecordButtons();});
+      registerFoundationListenerBinder('pondLocks', (collection, hydrationEpoch) => collection.onSnapshot(s=>{pondLocks={};s.docs.forEach(d=>pondLocks[d.id]={id:d.id,...d.data()});recordFoundationHydration('pondLocks', hydrationEpoch);saveLocal();initialPondLocksSnapshotReady=true;maybeReconcileInitialHarvestLocks();renderLockStatus();refreshMobileRecordButtons();}));
+      registerFoundationListenerBinder('cropLocks', (collection, hydrationEpoch) => collection.onSnapshot(s=>{cropLocks={};s.docs.forEach(d=>cropLocks[d.id]={id:d.id,...d.data()});recordFoundationHydration('cropLocks', hydrationEpoch);saveLocal();renderLockStatus();refreshMobileRecordButtons();}));
     }
     installGuards(); installRecordButtonLockUI(); installEntryEditModalLocks(); wrap('renderPondList',orig=>function(){const r=orig.apply(this,arguments);setTimeout(()=>{decoratePondCards();refreshMobileRecordButtons();},0);return r;}); setTimeout(()=>{renderLockStatus();decoratePondCards();refreshMobileRecordButtons();},900);
   }
