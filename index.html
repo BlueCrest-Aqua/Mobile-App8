@@ -1084,22 +1084,24 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
         const BLUECREST_OPERATIONAL_COLLECTIONS = Object.freeze(['feeds','sampling','treatments','harvests','stockTransfers','purchases','stockReturns','vendorTransactions','ledgerEntries','cropFinancialSummaries','farmBackup','crop1ClosingPackedStock','crop2ClosingPackedStock','physicalInventorySettlements','feedCropClosingAdjustments','feedCropClosingAdjustmentHistory']);
         const OPERATIONAL_MIGRATION_GROUPS = Object.freeze({ biological:Object.freeze(['feeds','sampling','harvests','stockTransfers']), accountingSource:Object.freeze(['treatments','purchases','stockReturns','vendorTransactions','ledgerEntries']), closingDerived:Object.freeze(['cropFinancialSummaries','crop1ClosingPackedStock','crop2ClosingPackedStock','physicalInventorySettlements','feedCropClosingAdjustments','feedCropClosingAdjustmentHistory']), backup:Object.freeze(['farmBackup']) });
         const OPERATIONAL_GROUP_STATES = Object.freeze(['legacy','freeze','scoped-read','scoped-active']); const OPERATIONAL_WRITE_MODE=Object.freeze({LEGACY:'legacy',VERIFY_READ_ONLY:'verify-read-only',SCOPED_WRITABLE:'scoped-writable'}); const OPERATIONAL_MIGRATION_ROUTING_ENABLED=true;
-        let blueCrestOperationalMigrationControl=null, blueCrestOperationalMigrationControlUnsubscribe=null, blueCrestOperationalMigrationControlFarmId=null, blueCrestOperationalMigrationControlStartPromise=null, blueCrestOperationalBiologicalBoundRoute=null; const blueCrestOperationalGroupListeners=new Map(), blueCrestOperationalGroupGeneration=new Map(Object.keys(OPERATIONAL_MIGRATION_GROUPS).map(g=>[g,0])), blueCrestOperationalGroupReadiness=new Map(Object.keys(OPERATIONAL_MIGRATION_GROUPS).map(g=>[g,{route:'legacy',expected:new Set(),snapshots:new Set(),verified:false,generation:0}])), blueCrestOperationalBiologicalListenerBinders=new Map();
+        let blueCrestOperationalMigrationControl=null, blueCrestOperationalMigrationControlUnsubscribe=null, blueCrestOperationalMigrationControlFarmId=null, blueCrestOperationalMigrationControlStartPromise=null, blueCrestOperationalBiologicalBoundRoute=null, blueCrestOperationalAccountingBoundRoute=null, blueCrestFinancialSummaryBoundRoute=null, blueCrestProductCatalogueBoundRoute=null; const blueCrestOperationalGroupListeners=new Map(), blueCrestOperationalGroupGeneration=new Map(Object.keys(OPERATIONAL_MIGRATION_GROUPS).map(g=>[g,0])), blueCrestOperationalGroupReadiness=new Map(Object.keys(OPERATIONAL_MIGRATION_GROUPS).map(g=>[g,{route:'legacy',expected:new Set(),snapshots:new Set(),verified:false,generation:0}])), blueCrestOperationalBiologicalListenerBinders=new Map(), blueCrestOperationalAccountingListenerBinders=new Map();
         function getOperationalMigrationGroup(name){for(const [group,collections] of Object.entries(OPERATIONAL_MIGRATION_GROUPS))if(collections.includes(name))return group;throw new Error('Operational collection is invalid.');}
-        function operationalControlIsValid(c){if(!(c&&typeof c==='object'&&c.version===1&&c.farmId===blueCrestSession?.farmId&&c.groups&&typeof c.groups==='object'))return false;const expected=Object.keys(OPERATIONAL_MIGRATION_GROUPS),supplied=Object.keys(c.groups);return supplied.length===expected.length&&!supplied.some(g=>!expected.includes(g))&&expected.every(g=>{const e=c.groups[g];return e&&typeof e==='object'&&OPERATIONAL_GROUP_STATES.includes(e.state)&&['legacy','scoped'].includes(e.routing)&&((e.state==='legacy'||e.state==='freeze')?e.routing==='legacy':e.routing==='scoped');});}
-        function applyOperationalMigrationControl(c){blueCrestOperationalMigrationControl=operationalControlIsValid(c)?Object.freeze({...c,groups:{...c.groups}}):null;return blueCrestOperationalMigrationControl;}
+        function operationalControlIsValid(c){if(!(c&&typeof c==='object'&&c.version===1&&c.farmId===blueCrestSession?.farmId&&c.groups&&typeof c.groups==='object'))return false;const expected=Object.keys(OPERATIONAL_MIGRATION_GROUPS),optional=['closingStock','closingStockCrop2','closingReconciliation','financialSummary','productCatalogue'],supplied=Object.keys(c.groups);function isValidEntry(e){return e&&typeof e==='object'&&OPERATIONAL_GROUP_STATES.includes(e.state)&&['legacy','scoped'].includes(e.routing)&&((e.state==='legacy'||e.state==='freeze')?e.routing==='legacy':e.routing==='scoped');}return supplied.length>=expected.length&&supplied.length<=expected.length+optional.length&&!supplied.some(g=>!expected.includes(g)&&!optional.includes(g))&&expected.every(g=>isValidEntry(c.groups[g]))&&optional.every(g=>!Object.prototype.hasOwnProperty.call(c.groups,g)||isValidEntry(c.groups[g]));}
+        function applyOperationalMigrationControl(c){const previous=blueCrestOperationalAccountingBoundRoute,previousFinancialSummary=blueCrestFinancialSummaryBoundRoute,previousProductCatalogue=blueCrestProductCatalogueBoundRoute,valid=operationalControlIsValid(c);blueCrestOperationalMigrationControl=valid?Object.freeze({...c,groups:{...c.groups,closingStock:c.groups.closingStock||{state:'legacy',routing:'legacy'},closingStockCrop2:c.groups.closingStockCrop2||{state:'legacy',routing:'legacy'},closingReconciliation:c.groups.closingReconciliation||{state:'legacy',routing:'legacy'},financialSummary:c.groups.financialSummary||{state:'legacy',routing:'legacy'},productCatalogue:c.groups.productCatalogue||{state:'legacy',routing:'legacy'}}}):null;const next=isOperationalGroupScoped('treatments')?'scoped':'legacy',nextFinancialSummary=isFinancialSummaryScoped()?'scoped':'legacy',nextProductCatalogue=isProductCatalogueScoped()?'scoped':'legacy';if(previous===null){blueCrestOperationalAccountingBoundRoute=next;beginOperationalGroupHydration('accountingSource',['treatments','vendorTransactions','ledgerEntries']);}else if(previous!==next&&blueCrestOperationalAccountingListenerBinders.size)rebindOperationalAccountingListeners();else blueCrestOperationalAccountingBoundRoute=next;if(previousFinancialSummary===null)blueCrestFinancialSummaryBoundRoute=nextFinancialSummary;else if(previousFinancialSummary!==nextFinancialSummary&&typeof subscribeMobileCropFinancialSummary==='function')subscribeMobileCropFinancialSummary();else blueCrestFinancialSummaryBoundRoute=nextFinancialSummary;if(previousProductCatalogue!==null&&previousProductCatalogue!==nextProductCatalogue&&typeof subscribeMobileProductMaster==='function')subscribeMobileProductMaster();blueCrestProductCatalogueBoundRoute=nextProductCatalogue;return blueCrestOperationalMigrationControl;}
         function getOperationalGroupState(g){if(!OPERATIONAL_MIGRATION_GROUPS[g])throw new Error('Operational migration group is invalid.');return blueCrestOperationalMigrationControl?.groups?.[g]?.state||'legacy';}
         function isOperationalGroupScoped(name){const g=getOperationalMigrationGroup(name);return OPERATIONAL_MIGRATION_ROUTING_ENABLED===true&&['scoped-read','scoped-active'].includes(getOperationalGroupState(g))&&blueCrestOperationalMigrationControl?.groups?.[g]?.routing==='scoped';}
         function isOperationalGroupFrozen(name){return getOperationalGroupState(getOperationalMigrationGroup(name))==='freeze';}
         function farmOperationalCollection(name){getOperationalMigrationGroup(name);if(!db||typeof db.collection!=='function')throw new Error('Firebase Firestore is unavailable.');return isOperationalGroupScoped(name)?db.collection('farms').doc(getActiveFarmId()).collection(name):db.collection(name);}
-        function group1OperationalCollectionOrLegacy(name){return OPERATIONAL_MIGRATION_GROUPS.biological.includes(name)?farmOperationalCollection(name):db.collection(name);}
+        function group1OperationalCollectionOrLegacy(name){return OPERATIONAL_MIGRATION_GROUPS.biological.includes(name)?farmOperationalCollection(name):db.collection(name);} function accountingSourceCollectionOrLegacy(name){return OPERATIONAL_MIGRATION_GROUPS.accountingSource.includes(name)?farmOperationalCollection(name):group1OperationalCollectionOrLegacy(name);} function assertOperationalWriteAllowed(name){if(!OPERATIONAL_MIGRATION_GROUPS.accountingSource.includes(name))return;if(getOperationalWriteMode(name)!==OPERATIONAL_WRITE_MODE.LEGACY&&getOperationalWriteMode(name)!==OPERATIONAL_WRITE_MODE.SCOPED_WRITABLE)throw new Error('Accounting-source writes are not authorized.');}
+        function getFinancialSummaryMigrationState(){return blueCrestOperationalMigrationControl?.groups?.financialSummary?.state||'legacy';} function isFinancialSummaryScoped(){return OPERATIONAL_MIGRATION_ROUTING_ENABLED===true&&['scoped-read','scoped-active'].includes(getFinancialSummaryMigrationState())&&blueCrestOperationalMigrationControl?.groups?.financialSummary?.routing==='scoped';} function isFinancialSummaryActive(){return getFinancialSummaryMigrationState()==='scoped-active'&&isFinancialSummaryScoped();} function financialSummaryCollectionOrLegacy(name){if(name!=='cropFinancialSummaries')throw new Error('Financial-summary collection is invalid.');if(!db||typeof db.collection!=='function')throw new Error('Firebase Firestore is unavailable.');return isFinancialSummaryScoped()?db.collection('farms').doc(getActiveFarmId()).collection(name):db.collection(name);}
+        function getProductCatalogueMigrationState(){return blueCrestOperationalMigrationControl?.groups?.productCatalogue?.state||'legacy';} function isProductCatalogueScoped(){return OPERATIONAL_MIGRATION_ROUTING_ENABLED===true&&['scoped-read','scoped-active'].includes(getProductCatalogueMigrationState())&&blueCrestOperationalMigrationControl?.groups?.productCatalogue?.routing==='scoped';} function mobileProductMasterDocument(){if(!db||typeof db.collection!=='function')throw new Error('Firebase Firestore is unavailable.');return isProductCatalogueScoped()?db.collection('farms').doc(getActiveFarmId()).collection('masterData').doc('productCatalogue'):db.collection('farmBackup').doc('masterCatalogue');}
         function getOperationalWriteMode(name){const g=getOperationalMigrationGroup(name),state=getOperationalGroupState(g);if(state==='freeze'||(isOperationalGroupScoped(name)&&state==='scoped-read'))return OPERATIONAL_WRITE_MODE.VERIFY_READ_ONLY;return isOperationalGroupScoped(name)&&state==='scoped-active'&&blueCrestOperationalGroupReadiness.get(g)?.verified?OPERATIONAL_WRITE_MODE.SCOPED_WRITABLE:(isOperationalGroupScoped(name)?OPERATIONAL_WRITE_MODE.VERIFY_READ_ONLY:OPERATIONAL_WRITE_MODE.LEGACY);}
         function registerOperationalGroupUnsubscribe(g,u){if(!OPERATIONAL_MIGRATION_GROUPS[g]||typeof u!=='function')return u;const s=blueCrestOperationalGroupListeners.get(g)||new Set();s.add(u);blueCrestOperationalGroupListeners.set(g,s);return u;}
-        function bindGroup1OperationalListener(name,onSnapshot,onError,generation){return registerOperationalGroupUnsubscribe('biological',farmOperationalCollection(name).onSnapshot(s=>{recordOperationalGroupHydration('biological',name,generation);onSnapshot(s);},onError));} function listenGroup1OperationalCollection(name,onSnapshot,onError){const binder=generation=>bindGroup1OperationalListener(name,onSnapshot,onError,generation);blueCrestOperationalBiologicalListenerBinders.set(name,binder);if(blueCrestOperationalBiologicalBoundRoute===null){blueCrestOperationalBiologicalBoundRoute=isOperationalGroupScoped(name)?'scoped':'legacy';beginOperationalGroupHydration('biological',OPERATIONAL_MIGRATION_GROUPS.biological);}return binder(blueCrestOperationalGroupReadiness.get('biological').generation);}
+        function bindGroup1OperationalListener(name,onSnapshot,onError,generation){return registerOperationalGroupUnsubscribe('biological',farmOperationalCollection(name).onSnapshot(s=>{recordOperationalGroupHydration('biological',name,generation);onSnapshot(s);},onError));} function listenGroup1OperationalCollection(name,onSnapshot,onError){const binder=generation=>bindGroup1OperationalListener(name,onSnapshot,onError,generation);blueCrestOperationalBiologicalListenerBinders.set(name,binder);if(blueCrestOperationalBiologicalBoundRoute===null){blueCrestOperationalBiologicalBoundRoute=isOperationalGroupScoped(name)?'scoped':'legacy';beginOperationalGroupHydration('biological',OPERATIONAL_MIGRATION_GROUPS.biological);}return binder(blueCrestOperationalGroupReadiness.get('biological').generation);} function bindAccountingSourceListener(name,onSnapshot,onError,generation){return registerOperationalGroupUnsubscribe('accountingSource',farmOperationalCollection(name).onSnapshot(s=>{recordOperationalGroupHydration('accountingSource',name,generation);onSnapshot(s);},onError));} function listenAccountingSourceCollection(name,onSnapshot,onError){const binder=generation=>bindAccountingSourceListener(name,onSnapshot,onError,generation);blueCrestOperationalAccountingListenerBinders.set(name,binder);if(blueCrestOperationalAccountingBoundRoute===null){blueCrestOperationalAccountingBoundRoute=isOperationalGroupScoped(name)?'scoped':'legacy';beginOperationalGroupHydration('accountingSource',['treatments','vendorTransactions','ledgerEntries']);}return binder(blueCrestOperationalGroupReadiness.get('accountingSource').generation);}
         function stopOperationalGroupListeners(g){if(!OPERATIONAL_MIGRATION_GROUPS[g])throw new Error('Operational migration group is invalid.');const s=blueCrestOperationalGroupListeners.get(g)||new Set();s.forEach(u=>{try{u();}catch(e){console.warn('Operational listener teardown failed:',e);}});s.clear();const n=(blueCrestOperationalGroupGeneration.get(g)||0)+1;blueCrestOperationalGroupGeneration.set(g,n);const state=blueCrestOperationalGroupReadiness.get(g);blueCrestOperationalGroupReadiness.set(g,{...state,snapshots:new Set(),verified:false,generation:n});return n;}
         function beginOperationalGroupHydration(g,expected=[]){if(!OPERATIONAL_MIGRATION_GROUPS[g])throw new Error('Operational migration group is invalid.');const n=(blueCrestOperationalGroupGeneration.get(g)||0)+1;blueCrestOperationalGroupGeneration.set(g,n);blueCrestOperationalGroupReadiness.set(g,{route:isOperationalGroupScoped(OPERATIONAL_MIGRATION_GROUPS[g][0])?'scoped':'legacy',expected:new Set(expected),snapshots:new Set(),verified:false,generation:n});return n;}
         function recordOperationalGroupHydration(g,source,n){const s=blueCrestOperationalGroupReadiness.get(g);if(!s||n!==s.generation||s.route!=='scoped'||!s.expected.has(source))return s;s.snapshots.add(source);s.verified=[...s.expected].every(x=>s.snapshots.has(x));return s;}
-        function rebindOperationalBiologicalListeners(){stopOperationalGroupListeners('biological');const n=beginOperationalGroupHydration('biological',OPERATIONAL_MIGRATION_GROUPS.biological);blueCrestOperationalBiologicalListenerBinders.forEach(binder=>binder(n));blueCrestOperationalBiologicalBoundRoute=isOperationalGroupScoped('feeds')?'scoped':'legacy';return n;} function stopOperationalMigrationControlListener(){if(typeof blueCrestOperationalMigrationControlUnsubscribe==='function')try{blueCrestOperationalMigrationControlUnsubscribe();}catch(e){console.warn('Operational migration-control teardown failed:',e);}blueCrestOperationalMigrationControlUnsubscribe=null;blueCrestOperationalMigrationControlFarmId=null;blueCrestOperationalMigrationControlStartPromise=null;applyOperationalMigrationControl(null);stopOperationalGroupListeners('biological');blueCrestOperationalBiologicalListenerBinders.clear();blueCrestOperationalBiologicalBoundRoute=null;} function startOperationalMigrationControlListener(){const farmId=getActiveFarmId();if(blueCrestOperationalMigrationControlUnsubscribe&&blueCrestOperationalMigrationControlFarmId===farmId)return blueCrestOperationalMigrationControlStartPromise||Promise.resolve();stopOperationalMigrationControlListener();blueCrestOperationalMigrationControlFarmId=farmId;blueCrestOperationalMigrationControlStartPromise=new Promise(resolve=>{let settled=false;const done=()=>{if(!settled){settled=true;resolve();}},applySnapshot=data=>{const previous=blueCrestOperationalBiologicalBoundRoute;applyOperationalMigrationControl(data);const next=isOperationalGroupScoped('feeds')?'scoped':'legacy';if(previous===null){blueCrestOperationalBiologicalBoundRoute=next;beginOperationalGroupHydration('biological',OPERATIONAL_MIGRATION_GROUPS.biological);}else if(previous!==next&&blueCrestOperationalBiologicalListenerBinders.size)rebindOperationalBiologicalListeners();else blueCrestOperationalBiologicalBoundRoute=next;};blueCrestOperationalMigrationControlUnsubscribe=db.collection('farms').doc(farmId).collection('migrationControl').doc('operational-v1').onSnapshot(s=>{applySnapshot(s.exists?s.data():null);done();},e=>{console.warn('Operational migration-control listener error:',e);applySnapshot(null);done();});});return blueCrestOperationalMigrationControlStartPromise;}
+        function rebindOperationalBiologicalListeners(){stopOperationalGroupListeners('biological');const n=beginOperationalGroupHydration('biological',OPERATIONAL_MIGRATION_GROUPS.biological);blueCrestOperationalBiologicalListenerBinders.forEach(binder=>binder(n));blueCrestOperationalBiologicalBoundRoute=isOperationalGroupScoped('feeds')?'scoped':'legacy';return n;} function rebindOperationalAccountingListeners(){stopOperationalGroupListeners('accountingSource');const n=beginOperationalGroupHydration('accountingSource',['treatments','vendorTransactions','ledgerEntries']);blueCrestOperationalAccountingListenerBinders.forEach(binder=>binder(n));blueCrestOperationalAccountingBoundRoute=isOperationalGroupScoped('treatments')?'scoped':'legacy';return n;} function stopOperationalMigrationControlListener(){if(typeof blueCrestOperationalMigrationControlUnsubscribe==='function')try{blueCrestOperationalMigrationControlUnsubscribe();}catch(e){console.warn('Operational migration-control teardown failed:',e);}blueCrestOperationalMigrationControlUnsubscribe=null;blueCrestOperationalMigrationControlFarmId=null;blueCrestOperationalMigrationControlStartPromise=null;applyOperationalMigrationControl(null);stopOperationalGroupListeners('biological');blueCrestOperationalBiologicalListenerBinders.clear();blueCrestOperationalBiologicalBoundRoute=null;stopOperationalGroupListeners('accountingSource');blueCrestOperationalAccountingListenerBinders.clear();blueCrestOperationalAccountingBoundRoute=null;} function startOperationalMigrationControlListener(){const farmId=getActiveFarmId();if(blueCrestOperationalMigrationControlUnsubscribe&&blueCrestOperationalMigrationControlFarmId===farmId)return blueCrestOperationalMigrationControlStartPromise||Promise.resolve();stopOperationalMigrationControlListener();blueCrestOperationalMigrationControlFarmId=farmId;blueCrestOperationalMigrationControlStartPromise=new Promise(resolve=>{let settled=false;const done=()=>{if(!settled){settled=true;resolve();}},applySnapshot=data=>{const previous=blueCrestOperationalBiologicalBoundRoute;applyOperationalMigrationControl(data);const next=isOperationalGroupScoped('feeds')?'scoped':'legacy';if(previous===null){blueCrestOperationalBiologicalBoundRoute=next;beginOperationalGroupHydration('biological',OPERATIONAL_MIGRATION_GROUPS.biological);}else if(previous!==next&&blueCrestOperationalBiologicalListenerBinders.size)rebindOperationalBiologicalListeners();else blueCrestOperationalBiologicalBoundRoute=next;};blueCrestOperationalMigrationControlUnsubscribe=db.collection('farms').doc(farmId).collection('migrationControl').doc('operational-v1').onSnapshot(s=>{applySnapshot(s.exists?s.data():null);done();},e=>{console.warn('Operational migration-control listener error:',e);applySnapshot(null);done();});});return blueCrestOperationalMigrationControlStartPromise;}
         const BLUECREST_FOUNDATION_COLLECTIONS = Object.freeze(['farmCycles', 'ponds', 'pondLocks', 'cropLocks', 'lockAudit']);
         const FOUNDATION_CUTOVER_VERSION = 1;
         const blueCrestFoundationUnsubscribes = new Set();
@@ -1448,6 +1450,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
         // document; new operational records are validated against this cache.
         let mobileProductMaster = [];
         let mobileProductMasterLoaded = false;
+        let mobileProductMasterUnsubscribe = null;
         let selectedTreatmentProductId = null;
         let selectedSupplementProductId = null;
 
@@ -1576,7 +1579,8 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             renderTreatmentList();
             if (!db) return;
 
-            mobileCropFinancialSummaryUnsubscribe = db.collection('cropFinancialSummaries').doc(documentId).onSnapshot(doc => {
+            blueCrestFinancialSummaryBoundRoute = isFinancialSummaryScoped() ? 'scoped' : 'legacy';
+            mobileCropFinancialSummaryUnsubscribe = financialSummaryCollectionOrLegacy('cropFinancialSummaries').doc(documentId).onSnapshot(doc => {
                 const selected = getActiveCycle();
                 if (documentId !== mobileCropFinancialSummaryDocumentId(selected.year, selected.crop)) return;
                 const data = doc.exists ? (doc.data() || {}) : null;
@@ -1710,6 +1714,20 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             })).filter(item => item.name);
         }
 
+        function subscribeMobileProductMaster() {
+            if (typeof mobileProductMasterUnsubscribe === 'function') { try { mobileProductMasterUnsubscribe(); } catch (error) { console.warn('Mobile Product Master listener teardown failed:', error); } }
+            mobileProductMasterUnsubscribe = mobileProductMasterDocument().onSnapshot(doc => {
+                mobileProductMaster = normalizeMobileProductMaster(doc.exists ? doc.data() : null);
+                mobileProductMasterLoaded = doc.exists;
+                if (!mobileProductMasterLoaded) console.warn('Mobile Product Master document is unavailable.');
+            }, err => {
+                mobileProductMaster = [];
+                mobileProductMasterLoaded = false;
+                console.error('Mobile Product Master sync error:', err);
+            });
+            return mobileProductMasterUnsubscribe;
+        }
+
         function mobileProductMasterUnavailableMessage() {
             return 'Product Master unavailable. Please reconnect and try again.';
         }
@@ -1767,15 +1785,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                 statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Cloud Sync`;
             }
 
-            db.collection('farmBackup').doc('masterCatalogue').onSnapshot(doc => {
-                mobileProductMaster = normalizeMobileProductMaster(doc.exists ? doc.data() : null);
-                mobileProductMasterLoaded = doc.exists;
-                if (!mobileProductMasterLoaded) console.warn('Mobile Product Master document is unavailable.');
-            }, err => {
-                mobileProductMaster = [];
-                mobileProductMasterLoaded = false;
-                console.error('Mobile Product Master sync error:', err);
-            });
+            subscribeMobileProductMaster();
 
             registerFoundationListenerBinder('farmCycles', (collection, hydrationEpoch) => collection.onSnapshot(snap => {
                 recordFoundationHydration('farmCycles', hydrationEpoch);
@@ -1854,7 +1864,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                 renderSamplingList();
             }, err => console.error("Sampling sync error:", err));
 
-            db.collection('treatments').onSnapshot(snap => {
+            listenAccountingSourceCollection('treatments', snap => {
                 treatmentEntries = snap.docs.map(doc => {
                     const d = doc.data() || {};
                     const year = Number(d.year || d.cropYear || DEFAULT_CYCLE_YEAR);
@@ -1938,13 +1948,13 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             }, err => console.error("Stock transfers sync error:", err));
 
             // Finance is global: never filter these records by the active Year + Crop.
-            db.collection('vendorTransactions').onSnapshot(snap => {
+            listenAccountingSourceCollection('vendorTransactions', snap => {
                 vendorTransactions = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 localStorage.setItem('bc_vendorTransactions', JSON.stringify(vendorTransactions));
                 renderAllPondsSummary();
             }, err => console.error("Vendor payments sync error:", err));
 
-            db.collection('ledgerEntries').onSnapshot(snap => {
+            listenAccountingSourceCollection('ledgerEntries', snap => {
                 ledgerEntries = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 localStorage.setItem('bc_ledgerEntries', JSON.stringify(ledgerEntries));
                 renderAllPondsSummary();
@@ -2155,9 +2165,10 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
         }
 
         async function deleteCloudRecord(collectionName, recordId, records, localSetter) {
+            assertOperationalWriteAllowed(collectionName);
             const firestoreId = resolveFirestoreRecordId(collectionName, recordId, records);
             if (isFirebaseConnected && db) {
-                await group1OperationalCollectionOrLegacy(collectionName).doc(firestoreId).delete();
+                await accountingSourceCollectionOrLegacy(collectionName).doc(firestoreId).delete();
             }
             if (typeof localSetter === 'function') localSetter();
         }
@@ -2287,8 +2298,9 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                 crop: c.crop,
                 cycleId: c.id
             };
+            assertOperationalWriteAllowed('treatments');
             if (isFirebaseConnected && db) {
-                await db.collection('treatments').doc(normalized.id.toString()).set(normalized);
+                await accountingSourceCollectionOrLegacy('treatments').doc(normalized.id.toString()).set(normalized);
             } else {
                 const idx = treatmentEntries.findIndex(item => item.id === normalized.id);
                 if (idx >= 0) treatmentEntries[idx] = normalized;
