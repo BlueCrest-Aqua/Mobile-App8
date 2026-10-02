@@ -310,7 +310,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             <div><h2 class="text-lg font-black text-slate-800">Create Farm Account</h2><p class="text-xs text-slate-500 mt-1">Your account will be activated after review.</p></div>
             <input id="mobileRegistrationOwnerName" required autocomplete="name" placeholder="Farmer / Owner Name" class="w-full px-3 py-3 border-2 border-slate-200 rounded-xl outline-none focus:border-blue-600">
             <input id="mobileRegistrationFarmName" required placeholder="Farm Name" class="w-full px-3 py-3 border-2 border-slate-200 rounded-xl outline-none focus:border-blue-600">
-            <input id="mobileRegistrationMobile" required type="tel" autocomplete="tel" placeholder="Mobile" class="w-full px-3 py-3 border-2 border-slate-200 rounded-xl outline-none focus:border-blue-600">
+            <input id="mobileRegistrationMobile" required type="tel" inputmode="numeric" maxlength="10" autocomplete="tel" placeholder="Mobile" class="w-full px-3 py-3 border-2 border-slate-200 rounded-xl outline-none focus:border-blue-600"><p id="mobileRegistrationMobileHint" hidden class="text-xs font-semibold text-red-600 -mt-1">Enter 10-digit mobile number</p>
             <input id="mobileRegistrationEmail" required type="email" autocomplete="email" placeholder="Email" class="w-full px-3 py-3 border-2 border-slate-200 rounded-xl outline-none focus:border-blue-600">
             <input id="mobileRegistrationPassword" required type="password" minlength="6" autocomplete="new-password" placeholder="Password (minimum 6 characters)" class="w-full px-3 py-3 border-2 border-slate-200 rounded-xl outline-none focus:border-blue-600">
             <input id="mobileRegistrationPasswordConfirm" required type="password" minlength="6" autocomplete="new-password" placeholder="Confirm Password" class="w-full px-3 py-3 border-2 border-slate-200 rounded-xl outline-none focus:border-blue-600">
@@ -1407,12 +1407,14 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
         let mobileOperationalRuntimeFarmId = null;
         let mobileRegistrationSubmissionInProgress = false;
         function setMobileRegistrationMessage(message) { const el=document.getElementById('mobileRegistrationStatus'); if(el) el.textContent=message||''; }
+        function updateMobileRegistrationMobileValidation() { const input=document.getElementById('mobileRegistrationMobile'),hint=document.getElementById('mobileRegistrationMobileHint');if(!input||!hint)return;const invalid=input.value.length>0&&!/^\d{10}$/.test(input.value);input.style.borderColor=invalid?'#dc2626':'';hint.hidden=!invalid; }
         function setMobileAuthView(view) {
             const views={signIn:document.getElementById('mobileSignInPanel'),registration:document.getElementById('mobileRegistrationForm'),pending:document.getElementById('mobileRegistrationPendingPanel')};
             Object.entries(views).forEach(([name,el])=>{if(el)el.hidden=name!==view;});
         }
         function showMobileRegistrationPending(title,message) { document.getElementById('mobileRegistrationPendingTitle').textContent=title;document.getElementById('mobileRegistrationPendingMessage').textContent=message;setMobileAuthView('pending'); }
 
+        function mobileRegistrationEscapeHtml(value) { return String(value ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
         const INDIA_STATE_UT_DISTRICTS = Object.freeze({
           'Andaman and Nicobar Islands':['Nicobar','North and Middle Andaman','South Andaman'],
           'Andhra Pradesh':['Alluri Sitharama Raju','Anakapalli','Anantapur','Annamayya','Bapatla','Chittoor','Dr. B.R. Ambedkar Konaseema','East Godavari','Eluru','Guntur','Kakinada','Krishna','Kurnool','Nandyal','NTR','Palnadu','Parvathipuram Manyam','Prakasam','Sri Potti Sriramulu Nellore','Sri Sathya Sai','Srikakulam','Tirupati','Visakhapatnam','Vizianagaram','West Godavari','YSR Kadapa'],
@@ -1465,7 +1467,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
           if (state) stateInput.value = state;
           if (clearDistrict || !state) districtInput.value = '';
           const districts = state ? INDIA_STATE_UT_DISTRICTS[state] : [];
-          districtOptions.innerHTML = districts.map(district => `<option value="${escapeHtml(district)}"></option>`).join('');
+          districtOptions.innerHTML = districts.map(district => `<option value="${mobileRegistrationEscapeHtml(district)}"></option>`).join('');
           districtInput.disabled = !state;
           districtInput.placeholder = state ? 'Search district' : 'Select a State / UT first';
           const district = blueCrestCanonicalIndiaOption(districtInput.value, districts);
@@ -1479,7 +1481,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
           const stateOptions = document.getElementById('mobileRegistrationStateOptions');
           if (!stateInput || !districtInput || !stateOptions || stateInput.dataset.bound === '1') return;
           stateInput.dataset.bound = '1';
-          stateOptions.innerHTML = Object.keys(INDIA_STATE_UT_DISTRICTS).map(state => `<option value="${escapeHtml(state)}"></option>`).join('');
+          stateOptions.innerHTML = Object.keys(INDIA_STATE_UT_DISTRICTS).map(state => `<option value="${mobileRegistrationEscapeHtml(state)}"></option>`).join('');
           let selectedState = '';
           stateInput.addEventListener('input', () => {
             const nextState = blueCrestCanonicalIndiaOption(stateInput.value, Object.keys(INDIA_STATE_UT_DISTRICTS));
@@ -1520,11 +1522,13 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
         document.getElementById('mobileAuthSignOut')?.addEventListener('click',mobileBridgeSignOut);
         document.getElementById('mobilePendingSignOut')?.addEventListener('click',mobileBridgeSignOut);
         initializeMobileRegistrationLocationSelectors();
+        document.getElementById('mobileRegistrationMobile')?.addEventListener('input',updateMobileRegistrationMobileValidation);
+        updateMobileRegistrationMobileValidation();
         document.getElementById('mobileShowRegistration')?.addEventListener('click',()=>{if(firebase.auth().currentUser)return;authStatus.textContent='';setMobileRegistrationMessage('');setMobileAuthView('registration');});
         document.getElementById('mobileReturnToSignIn')?.addEventListener('click',()=>{if(firebase.auth().currentUser)return;setMobileRegistrationMessage('');setMobileAuthView('signIn');});
         document.getElementById('mobileRegistrationForm')?.addEventListener('submit',async e=>{
-            e.preventDefault();const form=e.currentTarget;if(!db||!isFirebaseConnected)return setMobileRegistrationMessage('Firebase is unavailable. Please refresh and try again.');if(firebase.auth().currentUser)return setMobileRegistrationMessage('Sign out before creating a different farm account.');if(!form.reportValidity())return;
-            const ownerName=document.getElementById('mobileRegistrationOwnerName').value.trim(),farmName=document.getElementById('mobileRegistrationFarmName').value.trim(),mobile=document.getElementById('mobileRegistrationMobile').value.trim(),requestedEmail=document.getElementById('mobileRegistrationEmail').value.trim(),password=document.getElementById('mobileRegistrationPassword').value,passwordConfirm=document.getElementById('mobileRegistrationPasswordConfirm').value,state=syncMobileRegistrationDistrictOptions(),district=blueCrestCanonicalIndiaOption(document.getElementById('mobileRegistrationDistrict').value,INDIA_STATE_UT_DISTRICTS[state]||[]),totalFarmAreaAcres=Number(document.getElementById('mobileRegistrationArea').value);
+            e.preventDefault();const form=e.currentTarget;if(!db||!isFirebaseConnected)return setMobileRegistrationMessage('Firebase is unavailable. Please refresh and try again.');if(firebase.auth().currentUser)return setMobileRegistrationMessage('Sign out before creating a different farm account.');const mobile=document.getElementById('mobileRegistrationMobile').value.trim();if(!/^\d{10}$/.test(mobile))return setMobileRegistrationMessage('Mobile number must be exactly 10 digits.');if(!form.reportValidity())return;
+            const ownerName=document.getElementById('mobileRegistrationOwnerName').value.trim(),farmName=document.getElementById('mobileRegistrationFarmName').value.trim(),requestedEmail=document.getElementById('mobileRegistrationEmail').value.trim(),password=document.getElementById('mobileRegistrationPassword').value,passwordConfirm=document.getElementById('mobileRegistrationPasswordConfirm').value,state=syncMobileRegistrationDistrictOptions(),district=blueCrestCanonicalIndiaOption(document.getElementById('mobileRegistrationDistrict').value,INDIA_STATE_UT_DISTRICTS[state]||[]),totalFarmAreaAcres=Number(document.getElementById('mobileRegistrationArea').value);
             if(!ownerName||!farmName||!mobile||!requestedEmail||!state||!district)return setMobileRegistrationMessage('Select a valid State / Union Territory and district, then complete every required field.');if(password.length<6)return setMobileRegistrationMessage('Password must contain at least 6 characters.');if(password!==passwordConfirm)return setMobileRegistrationMessage('Password and Confirm Password must match.');if(!Number.isFinite(totalFarmAreaAcres)||totalFarmAreaAcres<=0)return setMobileRegistrationMessage('Total Farm Area must be greater than zero.');
             const submit=form.querySelector('button[type="submit"]'),label=submit?.textContent||'Submit Registration';let createdUser=null;mobileRegistrationSubmissionInProgress=true;form.querySelectorAll('input,button').forEach(control=>control.disabled=true);setMobileRegistrationMessage('Creating your secure account…');
             try{const credential=await firebase.auth().createUserWithEmailAndPassword(requestedEmail,password);createdUser=credential.user;const authenticatedEmail=typeof createdUser?.email==='string'?createdUser.email.trim():'';if(!createdUser?.uid||!authenticatedEmail)throw new Error('Firebase did not return a valid authenticated email address.');await db.collection('registrationRequests').doc(createdUser.uid).set({ownerName,farmName,mobile,email:authenticatedEmail,state,district,totalFarmAreaAcres,status:'pending',createdAt:firebase.firestore.FieldValue.serverTimestamp()});form.reset();syncMobileRegistrationDistrictOptions({clearDistrict:true});mobileRegistrationSubmissionInProgress=false;showMobileRegistrationPending('Registration Submitted','Your BlueCrest farm account is awaiting activation.');}
