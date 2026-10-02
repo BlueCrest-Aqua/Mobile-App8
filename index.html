@@ -647,24 +647,6 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1.5">Category *</label>
-                        <div class="grid grid-cols-3 gap-1.5 bg-slate-100 p-1.5 rounded-xl border border-slate-200">
-                            <label id="catLabelProbiotics" class="flex items-center justify-center py-2 text-xs font-extrabold rounded-lg cursor-pointer transition text-center select-none bg-blue-600 text-white shadow-sm">
-                                <input type="radio" name="treatmentCategory" value="Probiotics" checked class="hidden" onchange="selectTreatmentCategory('Probiotics')">
-                                Probiotics
-                            </label>
-                            <label id="catLabelMedicine" class="flex items-center justify-center py-2 text-xs font-extrabold rounded-lg cursor-pointer transition text-center select-none text-slate-600 hover:text-slate-900">
-                                <input type="radio" name="treatmentCategory" value="Medicine" class="hidden" onchange="selectTreatmentCategory('Medicine')">
-                                Medicine
-                            </label>
-                            <label id="catLabelFertilizers" class="flex items-center justify-center py-2 text-xs font-extrabold rounded-lg cursor-pointer transition text-center select-none text-slate-600 hover:text-slate-900">
-                                <input type="radio" name="treatmentCategory" value="Fertilizers" class="hidden" onchange="selectTreatmentCategory('Fertilizers')">
-                                Fertilizers
-                            </label>
-                        </div>
-                    </div>
-
-                    <div>
                         <div class="flex items-center justify-between gap-2 mb-1.5">
                             <label class="block text-xs font-semibold text-slate-600">Treatment Items *</label>
                             <button type="button" id="treatmentAddRowBtn" onclick="addTreatmentRow()" class="text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-lg">+ Add Treatment</button>
@@ -1859,6 +1841,14 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                     <span class="text-[10px] font-black uppercase tracking-wide text-slate-500">Treatment</span>
                     <button type="button" class="treatment-row-remove text-slate-400 hover:text-rose-600 text-xl leading-none${removable ? '' : ' invisible'}" aria-label="Remove treatment">&times;</button>
                 </div>
+                <div class="mb-2">
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Category *</label>
+                    <select class="treatment-row-category w-full border border-slate-200 p-2 rounded-lg outline-none focus:ring-1 focus:ring-blue-500 bg-white text-xs font-bold text-slate-700">
+                        <option value="Probiotics">Probiotics</option>
+                        <option value="Medicine">Medicine</option>
+                        <option value="Fertilizers">Fertilizers</option>
+                    </select>
+                </div>
                 <div class="relative treatment-searchable-dropdown z-30">
                     <label class="block text-xs font-semibold text-slate-600 mb-1">Product Name / Chemical *</label>
                     <div class="relative flex items-center">
@@ -1875,8 +1865,11 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                     </div>
                 </div>`;
             const productInput = row.querySelector('.treatment-row-product');
+            const categorySelect = row.querySelector('.treatment-row-category');
+            categorySelect.value = ['Probiotics', 'Medicine', 'Fertilizers'].includes(initial.category) ? initial.category : 'Probiotics';
             productInput.value = String(initial.product || '');
             setTreatmentRowUnitBadge(row, initial.unit || 'Kg');
+            categorySelect.addEventListener('change', () => changeTreatmentRowCategory(row));
             productInput.addEventListener('focus', () => openTreatmentDropdown(row));
             productInput.addEventListener('click', () => openTreatmentDropdown(row));
             productInput.addEventListener('input', () => { row.dataset.productId = ''; filterTreatmentOptions(productInput.value, row); });
@@ -3832,7 +3825,6 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
 
             const date = document.getElementById('treatmentDate').value;
             const pond = document.getElementById('treatmentPond').value;
-            const category = document.querySelector('input[name="treatmentCategory"]:checked')?.value || 'Probiotics';
             const purpose = document.getElementById('treatmentPurpose').value;
             const notes = document.getElementById('treatmentNotes').value.trim();
             const c = getActiveCycle();
@@ -3844,6 +3836,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
 
             const resolvedRows = [];
             for (const [index, row] of getTreatmentItemRows().entries()) {
+                const category = row.querySelector('.treatment-row-category')?.value || 'Probiotics';
                 const product = row.querySelector('.treatment-row-product').value.trim();
                 const rawQty = row.querySelector('.treatment-row-qty').value.trim();
                 if (!product && !rawQty) continue;
@@ -3866,7 +3859,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                     alert(`Treatment row ${index + 1}: Product Master unit for ${masterProduct.name} must be Kg or Ltr.`);
                     return;
                 }
-                resolvedRows.push({ masterProduct, qty, unit: masterProduct.stockUnit });
+                resolvedRows.push({ category, masterProduct, qty, unit: masterProduct.stockUnit });
             }
             if (!resolvedRows.length) {
                 alert('Add at least one treatment product and quantity.');
@@ -3881,7 +3874,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             const records = resolvedRows.map((row, index) => {
                 const record = {
                     id: editingTreatmentId !== null ? editingTreatmentId : baseId + index,
-                    date, pond, category, product: row.masterProduct.name, qty: row.qty, unit: row.unit,
+                    date, pond, category: row.category, product: row.masterProduct.name, qty: row.qty, unit: row.unit,
                     purpose, notes, year: Number(c.year), crop: c.crop, cycleId: c.id
                 };
                 if (row.masterProduct.productId) record.productId = row.masterProduct.productId;
@@ -4257,29 +4250,18 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             reader.readAsText(file);
         }
 
-        function selectTreatmentCategory(cat, preserveValue = false) {
-            ['Probiotics', 'Medicine', 'Fertilizers'].forEach(c => {
-                const label = document.getElementById('catLabel' + c);
-                const radio = label.querySelector('input');
-                if (c === cat) {
-                    radio.checked = true;
-                    label.className = "flex items-center justify-center py-2 text-xs font-extrabold rounded-lg cursor-pointer transition text-center select-none bg-blue-600 text-white shadow-sm";
-                } else {
-                    label.className = "flex items-center justify-center py-2 text-xs font-extrabold rounded-lg cursor-pointer transition text-center select-none text-slate-600 hover:text-slate-900";
-                }
-            });
-            if (!preserveValue) {
-                getTreatmentItemRows().forEach(row => {
-                    row.querySelector('.treatment-row-product').value = '';
-                    row.dataset.productId = '';
-                    setTreatmentRowUnitBadge(row, 'Kg');
-                });
-                selectedTreatmentProductId = null;
+        function changeTreatmentRowCategory(row) {
+            const category = row?.querySelector('.treatment-row-category')?.value || 'Probiotics';
+            const productInput = row?.querySelector('.treatment-row-product');
+            if (!productInput) return;
+            const resolution = resolveMobileMasterProduct(row.dataset.productId, productInput.value.trim());
+            if (productInput.value.trim() && (!resolution.product || !treatmentCategoryMatchesMaster(category, resolution.product))) {
+                productInput.value = '';
+                row.dataset.productId = '';
+                setTreatmentRowUnitBadge(row, 'Kg');
             }
-            getTreatmentItemRows().forEach(row => {
-                const listEl = row.querySelector('.treatment-row-options');
-                if (listEl && !listEl.classList.contains('hidden')) filterTreatmentOptions('', row);
-            });
+            const listEl = row.querySelector('.treatment-row-options');
+            if (listEl && !listEl.classList.contains('hidden')) filterTreatmentOptions(productInput.value, row);
         }
 
         function openTreatmentDropdown(row) {
@@ -4294,7 +4276,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
         function filterTreatmentOptions(q, row) {
             const listEl = row?.querySelector('.treatment-row-options');
             if (!listEl) return;
-            const cat = document.querySelector('input[name="treatmentCategory"]:checked')?.value || 'Probiotics';
+            const cat = row.querySelector('.treatment-row-category')?.value || 'Probiotics';
             listEl.innerHTML = '';
             if (!mobileProductMasterLoaded) {
                 listEl.innerHTML = `<div class="p-3 text-rose-500 text-center text-xs">${mobileProductMasterUnavailableMessage()}</div>`;
@@ -4349,8 +4331,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                     document.getElementById('treatmentItemsRows').innerHTML = '';
                     document.getElementById('treatmentDate').value = treat.date;
                     document.getElementById('treatmentPond').value = treat.pond;
-                    selectTreatmentCategory(treat.category || 'Probiotics', true);
-                    const row = addTreatmentRow({ product: treat.product, productId: treat.productId || '', qty: treat.qty, unit: treat.unit || determineUnit(treat.product) }, { removable: false });
+                    const row = addTreatmentRow({ category: treat.category || 'Probiotics', product: treat.product, productId: treat.productId || '', qty: treat.qty, unit: treat.unit || determineUnit(treat.product) }, { removable: false });
                     selectedTreatmentProductId = treat.productId || null;
                     setTreatmentRowUnitBadge(row, treat.unit || determineUnit(treat.product));
                     document.getElementById('treatmentPurpose').value = treat.purpose;
@@ -4365,8 +4346,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                 document.getElementById('treatmentItemsRows').innerHTML = '';
                 selectedTreatmentProductId = null;
                 document.getElementById('treatmentDate').value = getSystemLatestDate();
-                selectTreatmentCategory('Probiotics', false);
-                addTreatmentRow({}, { removable: false });
+                addTreatmentRow({ category: 'Probiotics' }, { removable: false });
                 if (ponds.length > 0) document.getElementById('treatmentPond').value = currentPond || ponds[0].id;
             }
         }
