@@ -297,15 +297,30 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
 
     <!-- Elite account sign-in bridge -->
     <div id="pinAuthScreen" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] hidden flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-xs rounded-2xl p-6 shadow-2xl text-center border border-slate-100">
+        <div id="mobileSignInPanel" class="bg-white w-full max-w-xs rounded-2xl p-6 shadow-2xl text-center border border-slate-100">
             <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-3 text-2xl">
                 🔒
             </div>
             <h2 id="mobileFarmName" class="text-lg font-black text-slate-800">BlueCrest Farm</h2>
             <p class="text-xs text-slate-500 mt-0.5 mb-5">Sign in with your BlueCrest account</p>
             <form id="mobileAuthForm" class="space-y-3"><input id="authEmailInput" type="email" autocomplete="email" placeholder="Email" required class="w-full px-3 py-3 border-2 border-slate-200 rounded-xl outline-none focus:border-blue-600"><input id="authPasswordInput" type="password" autocomplete="current-password" placeholder="Password" required class="w-full px-3 py-3 border-2 border-slate-200 rounded-xl outline-none focus:border-blue-600"><button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-xl font-black">Sign In</button></form>
-            <button id="mobileForgotPassword" type="button" class="mt-3 text-xs font-bold text-blue-600">Forgot Password?</button><button id="mobileAuthSignOut" type="button" class="mt-2 ml-3 text-xs font-bold text-slate-500">Sign Out</button><div id="authStatusText" class="text-xs font-semibold mt-3 min-h-[18px]"></div>
+            <button id="mobileForgotPassword" type="button" class="mt-3 text-xs font-bold text-blue-600">Forgot Password?</button><button id="mobileShowRegistration" type="button" class="mt-2 ml-3 text-xs font-bold text-blue-600">Create Farm Account</button><button id="mobileAuthSignOut" type="button" class="mt-2 ml-3 text-xs font-bold text-slate-500">Sign Out</button><div id="authStatusText" class="text-xs font-semibold mt-3 min-h-[18px]"></div>
         </div>
+        <form id="mobileRegistrationForm" hidden class="bg-white w-full max-w-sm max-h-[calc(100vh-2rem)] overflow-y-auto rounded-2xl p-5 shadow-2xl border border-slate-100 space-y-3">
+            <div><h2 class="text-lg font-black text-slate-800">Create Farm Account</h2><p class="text-xs text-slate-500 mt-1">Your account will be activated after review.</p></div>
+            <input id="mobileRegistrationOwnerName" required autocomplete="name" placeholder="Farmer / Owner Name" class="w-full px-3 py-3 border-2 border-slate-200 rounded-xl outline-none focus:border-blue-600">
+            <input id="mobileRegistrationFarmName" required placeholder="Farm Name" class="w-full px-3 py-3 border-2 border-slate-200 rounded-xl outline-none focus:border-blue-600">
+            <input id="mobileRegistrationMobile" required type="tel" autocomplete="tel" placeholder="Mobile" class="w-full px-3 py-3 border-2 border-slate-200 rounded-xl outline-none focus:border-blue-600">
+            <input id="mobileRegistrationEmail" required type="email" autocomplete="email" placeholder="Email" class="w-full px-3 py-3 border-2 border-slate-200 rounded-xl outline-none focus:border-blue-600">
+            <input id="mobileRegistrationPassword" required type="password" minlength="6" autocomplete="new-password" placeholder="Password (minimum 6 characters)" class="w-full px-3 py-3 border-2 border-slate-200 rounded-xl outline-none focus:border-blue-600">
+            <input id="mobileRegistrationPasswordConfirm" required type="password" minlength="6" autocomplete="new-password" placeholder="Confirm Password" class="w-full px-3 py-3 border-2 border-slate-200 rounded-xl outline-none focus:border-blue-600">
+            <input id="mobileRegistrationState" required list="mobileRegistrationStateOptions" autocomplete="address-level1" placeholder="Search State / UT" class="w-full px-3 py-3 border-2 border-slate-200 rounded-xl outline-none focus:border-blue-600"><datalist id="mobileRegistrationStateOptions"></datalist>
+            <input id="mobileRegistrationDistrict" required disabled list="mobileRegistrationDistrictOptions" autocomplete="address-level2" placeholder="Select a State / UT first" class="w-full px-3 py-3 border-2 border-slate-200 rounded-xl outline-none focus:border-blue-600"><datalist id="mobileRegistrationDistrictOptions"></datalist>
+            <input id="mobileRegistrationArea" required type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="Total Farm Area (Acres)" class="w-full px-3 py-3 border-2 border-slate-200 rounded-xl outline-none focus:border-blue-600">
+            <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-xl font-black">Submit Registration</button>
+            <button id="mobileReturnToSignIn" type="button" class="w-full text-xs font-bold text-blue-600 py-2">Back to Sign In</button><div id="mobileRegistrationStatus" class="text-xs font-semibold min-h-[18px]"></div>
+        </form>
+        <section id="mobileRegistrationPendingPanel" hidden class="bg-white w-full max-w-xs rounded-2xl p-6 shadow-2xl text-center border border-slate-100"><div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-3 text-2xl">✓</div><h2 id="mobileRegistrationPendingTitle" class="text-lg font-black text-slate-800">Registration Submitted</h2><p id="mobileRegistrationPendingMessage" class="text-xs text-slate-500 mt-2 mb-5">Your BlueCrest farm account is awaiting activation.</p><button id="mobilePendingSignOut" type="button" class="w-full bg-blue-600 text-white py-3 rounded-xl font-black">Sign Out</button></section>
     </div>
 
     <!-- Main App Container -->
@@ -1390,7 +1405,94 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
         const authScreen = document.getElementById('pinAuthScreen');
         const mainApp = document.getElementById('mainAppContainer');
         let mobileOperationalRuntimeFarmId = null;
+        let mobileRegistrationSubmissionInProgress = false;
+        function setMobileRegistrationMessage(message) { const el=document.getElementById('mobileRegistrationStatus'); if(el) el.textContent=message||''; }
+        function setMobileAuthView(view) {
+            const views={signIn:document.getElementById('mobileSignInPanel'),registration:document.getElementById('mobileRegistrationForm'),pending:document.getElementById('mobileRegistrationPendingPanel')};
+            Object.entries(views).forEach(([name,el])=>{if(el)el.hidden=name!==view;});
+        }
+        function showMobileRegistrationPending(title,message) { document.getElementById('mobileRegistrationPendingTitle').textContent=title;document.getElementById('mobileRegistrationPendingMessage').textContent=message;setMobileAuthView('pending'); }
 
+        const INDIA_STATE_UT_DISTRICTS = Object.freeze({
+          'Andaman and Nicobar Islands':['Nicobar','North and Middle Andaman','South Andaman'],
+          'Andhra Pradesh':['Alluri Sitharama Raju','Anakapalli','Anantapur','Annamayya','Bapatla','Chittoor','Dr. B.R. Ambedkar Konaseema','East Godavari','Eluru','Guntur','Kakinada','Krishna','Kurnool','Nandyal','NTR','Palnadu','Parvathipuram Manyam','Prakasam','Sri Potti Sriramulu Nellore','Sri Sathya Sai','Srikakulam','Tirupati','Visakhapatnam','Vizianagaram','West Godavari','YSR Kadapa'],
+          'Arunachal Pradesh':['Anjaw','Changlang','Dibang Valley','East Kameng','East Siang','Itanagar Capital Complex','Kamle','Kra Daadi','Kurung Kumey','Lepa Rada','Lohit','Longding','Lower Dibang Valley','Lower Siang','Lower Subansiri','Namsai','Pakke Kessang','Papum Pare','Shi Yomi','Siang','Tawang','Tirap','Upper Siang','Upper Subansiri','West Kameng','West Siang'],
+          'Assam':['Bajali','Baksa','Barpeta','Biswanath','Bongaigaon','Cachar','Charaideo','Chirang','Darrang','Dhemaji','Dhubri','Dibrugarh','Dima Hasao','Goalpara','Golaghat','Hailakandi','Hojai','Jorhat','Kamrup','Kamrup Metropolitan','Karbi Anglong','Karimganj','Kokrajhar','Lakhimpur','Majuli','Morigaon','Nagaon','Nalbari','Sivasagar','Sonitpur','South Salmara-Mankachar','Tamulpur','Tinsukia','Udalguri','West Karbi Anglong'],
+          'Bihar':['Araria','Arwal','Aurangabad','Banka','Begusarai','Bhagalpur','Bhojpur','Buxar','Darbhanga','East Champaran','Gaya','Gopalganj','Jamui','Jehanabad','Khagaria','Kishanganj','Kaimur','Katihar','Lakhisarai','Madhepura','Madhubani','Munger','Muzaffarpur','Nalanda','Nawada','Patna','Purnia','Rohtas','Saharsa','Samastipur','Saran','Sheikhpura','Sheohar','Sitamarhi','Siwan','Supaul','Vaishali','West Champaran'],
+          'Chandigarh':['Chandigarh'],
+          'Chhattisgarh':['Balod','Baloda Bazar','Balrampur','Bastar','Bemetara','Bijapur','Bilaspur','Dakshin Bastar Dantewada','Dhamtari','Durg','Gariaband','Gaurela-Pendra-Marwahi','Janjgir-Champa','Jashpur','Kabirdham','Kanker','Khairagarh-Chhuikhadan-Gandai','Kondagaon','Korba','Korea','Mahasamund','Manendragarh-Chirmiri-Bharatpur','Mohla-Manpur-Ambagarh Chowki','Mungeli','Narayanpur','Raigarh','Raipur','Rajnandgaon','Sakti','Sarangarh-Bilaigarh','Sukma','Surajpur','Surguja'],
+          'Dadra and Nagar Haveli and Daman and Diu':['Dadra and Nagar Haveli','Daman','Diu'],
+          'Delhi':['Central Delhi','East Delhi','New Delhi','North Delhi','North East Delhi','North West Delhi','Shahdara','South Delhi','South East Delhi','South West Delhi','West Delhi'],
+          'Goa':['North Goa','South Goa'],
+          'Gujarat':['Ahmedabad','Amreli','Anand','Aravalli','Banaskantha','Bharuch','Bhavnagar','Botad','Chhota Udaipur','Dahod','Dang','Devbhoomi Dwarka','Gandhinagar','Gir Somnath','Jamnagar','Junagadh','Kheda','Kutch','Mahisagar','Mehsana','Morbi','Narmada','Navsari','Panchmahal','Patan','Porbandar','Rajkot','Sabarkantha','Surat','Surendranagar','Tapi','Vadodara','Valsad'],
+          'Haryana':['Ambala','Bhiwani','Charkhi Dadri','Faridabad','Fatehabad','Gurugram','Hisar','Jhajjar','Jind','Kaithal','Karnal','Kurukshetra','Mahendragarh','Nuh','Palwal','Panchkula','Panipat','Rewari','Rohtak','Sirsa','Sonipat','Yamunanagar'],
+          'Himachal Pradesh':['Bilaspur','Chamba','Hamirpur','Kangra','Kinnaur','Kullu','Lahaul and Spiti','Mandi','Shimla','Sirmaur','Solan','Una'],
+          'Jammu and Kashmir':['Anantnag','Bandipora','Baramulla','Budgam','Doda','Ganderbal','Jammu','Kathua','Kishtwar','Kulgam','Kupwara','Poonch','Pulwama','Rajouri','Ramban','Reasi','Samba','Shopian','Srinagar','Udhampur'],
+          'Jharkhand':['Bokaro','Chatra','Deoghar','Dhanbad','Dumka','East Singhbhum','Garhwa','Giridih','Godda','Gumla','Hazaribagh','Jamtara','Khunti','Koderma','Latehar','Lohardaga','Pakur','Palamu','Ramgarh','Ranchi','Sahibganj','Seraikela Kharsawan','Simdega','West Singhbhum'],
+          'Karnataka':['Bagalkote','Ballari','Belagavi','Bengaluru Rural','Bengaluru Urban','Bidar','Chamarajanagar','Chikkaballapur','Chikkamagaluru','Chitradurga','Dakshina Kannada','Davanagere','Dharwad','Gadag','Hassan','Haveri','Kalaburagi','Kodagu','Kolar','Koppal','Mandya','Mysuru','Raichur','Ramanagara','Shivamogga','Tumakuru','Udupi','Uttara Kannada','Vijayapura','Vijayanagara','Yadgir'],
+          'Kerala':['Alappuzha','Ernakulam','Idukki','Kannur','Kasaragod','Kollam','Kottayam','Kozhikode','Malappuram','Palakkad','Pathanamthitta','Thiruvananthapuram','Thrissur','Wayanad'],
+          'Ladakh':['Kargil','Leh'],
+          'Lakshadweep':['Lakshadweep'],
+          'Madhya Pradesh':['Agar Malwa','Alirajpur','Anuppur','Ashoknagar','Balaghat','Barwani','Betul','Bhind','Bhopal','Burhanpur','Chhatarpur','Chhindwara','Damoh','Datia','Dewas','Dhar','Dindori','Guna','Gwalior','Harda','Indore','Jabalpur','Jhabua','Katni','Khandwa','Khargone','Maihar','Mandla','Mandsaur','Mauganj','Morena','Narmadapuram','Narsinghpur','Neemuch','Niwari','Pandhurna','Panna','Raisen','Rajgarh','Ratlam','Rewa','Sagar','Satna','Sehore','Seoni','Shahdol','Shajapur','Sheopur','Shivpuri','Sidhi','Singrauli','Tikamgarh','Ujjain','Umaria','Vidisha'],
+          'Maharashtra':['Ahmednagar','Akola','Amravati','Chhatrapati Sambhajinagar','Beed','Bhandara','Buldhana','Chandrapur','Dhule','Gadchiroli','Gondia','Hingoli','Jalgaon','Jalna','Kolhapur','Latur','Mumbai City','Mumbai Suburban','Nagpur','Nanded','Nandurbar','Nashik','Osmanabad','Palghar','Parbhani','Pune','Raigad','Ratnagiri','Sangli','Satara','Sindhudurg','Solapur','Thane','Wardha','Washim','Yavatmal'],
+          'Manipur':['Bishnupur','Chandel','Churachandpur','Imphal East','Imphal West','Jiribam','Kakching','Kamjong','Kangpokpi','Noney','Pherzawl','Senapati','Tamenglong','Tengnoupal','Thoubal','Ukhrul'],
+          'Meghalaya':['East Garo Hills','East Jaintia Hills','East Khasi Hills','Eastern West Khasi Hills','North Garo Hills','Ri Bhoi','South Garo Hills','South West Garo Hills','South West Khasi Hills','West Garo Hills','West Jaintia Hills','West Khasi Hills'],
+          'Mizoram':['Aizawl','Champhai','Hnahthial','Khawzawl','Kolasib','Lawngtlai','Lunglei','Mamit','Saitual','Serchhip','Siaha'],
+          'Nagaland':['Chumoukedima','Dimapur','Kiphire','Kohima','Longleng','Mokokchung','Mon','Niuland','Noklak','Peren','Phek','Shamator','Tseminyu','Tuensang','Wokha','Zunheboto'],
+          'Odisha':['Angul','Balangir','Balasore','Bargarh','Bhadrak','Boudh','Cuttack','Deogarh','Dhenkanal','Gajapati','Ganjam','Jagatsinghpur','Jajpur','Jharsuguda','Kalahandi','Kandhamal','Kendrapara','Kendujhar','Khordha','Koraput','Malkangiri','Mayurbhanj','Nabarangpur','Nayagarh','Nuapada','Puri','Rayagada','Sambalpur','Subarnapur','Sundargarh'],
+          'Puducherry':['Karaikal','Mahe','Puducherry','Yanam'],
+          'Punjab':['Amritsar','Barnala','Bathinda','Faridkot','Fatehgarh Sahib','Fazilka','Ferozepur','Gurdaspur','Hoshiarpur','Jalandhar','Kapurthala','Ludhiana','Malerkotla','Mansa','Moga','Pathankot','Patiala','Rupnagar','Sahibzada Ajit Singh Nagar','Sangrur','Shaheed Bhagat Singh Nagar','Sri Muktsar Sahib','Tarn Taran'],
+          'Rajasthan':['Ajmer','Alwar','Anupgarh','Balotra','Banswara','Baran','Barmer','Beawar','Bharatpur','Bhilwara','Bikaner','Bundi','Chittorgarh','Churu','Dausa','Deeg','Dholpur','Didwana-Kuchaman','Dungarpur','Ganganagar','Gangapur City','Hanumangarh','Jaipur','Jaisalmer','Jalore','Jhalawar','Jhunjhunu','Jodhpur','Karauli','Kekri','Khairthal-Tijara','Kota','Kotputli-Behror','Nagaur','Neem Ka Thana','Pali','Phalodi','Pratapgarh','Rajsamand','Ramganj Mandi','Salumbar','Sanchore','Sawai Madhopur','Shahpura','Sikar','Sirohi','Tonk','Udaipur'],
+          'Sikkim':['Gangtok','Gyalshing','Mangan','Namchi','Pakyong','Soreng'],
+          'Tamil Nadu':['Ariyalur','Chengalpattu','Chennai','Coimbatore','Cuddalore','Dharmapuri','Dindigul','Erode','Kallakurichi','Kancheepuram','Karur','Krishnagiri','Madurai','Mayiladuthurai','Nagapattinam','Kanyakumari','Namakkal','Perambalur','Pudukkottai','Ramanathapuram','Ranipet','Salem','Sivaganga','Tenkasi','Thanjavur','The Nilgiris','Theni','Thoothukudi','Tiruchirappalli','Tirunelveli','Tirupathur','Tiruppur','Tiruvallur','Tiruvannamalai','Tiruvarur','Vellore','Viluppuram','Virudhunagar'],
+          'Telangana':['Adilabad','Bhadradri Kothagudem','Hanamkonda','Hyderabad','Jagtial','Jangaon','Jayashankar Bhupalpally','Jogulamba Gadwal','Kamareddy','Karimnagar','Khammam','Komaram Bheem Asifabad','Mahabubabad','Mahabubnagar','Mancherial','Medak','Medchal-Malkajgiri','Mulugu','Nagarkurnool','Nalgonda','Narayanpet','Nirmal','Nizamabad','Peddapalli','Rajanna Sircilla','Rangareddy','Sangareddy','Siddipet','Suryapet','Vikarabad','Wanaparthy','Warangal','Yadadri Bhuvanagiri'],
+          'Tripura':['Dhalai','Gomati','Khowai','North Tripura','Sepahijala','South Tripura','Unakoti','West Tripura'],
+          'Uttar Pradesh':['Agra','Aligarh','Ambedkar Nagar','Amethi','Amroha','Auraiya','Ayodhya','Azamgarh','Baghpat','Bahraich','Ballia','Balrampur','Banda','Barabanki','Bareilly','Basti','Bhadohi','Bijnor','Budaun','Bulandshahr','Chandauli','Chitrakoot','Deoria','Etah','Etawah','Farrukhabad','Fatehpur','Firozabad','Gautam Buddha Nagar','Ghaziabad','Ghazipur','Gonda','Gorakhpur','Hamirpur','Hapur','Hardoi','Hathras','Jalaun','Jaunpur','Jhansi','Kannauj','Kanpur Dehat','Kanpur Nagar','Kasganj','Kaushambi','Kushinagar','Lakhimpur Kheri','Lalitpur','Lucknow','Maharajganj','Mahoba','Mainpuri','Mathura','Mau','Meerut','Mirzapur','Moradabad','Muzaffarnagar','Pilibhit','Pratapgarh','Prayagraj','Raebareli','Rampur','Saharanpur','Sambhal','Sant Kabir Nagar','Shahjahanpur','Shamli','Shrawasti','Siddharthnagar','Sitapur','Sonbhadra','Sultanpur','Unnao','Varanasi'],
+          'Uttarakhand':['Almora','Bageshwar','Chamoli','Champawat','Dehradun','Haridwar','Nainital','Pauri Garhwal','Pithoragarh','Rudraprayag','Tehri Garhwal','Udham Singh Nagar','Uttarkashi'],
+          'West Bengal':['Alipurduar','Bankura','Birbhum','Cooch Behar','Dakshin Dinajpur','Darjeeling','Hooghly','Howrah','Jalpaiguri','Jhargram','Kalimpong','Kolkata','Malda','Murshidabad','Nadia','North 24 Parganas','Paschim Bardhaman','Paschim Medinipur','Purba Bardhaman','Purba Medinipur','Purulia','South 24 Parganas','Uttar Dinajpur']
+        });
+        function blueCrestCanonicalIndiaOption(value, options) {
+          const needle = String(value || '').trim().toLocaleLowerCase('en-IN');
+          return (options || []).find(option => option.toLocaleLowerCase('en-IN') === needle) || '';
+        }
+        function syncMobileRegistrationDistrictOptions({ clearDistrict = false } = {}) {
+          const stateInput = document.getElementById('mobileRegistrationState');
+          const districtInput = document.getElementById('mobileRegistrationDistrict');
+          const districtOptions = document.getElementById('mobileRegistrationDistrictOptions');
+          if (!stateInput || !districtInput || !districtOptions) return '';
+          const state = blueCrestCanonicalIndiaOption(stateInput.value, Object.keys(INDIA_STATE_UT_DISTRICTS));
+          stateInput.setCustomValidity(state ? '' : 'Select a State or Union Territory from the list.');
+          if (state) stateInput.value = state;
+          if (clearDistrict || !state) districtInput.value = '';
+          const districts = state ? INDIA_STATE_UT_DISTRICTS[state] : [];
+          districtOptions.innerHTML = districts.map(district => `<option value="${escapeHtml(district)}"></option>`).join('');
+          districtInput.disabled = !state;
+          districtInput.placeholder = state ? 'Search district' : 'Select a State / UT first';
+          const district = blueCrestCanonicalIndiaOption(districtInput.value, districts);
+          districtInput.setCustomValidity(!state || district ? '' : 'Select a district from the list.');
+          if (district) districtInput.value = district;
+          return state;
+        }
+        function initializeMobileRegistrationLocationSelectors() {
+          const stateInput = document.getElementById('mobileRegistrationState');
+          const districtInput = document.getElementById('mobileRegistrationDistrict');
+          const stateOptions = document.getElementById('mobileRegistrationStateOptions');
+          if (!stateInput || !districtInput || !stateOptions || stateInput.dataset.bound === '1') return;
+          stateInput.dataset.bound = '1';
+          stateOptions.innerHTML = Object.keys(INDIA_STATE_UT_DISTRICTS).map(state => `<option value="${escapeHtml(state)}"></option>`).join('');
+          let selectedState = '';
+          stateInput.addEventListener('input', () => {
+            const nextState = blueCrestCanonicalIndiaOption(stateInput.value, Object.keys(INDIA_STATE_UT_DISTRICTS));
+            const changed = nextState !== selectedState;
+            selectedState = syncMobileRegistrationDistrictOptions({ clearDistrict: changed });
+          });
+          stateInput.addEventListener('change', () => { selectedState = syncMobileRegistrationDistrictOptions({ clearDistrict: blueCrestCanonicalIndiaOption(stateInput.value, Object.keys(INDIA_STATE_UT_DISTRICTS)) !== selectedState }); });
+          stateInput.addEventListener('blur', () => { selectedState = syncMobileRegistrationDistrictOptions({ clearDistrict: !blueCrestCanonicalIndiaOption(stateInput.value, Object.keys(INDIA_STATE_UT_DISTRICTS)) }); });
+          districtInput.addEventListener('input', () => syncMobileRegistrationDistrictOptions());
+          districtInput.addEventListener('change', () => syncMobileRegistrationDistrictOptions());
+          districtInput.addEventListener('blur', () => syncMobileRegistrationDistrictOptions());
+          syncMobileRegistrationDistrictOptions({ clearDistrict: true });
+        }
         async function resolveBlueCrestSession(user) {
             const accessError=(code,message)=>{const error=new Error(`${code}: ${message}`); error.code=code; return error;};
             const uid=typeof user?.uid==='string'?user.uid.trim():'';
@@ -1407,16 +1509,35 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             blueCrestSession={uid,email:user.email||'',farmId,farmName:farmData.farmName||'BlueCrest Farm',role,membershipStatus:membershipData.status,plan:entitlementData.plan||'',entitlementStatus:entitlementData.status,setupStatus:normalizedSetupStatus,canWrite:['owner','admin'].includes(role)};
             document.getElementById('mobileFarmName').textContent=blueCrestSession.farmName;
         }
+        async function hasValidMobilePendingRegistration(user) {
+            const uid=typeof user?.uid==='string'?user.uid.trim():'';const email=typeof user?.email==='string'?user.email.trim():'';
+            if(!uid||!email||!db)return false;const request=await db.collection('registrationRequests').doc(uid).get();const data=request.exists?(request.data()||{}):{};
+            return data.status==='pending'&&data.email===email;
+        }
         async function mobileBridgeSignOut() { stopOperationalMigrationControlListener(); stopFoundationMigrationControlListener(); clearOperationalRuntimeForFarmSwitch(); clearFoundationRuntimeForFarmSwitch(); blueCrestSession=null; isSyncInitialized=false; if (mobileCropFinancialSummaryUnsubscribe) { mobileCropFinancialSummaryUnsubscribe(); mobileCropFinancialSummaryUnsubscribe=null; } stopFarmListeners(); await firebase.auth().signOut(); location.reload(); }
         document.getElementById('mobileAuthForm')?.addEventListener('submit',async e=>{e.preventDefault();try{await firebase.auth().signInWithEmailAndPassword(authEmailInput.value.trim(),authPasswordInput.value);authStatus.textContent='';}catch(err){authStatus.textContent=err.message||'Sign in failed.';}});
         document.getElementById('mobileForgotPassword')?.addEventListener('click',async()=>{const email=authEmailInput.value.trim();if(!email)return authStatus.textContent='Enter your email first.';try{await firebase.auth().sendPasswordResetEmail(email);authStatus.textContent='Password-reset email sent.';}catch(err){authStatus.textContent=err.message||'Could not send reset email.';}});
         document.getElementById('mobileAuthSignOut')?.addEventListener('click',mobileBridgeSignOut);
+        document.getElementById('mobilePendingSignOut')?.addEventListener('click',mobileBridgeSignOut);
+        initializeMobileRegistrationLocationSelectors();
+        document.getElementById('mobileShowRegistration')?.addEventListener('click',()=>{if(firebase.auth().currentUser)return;authStatus.textContent='';setMobileRegistrationMessage('');setMobileAuthView('registration');});
+        document.getElementById('mobileReturnToSignIn')?.addEventListener('click',()=>{if(firebase.auth().currentUser)return;setMobileRegistrationMessage('');setMobileAuthView('signIn');});
+        document.getElementById('mobileRegistrationForm')?.addEventListener('submit',async e=>{
+            e.preventDefault();const form=e.currentTarget;if(!db||!isFirebaseConnected)return setMobileRegistrationMessage('Firebase is unavailable. Please refresh and try again.');if(firebase.auth().currentUser)return setMobileRegistrationMessage('Sign out before creating a different farm account.');if(!form.reportValidity())return;
+            const ownerName=document.getElementById('mobileRegistrationOwnerName').value.trim(),farmName=document.getElementById('mobileRegistrationFarmName').value.trim(),mobile=document.getElementById('mobileRegistrationMobile').value.trim(),requestedEmail=document.getElementById('mobileRegistrationEmail').value.trim(),password=document.getElementById('mobileRegistrationPassword').value,passwordConfirm=document.getElementById('mobileRegistrationPasswordConfirm').value,state=syncMobileRegistrationDistrictOptions(),district=blueCrestCanonicalIndiaOption(document.getElementById('mobileRegistrationDistrict').value,INDIA_STATE_UT_DISTRICTS[state]||[]),totalFarmAreaAcres=Number(document.getElementById('mobileRegistrationArea').value);
+            if(!ownerName||!farmName||!mobile||!requestedEmail||!state||!district)return setMobileRegistrationMessage('Select a valid State / Union Territory and district, then complete every required field.');if(password.length<6)return setMobileRegistrationMessage('Password must contain at least 6 characters.');if(password!==passwordConfirm)return setMobileRegistrationMessage('Password and Confirm Password must match.');if(!Number.isFinite(totalFarmAreaAcres)||totalFarmAreaAcres<=0)return setMobileRegistrationMessage('Total Farm Area must be greater than zero.');
+            const submit=form.querySelector('button[type="submit"]'),label=submit?.textContent||'Submit Registration';let createdUser=null;mobileRegistrationSubmissionInProgress=true;form.querySelectorAll('input,button').forEach(control=>control.disabled=true);setMobileRegistrationMessage('Creating your secure account…');
+            try{const credential=await firebase.auth().createUserWithEmailAndPassword(requestedEmail,password);createdUser=credential.user;const authenticatedEmail=typeof createdUser?.email==='string'?createdUser.email.trim():'';if(!createdUser?.uid||!authenticatedEmail)throw new Error('Firebase did not return a valid authenticated email address.');await db.collection('registrationRequests').doc(createdUser.uid).set({ownerName,farmName,mobile,email:authenticatedEmail,state,district,totalFarmAreaAcres,status:'pending',createdAt:firebase.firestore.FieldValue.serverTimestamp()});form.reset();syncMobileRegistrationDistrictOptions({clearDistrict:true});mobileRegistrationSubmissionInProgress=false;showMobileRegistrationPending('Registration Submitted','Your BlueCrest farm account is awaiting activation.');}
+            catch(err){if(createdUser){showMobileRegistrationPending('Registration Incomplete','Your sign-in account was created, but the registration request could not be submitted. Please sign out and contact BlueCrest support.');return;}mobileRegistrationSubmissionInProgress=false;setMobileRegistrationMessage(err?.message||'Registration could not be completed.');}
+            finally{if(!createdUser)form.querySelectorAll('input,button').forEach(control=>control.disabled=false);if(submit&&!createdUser)submit.textContent=label;}
+        });
 
         firebase.auth().onAuthStateChanged(async (user) => {
             authLoading.classList.add('hidden');
 
             if (user) {
-                try { await resolveBlueCrestSession(user); if (mobileOperationalRuntimeFarmId && mobileOperationalRuntimeFarmId !== blueCrestSession.farmId) { clearOperationalRuntimeForFarmSwitch(); clearFoundationRuntimeForFarmSwitch(); } mobileOperationalRuntimeFarmId=blueCrestSession.farmId; await startFoundationMigrationControlListener(); if (!isFoundationScopedRoutingEnabled()) throw new Error('Farm-scoped Foundation storage is not ready.'); loadFoundationCacheForActiveFarm(); const operationalStorageMigration=migrateEliteOperationalStorageToFarmScope(); if (!['complete','not-applicable'].includes(operationalStorageMigration.status)) throw new Error(operationalStorageMigration.reason||'Elite operational local-storage migration could not safely complete.'); loadOperationalCacheForActiveFarm(); await startOperationalMigrationControlListener(); assertGenericFarmNativeScopedStartupReady(); authScreen.classList.add('hidden'); mainApp.classList.remove('hidden'); } catch(err) { stopOperationalMigrationControlListener(); stopFoundationMigrationControlListener(); blueCrestSession=null; authStatus.textContent=err.message||'Access denied.'; authScreen.classList.remove('hidden'); mainApp.classList.add('hidden'); return; }
+                if (mobileRegistrationSubmissionInProgress) return;
+                try { await resolveBlueCrestSession(user); if (mobileOperationalRuntimeFarmId && mobileOperationalRuntimeFarmId !== blueCrestSession.farmId) { clearOperationalRuntimeForFarmSwitch(); clearFoundationRuntimeForFarmSwitch(); } mobileOperationalRuntimeFarmId=blueCrestSession.farmId; await startFoundationMigrationControlListener(); if (!isFoundationScopedRoutingEnabled()) throw new Error('Farm-scoped Foundation storage is not ready.'); loadFoundationCacheForActiveFarm(); const operationalStorageMigration=migrateEliteOperationalStorageToFarmScope(); if (!['complete','not-applicable'].includes(operationalStorageMigration.status)) throw new Error(operationalStorageMigration.reason||'Elite operational local-storage migration could not safely complete.'); loadOperationalCacheForActiveFarm(); await startOperationalMigrationControlListener(); assertGenericFarmNativeScopedStartupReady(); authScreen.classList.add('hidden'); mainApp.classList.remove('hidden'); } catch(err) { stopOperationalMigrationControlListener(); stopFoundationMigrationControlListener(); blueCrestSession=null;let pending=false;if(err?.code==='USER_PROFILE_NOT_FOUND'){try{pending=await hasValidMobilePendingRegistration(user);}catch(pendingError){console.error('Mobile pending-registration resolution failed:',pendingError);}}if(pending){authScreen.classList.remove('hidden');mainApp.classList.add('hidden');showMobileRegistrationPending('Registration Submitted','Your BlueCrest farm account is awaiting activation.');return;}authStatus.textContent=err.message||'Access denied.'; authScreen.classList.remove('hidden'); mainApp.classList.add('hidden'); setMobileAuthView('signIn'); return; }
                 // The header was hidden before authentication, so measure it only
                 // after the main app becomes visible.
                 requestAnimationFrame(() => {
@@ -1435,6 +1556,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                 authScreen.classList.remove('hidden');
                 mainApp.classList.add('hidden');
                 authPasswordInput.value = "";
+                setMobileAuthView('signIn');
                 authEmailInput.focus();
             }
         });
