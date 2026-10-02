@@ -664,30 +664,12 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                         </div>
                     </div>
 
-                    <div class="relative treatment-searchable-dropdown z-30">
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Product Name / Chemical *</label>
-                        <div class="relative flex items-center">
-                            <input type="text"
-                                   id="treatmentProduct"
-                                   required
-                                   class="w-full border border-slate-200 p-2.5 sm:p-2 pr-6 rounded text-sm sm:text-xs bg-white outline-none focus:ring-1 focus:ring-blue-500 font-medium text-slate-700"
-                                   placeholder="Tap to search product..."
-                                   autocomplete="off"
-                                   onfocus="openTreatmentDropdown()"
-                                   onclick="openTreatmentDropdown()"
-                                   oninput="selectedTreatmentProductId = null; filterTreatmentOptions(this.value)">
-                            <span class="absolute right-2 text-slate-400 pointer-events-none text-[10px]">▼</span>
-                        </div>
-                        <div id="treatmentOptionsList" class="dropdown-scroll-list absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-2xl z-50 hidden divide-y divide-slate-100">
-                        </div>
-                    </div>
-
                     <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Quantity / Dose Applied *</label>
-                        <div class="relative flex items-center">
-                            <input type="number" step="0.01" id="treatmentQty" placeholder="e.g. 5 or 0.5" required class="w-full border border-slate-200 p-2.5 sm:p-2 rounded text-sm sm:text-xs bg-white outline-none focus:ring-1 focus:ring-blue-500 font-bold text-slate-800 pr-16">
-                            <span id="treatmentUnitBadge" class="absolute right-2 px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded text-xs font-black pointer-events-none">Kg</span>
+                        <div class="flex items-center justify-between gap-2 mb-1.5">
+                            <label class="block text-xs font-semibold text-slate-600">Treatment Items *</label>
+                            <button type="button" id="treatmentAddRowBtn" onclick="addTreatmentRow()" class="text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-lg">+ Add Treatment</button>
                         </div>
+                        <div id="treatmentItemsRows" class="space-y-3"></div>
                         <p class="text-[10px] text-slate-400 mt-1">Product Master base unit (Kg / Ltr) for clean inventory reconciliation.</p>
                     </div>
 
@@ -711,7 +693,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                         <textarea id="treatmentNotes" rows="2" placeholder="e.g. Applied along with aerators running..." class="w-full border border-slate-200 p-2.5 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-xs"></textarea>
                     </div>
 
-                    <button type="submit" id="treatmentSubmitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold shadow-md transition">Save Treatment</button>
+                    <button type="submit" id="treatmentSubmitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold shadow-md transition">Save All</button>
                 </form>
             </div>
         </div>
@@ -1854,11 +1836,53 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             return { product: null, error: byName.length ? 'Product Master product is ambiguous. Please select it again.' : 'Please select a Product Master product.' };
         }
 
-        function setTreatmentUnitBadge(unit) {
-            const badge = document.getElementById('treatmentUnitBadge');
+        function setTreatmentRowUnitBadge(row, unit) {
+            const badge = row?.querySelector('.treatment-unit-badge');
             if (!badge) return;
             badge.innerText = unit;
-            badge.className = `absolute right-2 px-2.5 py-1 rounded text-xs font-black pointer-events-none border ${unit === 'Ltr' ? 'bg-cyan-50 text-cyan-700 border-cyan-200' : 'bg-blue-50 text-blue-700 border border-blue-200'}`;
+            badge.className = `treatment-unit-badge absolute right-2 px-2.5 py-1 rounded text-xs font-black pointer-events-none border ${unit === 'Ltr' ? 'bg-cyan-50 text-cyan-700 border-cyan-200' : 'bg-blue-50 text-blue-700 border border-blue-200'}`;
+        }
+
+        function getTreatmentItemRows() {
+            return [...document.querySelectorAll('#treatmentItemsRows .treatment-item-row')];
+        }
+
+        function addTreatmentRow(initial = {}, options = {}) {
+            const container = document.getElementById('treatmentItemsRows');
+            if (!container) return null;
+            const removable = options.removable !== false;
+            const row = document.createElement('div');
+            row.className = 'treatment-item-row rounded-xl border border-slate-200 bg-slate-50 p-3';
+            row.dataset.productId = initial.productId || '';
+            row.innerHTML = `
+                <div class="flex items-center justify-between gap-2 mb-2">
+                    <span class="text-[10px] font-black uppercase tracking-wide text-slate-500">Treatment</span>
+                    <button type="button" class="treatment-row-remove text-slate-400 hover:text-rose-600 text-xl leading-none${removable ? '' : ' invisible'}" aria-label="Remove treatment">&times;</button>
+                </div>
+                <div class="relative treatment-searchable-dropdown z-30">
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Product Name / Chemical *</label>
+                    <div class="relative flex items-center">
+                        <input type="text" class="treatment-row-product w-full border border-slate-200 p-2.5 sm:p-2 pr-6 rounded text-sm sm:text-xs bg-white outline-none focus:ring-1 focus:ring-blue-500 font-medium text-slate-700" placeholder="Tap to search product..." autocomplete="off">
+                        <span class="absolute right-2 text-slate-400 pointer-events-none text-[10px]">▼</span>
+                    </div>
+                    <div class="treatment-row-options dropdown-scroll-list absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-2xl z-50 hidden divide-y divide-slate-100"></div>
+                </div>
+                <div class="mt-2">
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Quantity / Dose Applied *</label>
+                    <div class="relative flex items-center">
+                        <input type="number" step="0.01" min="0" class="treatment-row-qty w-full border border-slate-200 p-2.5 sm:p-2 rounded text-sm sm:text-xs bg-white outline-none focus:ring-1 focus:ring-blue-500 font-bold text-slate-800 pr-16" placeholder="e.g. 5 or 0.5" value="${initial.qty ?? ''}">
+                        <span class="treatment-unit-badge absolute right-2 px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded text-xs font-black pointer-events-none">Kg</span>
+                    </div>
+                </div>`;
+            const productInput = row.querySelector('.treatment-row-product');
+            productInput.value = String(initial.product || '');
+            setTreatmentRowUnitBadge(row, initial.unit || 'Kg');
+            productInput.addEventListener('focus', () => openTreatmentDropdown(row));
+            productInput.addEventListener('click', () => openTreatmentDropdown(row));
+            productInput.addEventListener('input', () => { row.dataset.productId = ''; filterTreatmentOptions(productInput.value, row); });
+            if (removable) row.querySelector('.treatment-row-remove').addEventListener('click', () => row.remove());
+            container.appendChild(row);
+            return row;
         }
 
         function initRealtimeSync() {
@@ -3301,9 +3325,10 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             if (!filteredEntries.length) { container.innerHTML = '<div class="p-6 text-center text-slate-400 text-sm">No treatment records found.</div>'; return; }
             const badge = pond => { const n = Number(String(pond).match(/\d+/)?.[0] || 0); const colors=['bg-sky-100 text-sky-700','bg-amber-100 text-amber-700','bg-emerald-100 text-emerald-700','bg-cyan-100 text-cyan-700','bg-violet-100 text-violet-700']; return colors[(Math.max(1,n)-1)%colors.length]; };
             const date = value => { const d = new Date(`${value}T00:00:00`); return Number.isNaN(d) ? '—' : d.toLocaleDateString('en-GB',{day:'numeric',month:'short'}); };
-            const rows = [...filteredEntries].sort((a,b)=>new Date(b.date)-new Date(a.date)).map(item => `<tr data-treatment-detail-id="${String(item.id)}" class="border-t border-slate-100 cursor-pointer active:bg-blue-50"><td class="px-1 py-3 text-[11px] whitespace-nowrap">${date(item.date)}</td><td class="px-1 py-3 text-center"><span class="inline-block rounded-full px-1.5 py-0.5 text-[11px] font-bold ${badge(item.pond)}">${logicalPondIdFromRef(item.pond)}</span></td><td class="px-1 py-3 text-[11px] font-medium break-words">${item.product || item.productName || '—'}</td><td class="px-1 py-3 text-right text-[11px]">${item.qty ?? '—'}</td><td class="px-1 py-3 text-right text-[11px]">${item.unit || determineUnit(item.product)}</td><td class="px-2 py-3 text-right text-[11px] font-semibold">${costOf(item) === null ? '—' : `₹${Math.round(costOf(item))}`}</td></tr>`).join('');
+            const rows = [...filteredEntries].sort((a,b)=>new Date(b.date)-new Date(a.date)).map(item => { const id = String(item.id).replace(/&/g, '&amp;').replace(/"/g, '&quot;'); return `<tr data-treatment-detail-id="${id}" class="border-t border-slate-100 cursor-pointer active:bg-blue-50"><td class="px-1 py-3 text-[11px] whitespace-nowrap">${date(item.date)}</td><td class="px-1 py-3 text-center"><span class="inline-block rounded-full px-1.5 py-0.5 text-[11px] font-bold ${badge(item.pond)}">${logicalPondIdFromRef(item.pond)}</span></td><td class="px-1 py-3 text-[11px] font-medium break-words"><div class="flex items-start gap-1"><span class="min-w-0 flex-1">${item.product || item.productName || '—'}</span><button type="button" data-treatment-delete-id="${id}" class="shrink-0 text-rose-500 hover:text-rose-700 text-base leading-none" aria-label="Delete treatment" title="Delete treatment">×</button></div></td><td class="px-1 py-3 text-right text-[11px]">${item.qty ?? '—'}</td><td class="px-1 py-3 text-right text-[11px]">${item.unit || determineUnit(item.product)}</td><td class="px-2 py-3 text-right text-[11px] font-semibold">${costOf(item) === null ? '—' : `₹${Math.round(costOf(item))}`}</td></tr>`; }).join('');
             container.innerHTML = `<table class="w-full table-fixed border-collapse"><colgroup><col style="width:15%"><col style="width:13%"><col style="width:27%"><col style="width:11%"><col style="width:12%"><col style="width:22%"></colgroup><thead class="bg-slate-50 text-[9px] uppercase text-slate-500"><tr><th class="px-1 py-2 text-left">Date</th><th class="px-1 py-2">Pond</th><th class="px-1 py-2 text-left">Product</th><th class="px-1 py-2 text-right">Qty</th><th class="px-1 py-2 text-right">Unit</th><th class="px-2 py-2 text-right">Cost (₹)</th></tr></thead><tbody>${rows}</tbody></table>`;
             container.querySelectorAll('[data-treatment-detail-id]').forEach(row => row.addEventListener('click',()=>openTreatmentRecordView(row.dataset.treatmentDetailId)));
+            container.querySelectorAll('[data-treatment-delete-id]').forEach(button => button.addEventListener('click', event => { event.stopPropagation(); deleteTreatment(button.dataset.treatmentDeleteId); }));
         }
 
         // Reuse the established full-screen Treatment record panel for row access.
@@ -3775,49 +3800,109 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
         // Negative inventory is intentionally allowed. Operational entries may be
         // recorded before the purchase bill is entered; later purchases will settle
         // the inventory balance and FIFO costing can use the actual purchase lots.
+        let treatmentSaveInProgress = false;
+
+        async function saveNewTreatmentRecordsToDb(records) {
+            if (records.length === 1) return saveTreatmentToDb(records[0]);
+            for (const record of records) {
+                if (typeof window.blueCrestAssertOperationalWrite === 'function' && !window.blueCrestAssertOperationalWrite({ pondId: record.pond, cycleId: record.cycleId })) return false;
+            }
+            assertOperationalWriteAllowed('treatments');
+            if (isFirebaseConnected && db) {
+                const batch = db.batch();
+                const collection = accountingSourceCollectionOrLegacy('treatments');
+                records.forEach(record => batch.set(collection.doc(String(record.id)), record));
+                await batch.commit();
+                return true;
+            }
+            records.forEach(record => {
+                const index = treatmentEntries.findIndex(item => String(item.id) === String(record.id));
+                if (index >= 0) treatmentEntries[index] = record;
+                else treatmentEntries.push(record);
+            });
+            writeOperationalStorage('bc_treatments', JSON.stringify(treatmentEntries));
+            renderTreatmentList();
+            return true;
+        }
+
         async function handleTreatmentSubmit(e) {
             if (isViewOnlyMode) { e.preventDefault(); alert('View-Only mode: data changes are disabled.'); return; }
             e.preventDefault();
+            if (treatmentSaveInProgress) return;
+
             const date = document.getElementById('treatmentDate').value;
             const pond = document.getElementById('treatmentPond').value;
             const category = document.querySelector('input[name="treatmentCategory"]:checked')?.value || 'Probiotics';
-            const product = document.getElementById('treatmentProduct').value.trim();
-            const qty = parseFloat(document.getElementById('treatmentQty').value) || 0;
             const purpose = document.getElementById('treatmentPurpose').value;
             const notes = document.getElementById('treatmentNotes').value.trim();
-
-            const resolution = resolveMobileMasterProduct(selectedTreatmentProductId, product);
-            if (!resolution.product) {
-                alert(resolution.error);
-                return;
-            }
-            const masterProduct = resolution.product;
-            if (!treatmentCategoryMatchesMaster(category, masterProduct)) {
-                alert('Product is no longer enabled for this Pond Treatment category.');
-                return;
-            }
-            if (masterProduct.stockUnit !== 'Kg' && masterProduct.stockUnit !== 'Ltr') {
-                alert(`Product Master unit for ${masterProduct.name} must be Kg or Ltr.`);
-                return;
-            }
-            const unit = masterProduct.stockUnit;
-
             const c = getActiveCycle();
             const activePonds = getActivePonds();
             if (!activePonds.some(p => String(p.id) === String(pond))) {
                 alert(`Please select a pond from ${c.year} • ${c.crop}.`);
                 return;
             }
-            const id = editingTreatmentId !== null ? editingTreatmentId : Date.now();
-            const treatObj = { id, date, pond, category, product: masterProduct.name, qty, unit, purpose, notes, year: Number(c.year), crop: c.crop, cycleId: c.id };
-            if (masterProduct.productId) treatObj.productId = masterProduct.productId;
 
+            const resolvedRows = [];
+            for (const [index, row] of getTreatmentItemRows().entries()) {
+                const product = row.querySelector('.treatment-row-product').value.trim();
+                const rawQty = row.querySelector('.treatment-row-qty').value.trim();
+                if (!product && !rawQty) continue;
+                const qty = Number(rawQty);
+                if (!product || !Number.isFinite(qty) || qty <= 0) {
+                    alert(`Treatment row ${index + 1}: select a product and enter a quantity greater than zero.`);
+                    return;
+                }
+                const resolution = resolveMobileMasterProduct(row.dataset.productId, product);
+                if (!resolution.product) {
+                    alert(`Treatment row ${index + 1}: ${resolution.error}`);
+                    return;
+                }
+                const masterProduct = resolution.product;
+                if (!treatmentCategoryMatchesMaster(category, masterProduct)) {
+                    alert(`Treatment row ${index + 1}: product is no longer enabled for this Pond Treatment category.`);
+                    return;
+                }
+                if (masterProduct.stockUnit !== 'Kg' && masterProduct.stockUnit !== 'Ltr') {
+                    alert(`Treatment row ${index + 1}: Product Master unit for ${masterProduct.name} must be Kg or Ltr.`);
+                    return;
+                }
+                resolvedRows.push({ masterProduct, qty, unit: masterProduct.stockUnit });
+            }
+            if (!resolvedRows.length) {
+                alert('Add at least one treatment product and quantity.');
+                return;
+            }
+            if (editingTreatmentId !== null && resolvedRows.length !== 1) {
+                alert('Edit Treatment updates one existing record only.');
+                return;
+            }
+
+            const baseId = Date.now();
+            const records = resolvedRows.map((row, index) => {
+                const record = {
+                    id: editingTreatmentId !== null ? editingTreatmentId : baseId + index,
+                    date, pond, category, product: row.masterProduct.name, qty: row.qty, unit: row.unit,
+                    purpose, notes, year: Number(c.year), crop: c.crop, cycleId: c.id
+                };
+                if (row.masterProduct.productId) record.productId = row.masterProduct.productId;
+                return record;
+            });
+
+            const submitBtn = document.getElementById('treatmentSubmitBtn');
+            treatmentSaveInProgress = true;
+            if (submitBtn) submitBtn.disabled = true;
             try {
-                await saveTreatmentToDb(treatObj);
+                const saved = editingTreatmentId !== null
+                    ? await saveTreatmentToDb(records[0])
+                    : await saveNewTreatmentRecordsToDb(records);
+                if (saved === false) return;
                 closeTreatmentModal();
             } catch (err) {
                 console.error('Firestore treatment write error:', err);
                 alert('Treatment could not be saved to cloud data. Please try again.' + (err?.code ? '\n\nCode: ' + err.code : '') + (err?.message ? '\n\nMessage: ' + err.message : ''));
+            } finally {
+                treatmentSaveInProgress = false;
+                if (submitBtn) submitBtn.disabled = false;
             }
         }
 
@@ -4184,22 +4269,31 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                 }
             });
             if (!preserveValue) {
-                document.getElementById('treatmentProduct').value = '';
+                getTreatmentItemRows().forEach(row => {
+                    row.querySelector('.treatment-row-product').value = '';
+                    row.dataset.productId = '';
+                    setTreatmentRowUnitBadge(row, 'Kg');
+                });
                 selectedTreatmentProductId = null;
-                setTreatmentUnitBadge('Kg');
             }
-            const listEl = document.getElementById('treatmentOptionsList');
-            if (listEl && !listEl.classList.contains('hidden')) filterTreatmentOptions('');
+            getTreatmentItemRows().forEach(row => {
+                const listEl = row.querySelector('.treatment-row-options');
+                if (listEl && !listEl.classList.contains('hidden')) filterTreatmentOptions('', row);
+            });
         }
 
-        function openTreatmentDropdown() {
+        function openTreatmentDropdown(row) {
             document.querySelectorAll('.feed-options-list').forEach(l => l.classList.add('hidden'));
             document.getElementById('suppOptionsList')?.classList.add('hidden');
-            filterTreatmentOptions(document.getElementById('treatmentProduct').value);
+            document.querySelectorAll('.treatment-row-options').forEach(list => {
+                if (list !== row?.querySelector('.treatment-row-options')) list.classList.add('hidden');
+            });
+            filterTreatmentOptions(row?.querySelector('.treatment-row-product')?.value || '', row);
         }
 
-        function filterTreatmentOptions(q) {
-            const listEl = document.getElementById('treatmentOptionsList');
+        function filterTreatmentOptions(q, row) {
+            const listEl = row?.querySelector('.treatment-row-options');
+            if (!listEl) return;
             const cat = document.querySelector('input[name="treatmentCategory"]:checked')?.value || 'Probiotics';
             listEl.innerHTML = '';
             if (!mobileProductMasterLoaded) {
@@ -4221,11 +4315,12 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                     opt.innerHTML = `<div class="font-bold text-slate-700 text-sm sm:text-xs">${item.name}</div><span class="text-[10px] font-extrabold px-2 py-0.5 rounded ${unit === 'Ltr' ? 'bg-cyan-50 text-cyan-700 border border-cyan-200' : 'bg-blue-50 text-blue-700 border border-blue-200'}">${unit}</span>`;
                     opt.onclick = (e) => {
                         e.preventDefault(); e.stopPropagation();
-                        document.getElementById('treatmentProduct').value = item.name;
+                        row.querySelector('.treatment-row-product').value = item.name;
+                        row.dataset.productId = item.productId || '';
                         selectedTreatmentProductId = item.productId || null;
                         listEl.classList.add('hidden');
-                        setTreatmentUnitBadge(unit);
-                        document.getElementById('treatmentQty').focus();
+                        setTreatmentRowUnitBadge(row, unit);
+                        row.querySelector('.treatment-row-qty').focus();
                     };
                     listEl.appendChild(opt);
                 });
@@ -4238,45 +4333,47 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             document.getElementById('treatmentModal').classList.remove('hidden');
             const modalTitle = document.getElementById('treatmentModalTitleText');
             const submitBtn = document.getElementById('treatmentSubmitBtn');
+            const addRowBtn = document.getElementById('treatmentAddRowBtn');
 
             if (id !== null) {
                 editingTreatmentId = id;
                 modalTitle.innerText = "Edit Treatment Entry";
                 submitBtn.innerText = "Update Treatment";
+                addRowBtn?.classList.add('hidden');
                 const treat = getActiveTreatmentEntries().find(t =>
                     String(t.id) === String(id) ||
                     String(t.firestoreId || '') === String(id) ||
                     String(t.legacyRecordId || '') === String(id)
                 );
                 if (treat) {
+                    document.getElementById('treatmentItemsRows').innerHTML = '';
                     document.getElementById('treatmentDate').value = treat.date;
                     document.getElementById('treatmentPond').value = treat.pond;
                     selectTreatmentCategory(treat.category || 'Probiotics', true);
-                    document.getElementById('treatmentProduct').value = treat.product;
+                    const row = addTreatmentRow({ product: treat.product, productId: treat.productId || '', qty: treat.qty, unit: treat.unit || determineUnit(treat.product) }, { removable: false });
                     selectedTreatmentProductId = treat.productId || null;
-                    const unit = treat.unit || determineUnit(treat.product);
-                    const badge = document.getElementById('treatmentUnitBadge');
-                    if (badge) badge.innerText = unit;
-                    document.getElementById('treatmentQty').value = treat.qty;
+                    setTreatmentRowUnitBadge(row, treat.unit || determineUnit(treat.product));
                     document.getElementById('treatmentPurpose').value = treat.purpose;
                     document.getElementById('treatmentNotes').value = treat.notes || '';
                 }
             } else {
                 editingTreatmentId = null;
                 modalTitle.innerText = "Add Pond Treatment";
-                submitBtn.innerText = "Save Treatment";
+                submitBtn.innerText = "Save All";
+                addRowBtn?.classList.remove('hidden');
                 document.getElementById('treatmentForm').reset();
+                document.getElementById('treatmentItemsRows').innerHTML = '';
                 selectedTreatmentProductId = null;
                 document.getElementById('treatmentDate').value = getSystemLatestDate();
                 selectTreatmentCategory('Probiotics', false);
-                setTreatmentUnitBadge('Kg');
+                addTreatmentRow({}, { removable: false });
                 if (ponds.length > 0) document.getElementById('treatmentPond').value = currentPond || ponds[0].id;
             }
         }
 
         function closeTreatmentModal() {
             document.getElementById('treatmentModal').classList.add('hidden');
-            document.getElementById('treatmentOptionsList')?.classList.add('hidden');
+            document.querySelectorAll('.treatment-row-options').forEach(list => list.classList.add('hidden'));
             resetMobileContentScroll();
         }
 
@@ -4526,7 +4623,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
         function openFeedDropdown(inputEl) {
             document.querySelectorAll('.feed-options-list').forEach(l => l.classList.add('hidden'));
             document.getElementById('suppOptionsList')?.classList.add('hidden');
-            document.getElementById('treatmentOptionsList')?.classList.add('hidden');
+            document.querySelectorAll('.treatment-row-options').forEach(list => list.classList.add('hidden'));
             document.querySelectorAll('.feed-row-item').forEach(r => r.style.zIndex = '1');
             const currentRow = inputEl.closest('.feed-row-item');
             if (currentRow) currentRow.style.zIndex = '40';
@@ -4564,7 +4661,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
 
         function openSuppDropdown() {
             document.querySelectorAll('.feed-options-list').forEach(l => l.classList.add('hidden'));
-            document.getElementById('treatmentOptionsList')?.classList.add('hidden');
+            document.querySelectorAll('.treatment-row-options').forEach(list => list.classList.add('hidden'));
             document.getElementById('supplementProductsSection').style.zIndex = '35';
             filterSuppOptions(document.getElementById('singleSuppSearchInput').value);
         }
@@ -4774,7 +4871,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                 if (s) s.style.zIndex = '10';
             }
             if (!e.target.closest('.treatment-searchable-dropdown')) {
-                document.getElementById('treatmentOptionsList')?.classList.add('hidden');
+                document.querySelectorAll('.treatment-row-options').forEach(list => list.classList.add('hidden'));
             }
         });
         document.addEventListener('DOMContentLoaded', () => {
