@@ -156,8 +156,6 @@
 .mobile-financial-section{border-radius:15px;padding:.9rem;}
 @media(max-width:380px){.mobile-home-scroll #homeView{padding-left:.65rem;padding-right:.65rem}.app-fixed-header button[id^="tab"]{font-size:.59rem!important}}
 </style>
-<style id="mobile-feed-cycle-note-style">#mobile-feed-cycle-note{display:inline-flex;align-items:center;margin:.4rem 0 .7rem;padding:.3rem .65rem;border:1px solid #dbeafe;border-radius:999px;background:#eff6ff;color:#1d4ed8;font-size:.7rem;font-weight:700}</style>
-
 <style id="bluecrest-base-design-mobile">
 /* =========================================================
    BLUECREST MOBILE BASE DESIGN
@@ -303,8 +301,8 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-3 text-2xl">
                 🔒
             </div>
-            <h2 id="mobileFarmName" class="text-lg font-black text-slate-800">Elite Aqualines</h2>
-            <p class="text-xs text-slate-500 mt-0.5 mb-5">Sign in with your Elite owner account</p>
+            <h2 id="mobileFarmName" class="text-lg font-black text-slate-800">BlueCrest Farm</h2>
+            <p class="text-xs text-slate-500 mt-0.5 mb-5">Sign in with your BlueCrest account</p>
             <form id="mobileAuthForm" class="space-y-3"><input id="authEmailInput" type="email" autocomplete="email" placeholder="Email" required class="w-full px-3 py-3 border-2 border-slate-200 rounded-xl outline-none focus:border-blue-600"><input id="authPasswordInput" type="password" autocomplete="current-password" placeholder="Password" required class="w-full px-3 py-3 border-2 border-slate-200 rounded-xl outline-none focus:border-blue-600"><button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-xl font-black">Sign In</button></form>
             <button id="mobileForgotPassword" type="button" class="mt-3 text-xs font-bold text-blue-600">Forgot Password?</button><button id="mobileAuthSignOut" type="button" class="mt-2 ml-3 text-xs font-bold text-slate-500">Sign Out</button><div id="authStatusText" class="text-xs font-semibold mt-3 min-h-[18px]"></div>
         </div>
@@ -454,7 +452,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                     <span class="w-14 text-right pr-1">Action</span>
                 </div>
 
-                <div id="mobile-feed-cycle-note">Active cycle: <span id="mobile-feed-cycle-note-text" style="margin-left:4px;"></span></div><div id="feedHistoryList" class="space-y-3"></div>
+                <div id="feedHistoryList" class="space-y-3"></div>
             </div>
 
             <!-- 4. Sampling View -->
@@ -1095,7 +1093,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
         function farmOperationalCollection(name){getOperationalMigrationGroup(name);if(!db||typeof db.collection!=='function')throw new Error('Firebase Firestore is unavailable.');return isOperationalGroupScoped(name)?db.collection('farms').doc(getActiveFarmId()).collection(name):db.collection(name);}
         function group1OperationalCollectionOrLegacy(name){return OPERATIONAL_MIGRATION_GROUPS.biological.includes(name)?farmOperationalCollection(name):db.collection(name);} function accountingSourceCollectionOrLegacy(name){return OPERATIONAL_MIGRATION_GROUPS.accountingSource.includes(name)?farmOperationalCollection(name):group1OperationalCollectionOrLegacy(name);} function assertOperationalWriteAllowed(name){if(!OPERATIONAL_MIGRATION_GROUPS.accountingSource.includes(name))return;if(getOperationalWriteMode(name)!==OPERATIONAL_WRITE_MODE.LEGACY&&getOperationalWriteMode(name)!==OPERATIONAL_WRITE_MODE.SCOPED_WRITABLE)throw new Error('Accounting-source writes are not authorized.');}
         function getFinancialSummaryMigrationState(){return blueCrestOperationalMigrationControl?.groups?.financialSummary?.state||'legacy';} function isFinancialSummaryScoped(){return OPERATIONAL_MIGRATION_ROUTING_ENABLED===true&&['scoped-read','scoped-active'].includes(getFinancialSummaryMigrationState())&&blueCrestOperationalMigrationControl?.groups?.financialSummary?.routing==='scoped';} function isFinancialSummaryActive(){return getFinancialSummaryMigrationState()==='scoped-active'&&isFinancialSummaryScoped();} function financialSummaryCollectionOrLegacy(name){if(name!=='cropFinancialSummaries')throw new Error('Financial-summary collection is invalid.');if(!db||typeof db.collection!=='function')throw new Error('Firebase Firestore is unavailable.');return isFinancialSummaryScoped()?db.collection('farms').doc(getActiveFarmId()).collection(name):db.collection(name);}
-        function getProductCatalogueMigrationState(){return blueCrestOperationalMigrationControl?.groups?.productCatalogue?.state||'legacy';} function isProductCatalogueScoped(){return OPERATIONAL_MIGRATION_ROUTING_ENABLED===true&&['scoped-read','scoped-active'].includes(getProductCatalogueMigrationState())&&blueCrestOperationalMigrationControl?.groups?.productCatalogue?.routing==='scoped';} function mobileProductMasterDocument(){if(!db||typeof db.collection!=='function')throw new Error('Firebase Firestore is unavailable.');return isProductCatalogueScoped()?db.collection('farms').doc(getActiveFarmId()).collection('masterData').doc('productCatalogue'):db.collection('farmBackup').doc('masterCatalogue');}
+        function getProductCatalogueMigrationState(){return blueCrestOperationalMigrationControl?.groups?.productCatalogue?.state||'legacy';} function isProductCatalogueScoped(){return OPERATIONAL_MIGRATION_ROUTING_ENABLED===true&&['scoped-read','scoped-active'].includes(getProductCatalogueMigrationState())&&blueCrestOperationalMigrationControl?.groups?.productCatalogue?.routing==='scoped';} function mobileProductMasterDocument(){if(!db||typeof db.collection!=='function')throw new Error('Firebase Firestore is unavailable.');if(!isProductCatalogueScoped())throw new Error('Scoped Product Catalogue authority is unavailable.');return db.collection('farms').doc(getActiveFarmId()).collection('masterData').doc('productCatalogue');}
         function getOperationalWriteMode(name){const g=getOperationalMigrationGroup(name),state=getOperationalGroupState(g);if(state==='freeze'||(isOperationalGroupScoped(name)&&state==='scoped-read'))return OPERATIONAL_WRITE_MODE.VERIFY_READ_ONLY;return isOperationalGroupScoped(name)&&state==='scoped-active'&&blueCrestOperationalGroupReadiness.get(g)?.verified?OPERATIONAL_WRITE_MODE.SCOPED_WRITABLE:(isOperationalGroupScoped(name)?OPERATIONAL_WRITE_MODE.VERIFY_READ_ONLY:OPERATIONAL_WRITE_MODE.LEGACY);}
         function registerOperationalGroupUnsubscribe(g,u){if(!OPERATIONAL_MIGRATION_GROUPS[g]||typeof u!=='function')return u;const s=blueCrestOperationalGroupListeners.get(g)||new Set();s.add(u);blueCrestOperationalGroupListeners.set(g,s);return u;}
         function bindGroup1OperationalListener(name,onSnapshot,onError,generation){return registerOperationalGroupUnsubscribe('biological',farmOperationalCollection(name).onSnapshot(s=>{recordOperationalGroupHydration('biological',name,generation);onSnapshot(s);},onError));} function listenGroup1OperationalCollection(name,onSnapshot,onError){const binder=generation=>bindGroup1OperationalListener(name,onSnapshot,onError,generation);blueCrestOperationalBiologicalListenerBinders.set(name,binder);if(blueCrestOperationalBiologicalBoundRoute===null){blueCrestOperationalBiologicalBoundRoute=isOperationalGroupScoped(name)?'scoped':'legacy';beginOperationalGroupHydration('biological',OPERATIONAL_MIGRATION_GROUPS.biological);}return binder(blueCrestOperationalGroupReadiness.get('biological').generation);} function bindAccountingSourceListener(name,onSnapshot,onError,generation){return registerOperationalGroupUnsubscribe('accountingSource',farmOperationalCollection(name).onSnapshot(s=>{recordOperationalGroupHydration('accountingSource',name,generation);onSnapshot(s);},onError));} function listenAccountingSourceCollection(name,onSnapshot,onError){const binder=generation=>bindAccountingSourceListener(name,onSnapshot,onError,generation);blueCrestOperationalAccountingListenerBinders.set(name,binder);if(blueCrestOperationalAccountingBoundRoute===null){blueCrestOperationalAccountingBoundRoute=isOperationalGroupScoped(name)?'scoped':'legacy';beginOperationalGroupHydration('accountingSource',['treatments','vendorTransactions','ledgerEntries']);}return binder(blueCrestOperationalGroupReadiness.get('accountingSource').generation);}
@@ -1181,6 +1179,15 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             return blueCrestFoundationMigrationControlStartPromise;
         }
         function getFoundationMigrationControlStatus() { return { ...blueCrestFoundationMigrationControlStatus, requestedRouting: blueCrestFoundationMigrationControlStatus.requestedRouting || 'legacy', migrationFrozen: isFoundationMigrationFrozen(), scopedRouting: isFoundationScopedRoutingEnabled(), writeMode: blueCrestFoundationWriteMode, foundationReadiness: getFoundationReadiness() }; }
+        function assertGenericFarmNativeScopedStartupReady() {
+            const session=blueCrestSession, historicalEliteSession=session?.farmId===LEGACY_ELITE_FARM_ID&&session?.uid===ELITE_FARM_STORAGE_OWNER_UID;
+            if(historicalEliteSession)return true;
+            const foundation=blueCrestFoundationValidatedControl;
+            const foundationReady=foundation?.version===1&&foundation.farmId===session?.farmId&&foundation.state==='active'&&foundation.routing==='scoped'&&isFoundationScopedRoutingEnabled();
+            const operationalReady=operationalControlIsValid(blueCrestOperationalMigrationControl)&&['biological','accountingSource'].every(group=>{const entry=blueCrestOperationalMigrationControl.groups[group];return entry?.state==='scoped-active'&&entry.routing==='scoped';});
+            if(!foundationReady||!operationalReady)throw new Error('Farm setup is not ready. Please contact BlueCrest support.');
+            return true;
+        }
 
         const ELITE_FARM_STORAGE_LEGACY_KEYS = ['bc_ponds', 'bc_feeds', 'bc_sampling', 'bc_treatments', 'bc_harvests', 'bc_stockTransfers', 'bc_farmCycles', 'bc_activeCycle', 'bc_vendorTransactions', 'bc_ledgerEntries', 'bc_pondLocks', 'bc_cropLocks'];
         const ELITE_FARM_STORAGE_MIGRATION_APP = 'mobile';
@@ -1188,6 +1195,84 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
         function farmStorageKey(legacyKey) {
             if (typeof legacyKey !== 'string' || !legacyKey.trim()) throw new Error('A non-empty legacy storage key is required.');
             return `bluecrest:${getActiveFarmId()}:${legacyKey.trim()}`;
+        }
+        // LS-4: operational caches are isolated separately from the completed
+        // Foundation storage architecture.
+        const OPERATIONAL_STORAGE_LEGACY_KEYS = Object.freeze([
+            'bc_feeds', 'bc_sampling', 'bc_treatments', 'bc_harvests',
+            'bc_stockTransfers', 'bc_vendorTransactions', 'bc_ledgerEntries'
+        ]);
+        function operationalStorageKey(legacyKey) {
+            if (!OPERATIONAL_STORAGE_LEGACY_KEYS.includes(legacyKey)) throw new Error('Operational storage key is invalid.');
+            return farmStorageKey(legacyKey);
+        }
+        function readOperationalStorage(legacyKey) {
+            try { return localStorage.getItem(operationalStorageKey(legacyKey)); }
+            catch (error) { console.warn('Operational local cache read skipped:', error); return null; }
+        }
+        function writeOperationalStorage(legacyKey, value) {
+            try { localStorage.setItem(operationalStorageKey(legacyKey), value); return true; }
+            catch (error) { console.warn('Operational local cache write skipped:', error); return false; }
+        }
+        function removeOperationalStorage(legacyKey) {
+            try { localStorage.removeItem(operationalStorageKey(legacyKey)); return true; }
+            catch (error) { console.warn('Operational local cache removal skipped:', error); return false; }
+        }
+        // LS-5 will activate this explicit migration only after both clients
+        // have completed their storage isolation work.
+        const OPERATIONAL_STORAGE_MIGRATION_APP = 'mobile';
+        const OPERATIONAL_STORAGE_MIGRATION_ELITE_FARM_ID = '5a7a4AYQ1o3Jf69VZ1Mx';
+        const OPERATIONAL_STORAGE_MIGRATION_VERSION = 1;
+        function operationalStorageMigrationMarkerKey(farmId = getActiveFarmId()) {
+            if (typeof farmId !== 'string' || !farmId.trim()) throw new Error('A non-empty farm ID is required.');
+            return `bluecrest:${farmId.trim()}:migration:localStorage:operational:v1:${OPERATIONAL_STORAGE_MIGRATION_APP}`;
+        }
+        function operationalStorageSerializedValueIsValid(raw) {
+            if (raw === null) return true;
+            try { JSON.parse(raw); return true; } catch (error) { return false; }
+        }
+        function isEliteOperationalStorageMigrationSession(farmId) {
+            const session = blueCrestSession;
+            return farmId === OPERATIONAL_STORAGE_MIGRATION_ELITE_FARM_ID && session?.farmId === farmId && session.uid === ELITE_FARM_STORAGE_OWNER_UID && session.role === 'owner' && session.membershipStatus === 'active' && session.plan === 'activated' && session.entitlementStatus === 'active' && session.canWrite === true;
+        }
+        function readOperationalStorageMigrationMarker(markerKey, farmId) {
+            const raw = localStorage.getItem(markerKey);
+            if (raw === null) return { state: 'missing', marker: null };
+            let marker;
+            try { marker = JSON.parse(raw); } catch (error) { return { state: 'invalid', reason: 'Migration marker is not valid JSON.' }; }
+            if (!marker || typeof marker !== 'object' || Array.isArray(marker) || marker.version !== OPERATIONAL_STORAGE_MIGRATION_VERSION || marker.app !== OPERATIONAL_STORAGE_MIGRATION_APP || marker.farmId !== farmId || !['complete', 'partial'].includes(marker.status) || !marker.keys || typeof marker.keys !== 'object' || Array.isArray(marker.keys)) return { state: 'invalid', reason: 'Migration marker contract is invalid.' };
+            const actualKeys = Object.keys(marker.keys).sort(), expectedKeys = [...OPERATIONAL_STORAGE_LEGACY_KEYS].sort();
+            if (actualKeys.length !== expectedKeys.length || actualKeys.some((key, index) => key !== expectedKeys[index])) return { state: 'invalid', reason: 'Migration marker key coverage is invalid.' };
+            const complete = marker.status === 'complete' && typeof marker.completedAt === 'string' && marker.completedAt.trim() && OPERATIONAL_STORAGE_LEGACY_KEYS.every(key => marker.keys[key] && typeof marker.keys[key] === 'object' && ['copied', 'already-present', 'absent'].includes(marker.keys[key].state) && marker.keys[key].verified === true);
+            if (marker.status === 'complete' && !complete) return { state: 'invalid', reason: 'Complete migration marker verification is invalid.' };
+            return { state: complete ? 'complete' : 'partial', marker };
+        }
+        function migrateEliteOperationalStorageToFarmScope() {
+            let farmId;
+            try { farmId = getActiveFarmId(); } catch (error) { return { status: 'failed', reason: error.message, keys: {} }; }
+            if (!isEliteOperationalStorageMigrationSession(farmId)) return { status: 'not-applicable', reason: 'Elite farm-owner session is required.', keys: {} };
+            const markerKey = operationalStorageMigrationMarkerKey(farmId);
+            let prior;
+            try { prior = readOperationalStorageMigrationMarker(markerKey, farmId); } catch (error) { return { status: 'failed', reason: `Migration marker could not be read: ${error.message}`, keys: {} }; }
+            if (prior.state === 'invalid') return { status: 'failed', reason: prior.reason, keys: {} };
+            if (prior.state === 'complete') return prior.marker;
+            const keys = {};
+            for (const legacyKey of OPERATIONAL_STORAGE_LEGACY_KEYS) {
+                try {
+                    const source = localStorage.getItem(legacyKey), destinationKey = operationalStorageKey(legacyKey), destination = localStorage.getItem(destinationKey);
+                    if (!operationalStorageSerializedValueIsValid(destination)) { keys[legacyKey] = { state: 'invalid-scoped', verified: false }; continue; }
+                    if (destination !== null) { keys[legacyKey] = { state: 'already-present', verified: true }; continue; }
+                    if (source === null) { keys[legacyKey] = { state: 'absent', verified: true }; continue; }
+                    if (!operationalStorageSerializedValueIsValid(source)) { keys[legacyKey] = { state: 'invalid-global', verified: false }; continue; }
+                    localStorage.setItem(destinationKey, source);
+                    keys[legacyKey] = localStorage.getItem(destinationKey) === source ? { state: 'copied', verified: true } : { state: 'failed', verified: false };
+                } catch (error) { keys[legacyKey] = { state: 'failed', verified: false, reason: error.message || 'Storage operation failed.' }; }
+            }
+            const complete = Object.values(keys).every(entry => entry.verified === true);
+            const marker = { version: OPERATIONAL_STORAGE_MIGRATION_VERSION, farmId, app: OPERATIONAL_STORAGE_MIGRATION_APP, status: complete ? 'complete' : 'partial', keys, completedAt: complete ? new Date().toISOString() : null, previousStatus: prior.state === 'partial' ? 'partial' : null };
+            try { localStorage.setItem(markerKey, JSON.stringify(marker)); }
+            catch (error) { return { ...marker, status: 'failed', reason: `Migration marker could not be written: ${error.message}` }; }
+            return marker;
         }
         function farmStorageMigrationMarkerKey() {
             return `bluecrest:${getActiveFarmId()}:migration:localStorage:v1:${ELITE_FARM_STORAGE_MIGRATION_APP}`;
@@ -1340,17 +1425,25 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
         const authLoading = document.getElementById('authLoadingScreen');
         const authScreen = document.getElementById('pinAuthScreen');
         const mainApp = document.getElementById('mainAppContainer');
+        let mobileOperationalRuntimeFarmId = null;
 
-        async function resolveLegacyEliteSession(user) {
-            const farm=await db.collection('farms').doc(LEGACY_ELITE_FARM_ID).get(); const membership=await db.collection('farms').doc(LEGACY_ELITE_FARM_ID).collection('members').doc(user.uid).get(); const entitlement=await db.collection('farms').doc(LEGACY_ELITE_FARM_ID).collection('entitlement').doc('current').get();
-            const farmData=farm.data()||{}; const membershipData=membership.data()||{}; const entitlementData=entitlement.data()||{};
-            if(!farm.exists||farmData.status!=='active') throw new Error('Elite farm is unavailable.'); if(!membership.exists||membershipData.status!=='active'||membershipData.role!=='owner') throw new Error('This account is not an active Elite owner.'); if(!entitlement.exists||entitlementData.plan!=='activated'||entitlementData.status!=='active') throw new Error('Elite entitlement is inactive.');
+        async function resolveBlueCrestSession(user) {
+            const accessError=(code,message)=>{const error=new Error(`${code}: ${message}`); error.code=code; return error;};
+            const uid=typeof user?.uid==='string'?user.uid.trim():'';
+            if(!uid) throw accessError('AUTH_UID_MISSING','A signed-in account is required.');
+            const userProfile=await db.collection('users').doc(uid).get();
+            if(!userProfile.exists) throw accessError('USER_PROFILE_NOT_FOUND','This account is not linked to a BlueCrest farm.');
+            const userData=userProfile.data()||{}; const farmId=typeof userData.farmId==='string'?userData.farmId.trim():'';
+            if(!farmId) throw accessError('USER_FARM_ID_MISSING','This account does not have a BlueCrest farm assignment.');
+            const farm=await db.collection('farms').doc(farmId).get(); const membership=await db.collection('farms').doc(farmId).collection('members').doc(uid).get(); const entitlement=await db.collection('farms').doc(farmId).collection('entitlement').doc('current').get();
+            const farmData=farm.data()||{}; const membershipData=membership.data()||{}; const entitlementData=entitlement.data()||{}; const role=typeof membershipData.role==='string'?membershipData.role.trim().toLowerCase():'';
+            if(!farm.exists) throw accessError('FARM_NOT_FOUND','The assigned farm record was not found.'); if(farmData.status!=='active') throw accessError('FARM_INACTIVE','The assigned farm is not active.'); if(!membership.exists) throw accessError('MEMBERSHIP_NOT_FOUND','No membership record exists for this account.'); if(membershipData.status!=='active') throw accessError('MEMBERSHIP_INACTIVE','This membership is not active.'); if(!['owner','admin','viewer','investor'].includes(role)) throw accessError('MEMBERSHIP_ROLE_INVALID','This membership role is not authorized.'); if(!entitlement.exists) throw accessError('ENTITLEMENT_NOT_FOUND','The farm entitlement record was not found.'); if(entitlementData.status!=='active') throw accessError('ENTITLEMENT_INACTIVE','The farm entitlement is not active.'); if(entitlementData.plan!=='activated') throw accessError('ENTITLEMENT_NOT_ACTIVATED','The farm entitlement plan is not activated.');
             const normalizedSetupStatus=resolveFarmSetupStatus(farmData);
             // Provisioning metadata for future startup routing; it does not alter current startup behavior.
-            blueCrestSession={uid:user.uid,email:user.email||'',farmId:LEGACY_ELITE_FARM_ID,farmName:farmData.farmName||'Elite Aqualines',role:membershipData.role,membershipStatus:membershipData.status,plan:entitlementData.plan||'',entitlementStatus:entitlementData.status,setupStatus:normalizedSetupStatus,canWrite:true};
+            blueCrestSession={uid,email:user.email||'',farmId,farmName:farmData.farmName||'BlueCrest Farm',role,membershipStatus:membershipData.status,plan:entitlementData.plan||'',entitlementStatus:entitlementData.status,setupStatus:normalizedSetupStatus,canWrite:['owner','admin'].includes(role)};
             document.getElementById('mobileFarmName').textContent=blueCrestSession.farmName;
         }
-        async function mobileBridgeSignOut() { stopOperationalMigrationControlListener(); stopFoundationMigrationControlListener(); blueCrestSession=null; isSyncInitialized=false; if (mobileCropFinancialSummaryUnsubscribe) { mobileCropFinancialSummaryUnsubscribe(); mobileCropFinancialSummaryUnsubscribe=null; } stopFarmListeners(); await firebase.auth().signOut(); location.reload(); }
+        async function mobileBridgeSignOut() { stopOperationalMigrationControlListener(); stopFoundationMigrationControlListener(); clearOperationalRuntimeForFarmSwitch(); clearFoundationRuntimeForFarmSwitch(); blueCrestSession=null; isSyncInitialized=false; if (mobileCropFinancialSummaryUnsubscribe) { mobileCropFinancialSummaryUnsubscribe(); mobileCropFinancialSummaryUnsubscribe=null; } stopFarmListeners(); await firebase.auth().signOut(); location.reload(); }
         document.getElementById('mobileAuthForm')?.addEventListener('submit',async e=>{e.preventDefault();try{await firebase.auth().signInWithEmailAndPassword(authEmailInput.value.trim(),authPasswordInput.value);authStatus.textContent='';}catch(err){authStatus.textContent=err.message||'Sign in failed.';}});
         document.getElementById('mobileForgotPassword')?.addEventListener('click',async()=>{const email=authEmailInput.value.trim();if(!email)return authStatus.textContent='Enter your email first.';try{await firebase.auth().sendPasswordResetEmail(email);authStatus.textContent='Password-reset email sent.';}catch(err){authStatus.textContent=err.message||'Could not send reset email.';}});
         document.getElementById('mobileAuthSignOut')?.addEventListener('click',mobileBridgeSignOut);
@@ -1359,7 +1452,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             authLoading.classList.add('hidden');
 
             if (user) {
-                try { await resolveLegacyEliteSession(user); await startFoundationMigrationControlListener(); await startOperationalMigrationControlListener(); authScreen.classList.add('hidden'); mainApp.classList.remove('hidden'); } catch(err) { stopOperationalMigrationControlListener(); stopFoundationMigrationControlListener(); blueCrestSession=null; authStatus.textContent=err.message||'Access denied.'; authScreen.classList.remove('hidden'); mainApp.classList.add('hidden'); return; }
+                try { await resolveBlueCrestSession(user); if (mobileOperationalRuntimeFarmId && mobileOperationalRuntimeFarmId !== blueCrestSession.farmId) { clearOperationalRuntimeForFarmSwitch(); clearFoundationRuntimeForFarmSwitch(); } mobileOperationalRuntimeFarmId=blueCrestSession.farmId; await startFoundationMigrationControlListener(); if (!isFoundationScopedRoutingEnabled()) throw new Error('Farm-scoped Foundation storage is not ready.'); loadFoundationCacheForActiveFarm(); const operationalStorageMigration=migrateEliteOperationalStorageToFarmScope(); if (!['complete','not-applicable'].includes(operationalStorageMigration.status)) throw new Error(operationalStorageMigration.reason||'Elite operational local-storage migration could not safely complete.'); loadOperationalCacheForActiveFarm(); await startOperationalMigrationControlListener(); assertGenericFarmNativeScopedStartupReady(); authScreen.classList.add('hidden'); mainApp.classList.remove('hidden'); } catch(err) { stopOperationalMigrationControlListener(); stopFoundationMigrationControlListener(); blueCrestSession=null; authStatus.textContent=err.message||'Access denied.'; authScreen.classList.remove('hidden'); mainApp.classList.add('hidden'); return; }
                 // The header was hidden before authentication, so measure it only
                 // after the main app becomes visible.
                 requestAnimationFrame(() => {
@@ -1386,30 +1479,28 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             if (confirm("Sign out of this device? You will need to sign in again.")) mobileBridgeSignOut();
         }
 
-        let ponds = JSON.parse(localStorage.getItem(foundationStorageKey('bc_ponds'))) || (canPersistSyntheticFoundationState() ? [
-            { id: 'P1', length: 100, breadth: 50, area: 5000, stockingDate: '2026-07-28', stockingCount: 150000 },
-            { id: 'P2', length: 100, breadth: 60, area: 6000, stockingDate: '2026-07-28', stockingCount: 180000 },
-            { id: 'P3', length: 80, breadth: 50, area: 4000, stockingDate: '2026-08-01', stockingCount: 120000 },
-            { id: 'P4', length: 120, breadth: 60, area: 7200, stockingDate: '2026-08-05', stockingCount: 200000 },
-            { id: 'P5', length: 90, breadth: 50, area: 4500, stockingDate: '2026-08-10', stockingCount: 135000 }
-        ] : []);
+        let ponds = [];
 
-        // Legacy pond records are treated as 2026 Crop 1 until explicitly assigned.
-        ponds = ponds.map(p => ({
-            ...p,
-            year: p.year || 2026,
-            crop: p.crop || 'Crop 1',
-            cycleId: p.cycleId || `${Number(p.year || 2026)}|${String(p.crop || 'Crop 1').toLowerCase()}`
-        }));
-        if (canPersistSyntheticFoundationState()) localStorage.setItem(foundationStorageKey('bc_ponds'), JSON.stringify(ponds));
-
-        let feedEntries = JSON.parse(localStorage.getItem('bc_feeds')) || [];
-        let samplingEntries = JSON.parse(localStorage.getItem('bc_sampling')) || [];
-        let treatmentEntries = JSON.parse(localStorage.getItem('bc_treatments')) || [];
-        let harvestEntries = JSON.parse(localStorage.getItem('bc_harvests')) || [];
+        let feedEntries = [];
+        let samplingEntries = [];
+        let treatmentEntries = [];
+        let harvestEntries = [];
         // Stock transfers are created/managed from the laptop, but the mobile app
         // must read them so Transfer-in ponds show their actual incoming stock.
-        let stockTransfers = JSON.parse(localStorage.getItem('bc_stockTransfers')) || [];
+        let stockTransfers = [];
+        function clearOperationalRuntimeForFarmSwitch() {
+            feedEntries=[]; samplingEntries=[]; treatmentEntries=[]; harvestEntries=[]; stockTransfers=[];
+            vendorTransactions=[]; ledgerEntries=[]; mobileOperationalRuntimeFarmId=null;
+        }
+        function loadOperationalCacheForActiveFarm() {
+            feedEntries=JSON.parse(readOperationalStorage('bc_feeds')) || [];
+            samplingEntries=JSON.parse(readOperationalStorage('bc_sampling')) || [];
+            treatmentEntries=JSON.parse(readOperationalStorage('bc_treatments')) || [];
+            harvestEntries=JSON.parse(readOperationalStorage('bc_harvests')) || [];
+            stockTransfers=JSON.parse(readOperationalStorage('bc_stockTransfers')) || [];
+            vendorTransactions=JSON.parse(readOperationalStorage('bc_vendorTransactions')) || [];
+            ledgerEntries=JSON.parse(readOperationalStorage('bc_ledgerEntries')) || [];
+        }
 
         const treatmentCatalog = {
             'Probiotics': [
@@ -1478,12 +1569,10 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
         // Year + Crop is the foundational operational context.
         const DEFAULT_CYCLE_YEAR = 2026;
         const DEFAULT_CYCLE_CROP = 'Crop 1';
-        let farmCycles = JSON.parse(localStorage.getItem(foundationStorageKey('bc_farmCycles'))) || (canPersistSyntheticFoundationState() ? [
-            { id: '2026|crop 1', year: 2026, crop: 'Crop 1', name: '2026 Crop 1' }
-        ] : []);
-        let activeMobileCycle = JSON.parse(localStorage.getItem(foundationStorageKey('bc_activeCycle'))) || (canPersistSyntheticFoundationState() ? {
-            id: '2026|crop 1', year: 2026, crop: 'Crop 1'
-        } : null);
+        let farmCycles = [];
+        let activeMobileCycle = null;
+        function clearFoundationRuntimeForFarmSwitch(){ponds=[];farmCycles=[];activeMobileCycle=null;window.blueCrestClearFoundationLocksForFarmSwitch?.();}
+        function loadFoundationCacheForActiveFarm(){if(!isFoundationScopedRoutingEnabled())throw new Error('Farm-scoped Foundation storage is not ready.');try{ponds=JSON.parse(localStorage.getItem(foundationStorageKey('bc_ponds'))||'[]')}catch(e){ponds=[]}ponds=(Array.isArray(ponds)?ponds:[]).map(p=>({...p,year:p.year||2026,crop:p.crop||'Crop 1',cycleId:p.cycleId||`${Number(p.year||2026)}|${String(p.crop||'Crop 1').toLowerCase()}`}));try{farmCycles=JSON.parse(localStorage.getItem(foundationStorageKey('bc_farmCycles'))||'[]')}catch(e){farmCycles=[]}farmCycles=Array.isArray(farmCycles)?farmCycles:[];try{activeMobileCycle=JSON.parse(localStorage.getItem(foundationStorageKey('bc_activeCycle'))||'null')}catch(e){activeMobileCycle=null}window.blueCrestLoadFoundationLocksForActiveFarm();}
         // Financial results are calculated and published by the Laptop. Mobile
         // only displays the selected crop's published summary.
         let mobileCropFinancialSummary = null;
@@ -1635,8 +1724,6 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             treatmentPondFilter = 'ALL';
             harvestPondFilter = 'ALL';
             populateMobileCycleSelectors();
-            const feedCycleNote = document.getElementById('mobile-feed-cycle-note-text');
-            if (feedCycleNote) feedCycleNote.textContent = `${activeMobileCycle.year} • ${activeMobileCycle.crop}`;
             syncPondDropdown();
             renderAllPondsSummary();
             renderPondList();
@@ -1717,6 +1804,12 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
 
         function subscribeMobileProductMaster() {
             if (typeof mobileProductMasterUnsubscribe === 'function') { try { mobileProductMasterUnsubscribe(); } catch (error) { console.warn('Mobile Product Master listener teardown failed:', error); } }
+            if (!isProductCatalogueScoped()) {
+                mobileProductMaster = [];
+                mobileProductMasterLoaded = false;
+                console.warn('Scoped Product Catalogue authority is unavailable.');
+                return;
+            }
             mobileProductMasterUnsubscribe = mobileProductMasterDocument().onSnapshot(doc => {
                 mobileProductMaster = normalizeMobileProductMaster(doc.exists ? doc.data() : null);
                 mobileProductMasterLoaded = doc.exists;
@@ -1775,8 +1868,8 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                 if (statusEl) {
                     statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-400"></span> Local`;
                 }
-                vendorTransactions = JSON.parse(localStorage.getItem('bc_vendorTransactions') || '[]');
-                ledgerEntries = JSON.parse(localStorage.getItem('bc_ledgerEntries') || '[]');
+                vendorTransactions = JSON.parse(readOperationalStorage('bc_vendorTransactions') || '[]');
+                ledgerEntries = JSON.parse(readOperationalStorage('bc_ledgerEntries') || '[]');
                 recalculateCumulatives();
                 refreshAllViews();
                 return;
@@ -1825,7 +1918,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                     const d = doc.data() || {};
                     return { ...d, id: doc.id, firestoreId: doc.id, legacyRecordId: d.id != null && String(d.id) !== String(doc.id) ? d.id : null };
                 });
-                localStorage.setItem('bc_feeds', JSON.stringify(feedEntries));
+                writeOperationalStorage('bc_feeds', JSON.stringify(feedEntries));
                 recalculateCumulatives();
                 refreshForMobileCycleChange();
             }, err => console.error("Feeds sync error:", err));
@@ -1861,7 +1954,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                         notes: d.notes || ''
                     };
                 });
-                localStorage.setItem('bc_sampling', JSON.stringify(samplingEntries));
+                writeOperationalStorage('bc_sampling', JSON.stringify(samplingEntries));
                 renderSamplingList();
             }, err => console.error("Sampling sync error:", err));
 
@@ -1889,7 +1982,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                         notes: d.notes || ''
                     };
                 });
-                localStorage.setItem('bc_treatments', JSON.stringify(treatmentEntries));
+                writeOperationalStorage('bc_treatments', JSON.stringify(treatmentEntries));
                 renderTreatmentList();
             }, err => console.error("Treatments sync error:", err));
 
@@ -1924,7 +2017,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                         notes: d.notes || ''
                     };
                 });
-                localStorage.setItem('bc_harvests', JSON.stringify(harvestEntries));
+                writeOperationalStorage('bc_harvests', JSON.stringify(harvestEntries));
                 window.__bcMobileInitialHarvestSnapshotReady = true;
                 if (typeof window.blueCrestMarkInitialHarvestLockSnapshotReady === 'function') {
                     window.blueCrestMarkInitialHarvestLockSnapshotReady();
@@ -1941,7 +2034,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                     id: doc.id,
                     ...doc.data()
                 }));
-                localStorage.setItem('bc_stockTransfers', JSON.stringify(stockTransfers));
+                writeOperationalStorage('bc_stockTransfers', JSON.stringify(stockTransfers));
                 // The transfer helper is derived from this listener's state. Refresh
                 // the visible Pond Management view only after that state is current.
                 if (currentMobileTab === 'pond') setTimeout(renderPondList, 0);
@@ -1951,13 +2044,13 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             // Finance is global: never filter these records by the active Year + Crop.
             listenAccountingSourceCollection('vendorTransactions', snap => {
                 vendorTransactions = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                localStorage.setItem('bc_vendorTransactions', JSON.stringify(vendorTransactions));
+                writeOperationalStorage('bc_vendorTransactions', JSON.stringify(vendorTransactions));
                 renderAllPondsSummary();
             }, err => console.error("Vendor payments sync error:", err));
 
             listenAccountingSourceCollection('ledgerEntries', snap => {
                 ledgerEntries = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                localStorage.setItem('bc_ledgerEntries', JSON.stringify(ledgerEntries));
+                writeOperationalStorage('bc_ledgerEntries', JSON.stringify(ledgerEntries));
                 renderAllPondsSummary();
             }, err => console.error("Ledger expenses sync error:", err));
 
@@ -2146,7 +2239,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                 );
                 if (idx >= 0) feedEntries[idx] = normalized;
                 else feedEntries.push(normalized);
-                localStorage.setItem('bc_feeds', JSON.stringify(feedEntries));
+                writeOperationalStorage('bc_feeds', JSON.stringify(feedEntries));
                 recalculateCumulatives();
                 renderAllPondsSummary();
                 renderHistory();
@@ -2183,7 +2276,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                         String(item.firestoreId || '') !== String(entryId) &&
                         String(item.legacyRecordId || '') !== String(entryId)
                     );
-                    localStorage.setItem('bc_feeds', JSON.stringify(feedEntries));
+                    writeOperationalStorage('bc_feeds', JSON.stringify(feedEntries));
                     recalculateCumulatives();
                     renderAllPondsSummary();
                     renderHistory();
@@ -2231,7 +2324,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                     String(s.id) === String(firestoreId) || String(s.firestoreId || '') === String(firestoreId)
                 );
                 if (idx >= 0) samplingEntries[idx] = normalized; else samplingEntries.push(normalized);
-                localStorage.setItem('bc_sampling', JSON.stringify(samplingEntries));
+                writeOperationalStorage('bc_sampling', JSON.stringify(samplingEntries));
                 renderSamplingList();
                 return true;
             }
@@ -2245,7 +2338,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                         String(s.firestoreId || '') !== String(sampleId) &&
                         String(s.legacyRecordId || '') !== String(sampleId)
                     );
-                    localStorage.setItem('bc_sampling', JSON.stringify(samplingEntries));
+                    writeOperationalStorage('bc_sampling', JSON.stringify(samplingEntries));
                     renderSamplingList();
                 });
             } catch (err) {
@@ -2307,7 +2400,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                 const idx = treatmentEntries.findIndex(item => item.id === normalized.id);
                 if (idx >= 0) treatmentEntries[idx] = normalized;
                 else treatmentEntries.push(normalized);
-                localStorage.setItem('bc_treatments', JSON.stringify(treatmentEntries));
+                writeOperationalStorage('bc_treatments', JSON.stringify(treatmentEntries));
                 renderTreatmentList();
             }
         }
@@ -2320,7 +2413,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                         String(t.firestoreId || '') !== String(treatId) &&
                         String(t.legacyRecordId || '') !== String(treatId)
                     );
-                    localStorage.setItem('bc_treatments', JSON.stringify(treatmentEntries));
+                    writeOperationalStorage('bc_treatments', JSON.stringify(treatmentEntries));
                     renderTreatmentList();
                 });
             } catch (err) {
@@ -2348,7 +2441,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                 const idx = harvestEntries.findIndex(item => item.id === normalized.id);
                 if (idx >= 0) harvestEntries[idx] = normalized;
                 else harvestEntries.push(normalized);
-                localStorage.setItem('bc_harvests', JSON.stringify(harvestEntries));
+                writeOperationalStorage('bc_harvests', JSON.stringify(harvestEntries));
                 renderHarvestList();
             }
         }
@@ -2361,7 +2454,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                         String(h.firestoreId || '') !== String(harvestId) &&
                         String(h.legacyRecordId || '') !== String(harvestId)
                     );
-                    localStorage.setItem('bc_harvests', JSON.stringify(harvestEntries));
+                    writeOperationalStorage('bc_harvests', JSON.stringify(harvestEntries));
                     renderHarvestList();
                 });
             } catch (err) {
@@ -3165,16 +3258,8 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             const c = getActiveCycle();
             const cycleEntries = samplingEntries.filter(item => String(item.cycleId || `${Number(item.year || DEFAULT_CYCLE_YEAR)}|${String(item.crop || DEFAULT_CYCLE_CROP).toLowerCase()}`) === String(c.id));
             let rows = samplingPondFilter === 'ALL' ? [...cycleEntries] : cycleEntries.filter(item => item.pond === samplingPondFilter);
-            if (samplingPondFilter === 'ALL') {
-                const latestByPond = new Map();
-                rows.forEach(item => {
-                    const prior = latestByPond.get(item.pond);
-                    if (!prior || new Date(`${item.date}T00:00:00`) > new Date(`${prior.date}T00:00:00`)) latestByPond.set(item.pond, item);
-                });
-                rows = [...latestByPond.values()];
-            }
             rows.sort((a, b) => new Date(`${b.date}T00:00:00`) - new Date(`${a.date}T00:00:00`));
-            if (totalCountEl) totalCountEl.innerText = samplingPondFilter === 'ALL' ? `${rows.length} Latest Records` : `${rows.length} Records Logged`;
+            if (totalCountEl) totalCountEl.innerText = `${rows.length} Records Logged`;
             if (!rows.length) { container.innerHTML = '<div class="p-6 text-center text-slate-400 text-sm">No sampling records found.</div>'; return; }
             const header = '<colgroup><col style="width:22%"><col style="width:12%"><col style="width:12%"><col style="width:17%"><col style="width:18%"><col style="width:19%"></colgroup><thead class="bg-slate-50 text-[9px] uppercase tracking-wide text-slate-500"><tr><th class="px-1 py-2 text-left">Date</th><th class="px-1 py-2 text-left">Pond</th><th class="px-1 py-2 text-right">DOC</th><th class="px-1 py-2 text-right">Count</th><th class="px-1 py-2 text-right">ABW</th><th class="px-1 py-2 text-right">ADG</th></tr></thead>';
             // Same compact pond-badge mapping used by Treatment and Harvest.
@@ -4769,8 +4854,8 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
 <script id="bluecrest-lock-system">
 (function(){
   const DEVICE = 'mobile';
-  let pondLocks = JSON.parse(localStorage.getItem(foundationStorageKey('bc_pondLocks')) || '{}');
-  let cropLocks = JSON.parse(localStorage.getItem(foundationStorageKey('bc_cropLocks')) || '{}');
+  let pondLocks = {};
+  let cropLocks = {};
   let initialPondLocksSnapshotReady = false;
   let initialHarvestSnapshotReady = window.__bcMobileInitialHarvestSnapshotReady === true;
   let initialHarvestReconciliationDone = false;
@@ -4814,6 +4899,8 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
   function isPondClosed(pid,cid){ return effectivePondLock(cid,pid)?.closed===true; }
   function isCropClosed(cid){ return !!cropLocks[String(cid)]?.closed; }
   function saveLocal(){ localStorage.setItem(foundationStorageKey('bc_pondLocks'),JSON.stringify(pondLocks)); localStorage.setItem(foundationStorageKey('bc_cropLocks'),JSON.stringify(cropLocks)); }
+  window.blueCrestClearFoundationLocksForFarmSwitch=function(){pondLocks={};cropLocks={};initialPondLocksSnapshotReady=false;};
+  window.blueCrestLoadFoundationLocksForActiveFarm=function(){try{pondLocks=JSON.parse(localStorage.getItem(foundationStorageKey('bc_pondLocks'))||'{}')}catch(error){pondLocks={}}try{cropLocks=JSON.parse(localStorage.getItem(foundationStorageKey('bc_cropLocks'))||'{}')}catch(error){cropLocks={}}};
   function deny(msg){ alert(msg); return false; }
   window.blueCrestIsPondClosed=isPondClosed;
   window.blueCrestIsCropClosed=isCropClosed;
