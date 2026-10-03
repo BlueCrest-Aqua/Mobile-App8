@@ -6121,7 +6121,10 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                     updateBulkFeedSummary();
                 };
                 wireBulkFeedSearch(feedInput, feedList, feedCodes, code => code);
-                wireBulkFeedSearch(sname, suppList, supplements, product => product.name, recalc);
+                wireBulkFeedSearch(sname, suppList, supplements, product => product.name, () => {
+                    recalc();
+                    dose.focus();
+                });
                 qty.addEventListener('input', recalc);
                 dose.addEventListener('input', recalc);
                 sname.addEventListener('input', recalc);
