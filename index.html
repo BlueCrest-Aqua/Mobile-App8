@@ -284,6 +284,124 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
   .app-fixed-header > div:first-child{padding:.75rem!important;}
   .app-fixed-header button[id^="tab"]{font-size:.72rem!important;padding-left:.45rem!important;padding-right:.45rem!important;}
 }
+
+/* BULK FEED STAGE 4 — Pending Status & Progress UI only */
+#bulkFeedPendingStatus {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  z-index: 9998;
+  display: none;
+  background: #fff;
+  border: 1px solid #d7e0e8;
+  border-radius: 12px;
+  box-shadow: 0 6px 22px rgba(0,0,0,.14);
+  padding: 10px 12px;
+}
+#bulkFeedPendingStatus.is-visible { display: block; }
+#bulkFeedPendingStatus .bfps-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+#bulkFeedPendingStatus .bfps-text { flex: 1; min-width: 0; }
+#bulkFeedPendingStatus .bfps-title { font-weight: 700; font-size: 14px; }
+#bulkFeedPendingStatus .bfps-detail { font-size: 12px; opacity: .72; margin-top: 2px; }
+#bulkFeedPendingStatus .bfps-btn {
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+#bulkFeedPendingStatus .bfps-btn:disabled { opacity: .55; cursor: default; }
+#bulkFeedPendingStatus .bfps-progress {
+  height: 5px;
+  border-radius: 999px;
+  background: #e8edf2;
+  overflow: hidden;
+  margin-top: 8px;
+  display: none;
+}
+#bulkFeedPendingStatus .bfps-progress.is-visible { display: block; }
+#bulkFeedPendingStatus .bfps-progress > span {
+  display: block;
+  width: 0%;
+  height: 100%;
+  background: currentColor;
+  transition: width .15s linear;
+}
+
+
+/* BULK FEED STAGE 5 — Bulk Feed Entry UI only */
+#bulkFeedModal {
+  position: fixed; inset: 0; z-index: 9997; display: none;
+  background: #f5f8fb; overflow: auto;
+}
+#bulkFeedModal.is-open { display: block; }
+#bulkFeedModal .bf-head {
+  position: sticky; top: 0; z-index: 3; background: #fff;
+  border-bottom: 1px solid #dbe4ec; padding: 10px 12px;
+}
+#bulkFeedModal .bf-head-row { display:flex; align-items:center; gap:10px; }
+#bulkFeedModal .bf-title { font-weight:800; font-size:18px; flex:1; }
+#bulkFeedModal .bf-close {
+  border:0; background:transparent; font-size:26px; line-height:1; cursor:pointer;
+}
+#bulkFeedModal .bf-controls {
+  display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px;
+}
+#bulkFeedModal label { font-size:12px; font-weight:700; display:block; }
+#bulkFeedModal input, #bulkFeedModal select {
+  width:100%; box-sizing:border-box; min-height:38px; border:1px solid #cbd7e1;
+  border-radius:8px; background:#fff; padding:7px 8px; font:inherit;
+}
+#bulkFeedModal .bf-body { padding:10px 10px 92px; }
+#bulkFeedRows { display:flex; flex-direction:column; gap:8px; }
+#bulkFeedRows .bf-row {
+  background:#fff; border:1px solid #dce5ed; border-radius:10px; padding:8px;
+}
+#bulkFeedRows .bf-grid {
+  display:grid; grid-template-columns:52px 76px minmax(105px,1fr) 78px 38px;
+  gap:6px; align-items:end;
+}
+#bulkFeedRows .bf-cell-title { font-size:10px; opacity:.68; margin-bottom:3px; }
+#bulkFeedRows .bf-pond { font-weight:800; min-height:38px; display:flex; align-items:center; }
+#bulkFeedRows .bf-prev { min-height:38px; display:flex; align-items:center; font-weight:700; }
+#bulkFeedRows .bf-plus {
+  min-height:38px; border:1px solid #1686df; color:#1686df; background:#fff;
+  border-radius:8px; font-size:21px; font-weight:800; cursor:pointer;
+}
+#bulkFeedRows .bf-plus.has-supp {
+  background:#eaf8ef; border-color:#27a45a; color:#188a45; font-size:17px;
+}
+#bulkFeedRows .bf-supp {
+  display:none; margin-top:8px; border-top:1px dashed #d8e1e9; padding-top:8px;
+}
+#bulkFeedRows .bf-supp.is-open { display:block; }
+#bulkFeedRows .bf-supp-grid {
+  display:grid; grid-template-columns:minmax(130px,1fr) 86px 92px 34px; gap:6px; align-items:end;
+}
+#bulkFeedRows .bf-remove {
+  min-height:38px; border:0; background:transparent; font-size:20px; cursor:pointer;
+}
+#bulkFeedModal .bf-bottom {
+  position:fixed; left:0; right:0; bottom:0; z-index:4; background:#fff;
+  border-top:1px solid #dbe4ec; padding:8px 10px;
+}
+#bulkFeedModal .bf-summary { display:flex; gap:16px; font-size:12px; margin-bottom:7px; }
+#bulkFeedModal .bf-actions { display:grid; grid-template-columns:1fr 2fr; gap:8px; }
+#bulkFeedModal .bf-actions button {
+  min-height:42px; border-radius:9px; border:1px solid #cbd7e1; font-weight:800; cursor:pointer;
+}
+#bulkFeedSaveBtn { border:0 !important; }
+#bulkFeedOpenBtn { margin-left:8px; }
+@media (max-width: 430px) {
+  #bulkFeedRows .bf-grid { grid-template-columns:42px 66px minmax(90px,1fr) 70px 36px; gap:4px; }
+  #bulkFeedRows .bf-supp-grid { grid-template-columns:minmax(110px,1fr) 72px 78px 30px; gap:4px; }
+}
+
 </style>
 
 </head>
@@ -439,6 +557,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                     <button id="feedRecordBtn" onclick="blueCrestOpenFeedRecord()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow-sm transition flex items-center gap-1.5">
                         <span>+</span> Record Feed
                     </button>
+<button id="bulkFeedOpenBtn" type="button" onclick="openBulkFeedModal()">Bulk Feed</button>
                 </div>
 
                 <div class="flex justify-between items-center bg-white p-2.5 rounded-xl border border-slate-100 shadow-sm gap-2">
@@ -3760,6 +3879,278 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             }
         }
 
+        // BULK FEED STAGE 1 — CORE RECORD ENGINE ONLY.
+        // This helper builds and validates ordinary BlueCrest feed records in memory.
+        // It performs no UI changes, no local-storage writes, and no Firebase writes.
+        function buildBulkFeedRecords(input) {
+            if (isViewOnlyMode) throw new Error('View-Only mode: data changes are disabled.');
+
+            const payload = input && typeof input === 'object' ? input : {};
+            const date = String(payload.date || '').trim();
+            const slotKey = String(payload.feedingSlot || '').trim();
+            const rows = Array.isArray(payload.rows) ? payload.rows : [];
+            const slotTimes = Object.freeze({
+                'Morning – 6 AM': '06:00 AM',
+                'Morning – 10 AM': '10:00 AM',
+                'Afternoon – 2 PM': '02:00 PM',
+                'Evening – 5 PM': '05:00 PM'
+            });
+            const time = slotTimes[slotKey];
+
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error('A valid feeding date is required.');
+            if (!time) throw new Error('A valid BlueCrest feeding slot is required.');
+            if (rows.length === 0) throw new Error('At least one pond feed row is required.');
+
+            const c = getActiveCycle();
+            const activePonds = getActivePonds();
+            const activePondIds = new Set(activePonds.map(p => String(p.id)));
+            const seenPonds = new Set();
+            const prepared = [];
+            const idBase = Date.now();
+
+            rows.forEach((rawRow, index) => {
+                const row = rawRow && typeof rawRow === 'object' ? rawRow : {};
+                const pond = String(row.pond || '').trim();
+                const feedCode = String(row.feedCode || '').trim();
+                const feedQty = Number(row.feedQty);
+
+                // previousFeedQty is deliberately ignored: it is display/reference only.
+                if (!pond || !activePondIds.has(pond)) throw new Error(`Row ${index + 1}: select a pond from ${c.year} • ${c.crop}.`);
+                if (seenPonds.has(pond)) throw new Error(`Row ${index + 1}: pond ${pond} appears more than once.`);
+                if (!feedCode || !Number.isFinite(feedQty) || feedQty <= 0) throw new Error(`Row ${index + 1}: Feed Code and a positive Feed Qty are required.`);
+                if (typeof blueCrestAssertOperationalWrite === 'function' && !blueCrestAssertOperationalWrite({ pondId: pond, cycleId: c.id })) {
+                    throw new Error(`Row ${index + 1}: ${pond} is not writable.`);
+                }
+
+                let supplement = null;
+                const supplementCode = String(row.supplement || row.supplementCode || '').trim();
+                const supplementDoseRaw = row.supplementDose;
+                const supplementDose = Number(supplementDoseRaw);
+                if (supplementCode) {
+                    const calculatedSuppQty = feedQty * supplementDose;
+                    if (supplementDoseRaw === '' || supplementDoseRaw === null || supplementDoseRaw === undefined || !Number.isFinite(supplementDose) || supplementDose <= 0 || !Number.isFinite(calculatedSuppQty) || calculatedSuppQty <= 0) {
+                        throw new Error(`Row ${index + 1}: enter supplement quantity/dose before saving.`);
+                    }
+                    const productId = row.supplementProductId || null;
+                    const resolution = resolveMobileMasterProduct(productId, supplementCode);
+                    if (!resolution.product) throw new Error(`Row ${index + 1}: ${resolution.error}`);
+                    if (!resolution.product.useInSupplement) throw new Error(`Row ${index + 1}: product is no longer enabled for Feed Supplement.`);
+                    supplement = { code: supplementCode, dose: supplementDose, qty: calculatedSuppQty };
+                }
+
+                seenPonds.add(pond);
+                prepared.push({
+                    id: `${idBase}-${index + 1}`,
+                    pond,
+                    year: Number(c.year),
+                    crop: c.crop,
+                    cycleId: c.id,
+                    date,
+                    time,
+                    qty: feedQty,
+                    cumulative: 0,
+                    notes: '',
+                    fasting: false,
+                    feeds: [{ code: feedCode, qty: feedQty }],
+                    supplement
+                });
+            });
+
+            return prepared;
+        }
+        window.blueCrestBuildBulkFeedRecords = buildBulkFeedRecords;
+
+        // BULK FEED STAGE 2 — FARM-SCOPED LOCAL PENDING QUEUE ONLY.
+        // This queue preserves already-built ordinary feed records on this device.
+        // It performs no Firebase writes and does not alter the existing single-feed flow.
+        const BULK_FEED_PENDING_STORAGE_KEY = 'bc_pendingFeedUploads';
+        const BULK_FEED_PENDING_VERSION = 1;
+
+        function bulkFeedPendingStorageKey() {
+            return farmStorageKey(BULK_FEED_PENDING_STORAGE_KEY);
+        }
+
+        function readBulkFeedPendingQueue() {
+            const farmId = getActiveFarmId();
+            let raw = null;
+            try { raw = localStorage.getItem(bulkFeedPendingStorageKey()); }
+            catch (error) { throw new Error(`Bulk Feed pending queue could not be read: ${error.message}`); }
+            if (raw === null) return { version: BULK_FEED_PENDING_VERSION, farmId, records: [] };
+
+            let parsed;
+            try { parsed = JSON.parse(raw); }
+            catch (error) { throw new Error('Bulk Feed pending queue is not valid JSON.'); }
+            if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed) || parsed.version !== BULK_FEED_PENDING_VERSION || parsed.farmId !== farmId || !Array.isArray(parsed.records)) {
+                throw new Error('Bulk Feed pending queue contract is invalid for this farm.');
+            }
+            return parsed;
+        }
+
+        function writeBulkFeedPendingQueue(queue) {
+            const farmId = getActiveFarmId();
+            const normalized = { version: BULK_FEED_PENDING_VERSION, farmId, records: Array.isArray(queue?.records) ? queue.records : [] };
+            try {
+                localStorage.setItem(bulkFeedPendingStorageKey(), JSON.stringify(normalized));
+                return normalized;
+            } catch (error) {
+                throw new Error(`Bulk Feed pending queue could not be saved: ${error.message}`);
+            }
+        }
+
+        function queueBulkFeedPendingRecords(records) {
+            if (isViewOnlyMode) throw new Error('View-Only mode: data changes are disabled.');
+            if (!Array.isArray(records) || records.length === 0) throw new Error('At least one Bulk Feed record is required.');
+
+            const c = getActiveCycle();
+            const queue = readBulkFeedPendingQueue();
+            const existingIds = new Set(queue.records.map(record => String(record?.id || '')));
+            const incomingIds = new Set();
+            const prepared = records.map((record, index) => {
+                if (!record || typeof record !== 'object' || Array.isArray(record)) throw new Error(`Pending record ${index + 1} is invalid.`);
+                const id = String(record.id || '').trim();
+                if (!id) throw new Error(`Pending record ${index + 1} has no permanent ID.`);
+                if (incomingIds.has(id)) throw new Error(`Pending record ${index + 1} duplicates ID ${id}.`);
+                if (existingIds.has(id)) throw new Error(`Pending record ${index + 1} is already queued.`);
+                if (String(record.cycleId || '') !== String(c.id) || Number(record.year) !== Number(c.year) || String(record.crop || '') !== String(c.crop)) {
+                    throw new Error(`Pending record ${index + 1} does not belong to ${c.year} • ${c.crop}.`);
+                }
+                incomingIds.add(id);
+                return { ...record };
+            });
+
+            queue.records.push(...prepared);
+            return writeBulkFeedPendingQueue(queue);
+        }
+
+        function getBulkFeedPendingRecords() {
+            return readBulkFeedPendingQueue().records.map(record => ({ ...record }));
+        }
+
+        function clearBulkFeedPendingQueueForStage2Test() {
+            try { localStorage.removeItem(bulkFeedPendingStorageKey()); return true; }
+            catch (error) { throw new Error(`Bulk Feed pending queue could not be cleared: ${error.message}`); }
+        }
+
+        window.blueCrestBulkFeedPending = Object.freeze({
+            storageKey: bulkFeedPendingStorageKey,
+            read: readBulkFeedPendingQueue,
+            queue: queueBulkFeedPendingRecords,
+            records: getBulkFeedPendingRecords,
+            clearForStage2Test: clearBulkFeedPendingQueueForStage2Test
+        });
+
+        // BULK FEED STAGE 3 — FIREBASE UPLOAD + RETRY ENGINE ONLY.
+        // Pending records remain ordinary feed records and use their permanent pending ID
+        // as the Firestore document ID. Existing single-feed save behavior is untouched.
+        const BULK_FEED_UPLOAD_CONFIRM_TIMEOUT_MS = 8000;
+
+        function removeBulkFeedPendingRecordById(recordId) {
+            const id = String(recordId || '').trim();
+            if (!id) throw new Error('Bulk Feed pending record ID is required.');
+            const queue = readBulkFeedPendingQueue();
+            const before = queue.records.length;
+            queue.records = queue.records.filter(record => String(record?.id || '') !== id);
+            if (queue.records.length === before) return queue;
+            return writeBulkFeedPendingQueue(queue);
+        }
+
+        function bulkFeedServerConfirmation(timeoutMs = BULK_FEED_UPLOAD_CONFIRM_TIMEOUT_MS) {
+            if (!db || typeof db.waitForPendingWrites !== 'function') {
+                return Promise.reject(new Error('Firebase server confirmation is unavailable.'));
+            }
+            const wait = db.waitForPendingWrites();
+            const timeout = new Promise((_, reject) => {
+                setTimeout(() => reject(new Error('Server confirmation timed out; record remains pending.')), timeoutMs);
+            });
+            return Promise.race([wait, timeout]);
+        }
+
+        async function uploadOneBulkFeedPendingRecord(record, options = {}) {
+            if (isViewOnlyMode) throw new Error('View-Only mode: data changes are disabled.');
+            if (!record || typeof record !== 'object' || Array.isArray(record)) throw new Error('Bulk Feed pending record is invalid.');
+
+            const id = String(record.id || '').trim();
+            if (!id) throw new Error('Bulk Feed pending record has no permanent ID.');
+            if (!isFirebaseConnected || !db) throw new Error('Firebase is unavailable; record remains pending.');
+
+            if (typeof blueCrestAssertOperationalWrite === 'function' &&
+                !blueCrestAssertOperationalWrite({ pondId: record.pond, cycleId: record.cycleId })) {
+                throw new Error(`${record.pond || 'Pond'} is not writable; record remains pending.`);
+            }
+
+            const normalized = {
+                ...record,
+                id,
+                firestoreId: id,
+                legacyRecordId: record.legacyRecordId || null
+            };
+
+            const timeoutMs = Number.isFinite(Number(options.confirmTimeoutMs))
+                ? Number(options.confirmTimeoutMs)
+                : BULK_FEED_UPLOAD_CONFIRM_TIMEOUT_MS;
+            const writeAttempt = farmOperationalCollection('feeds').doc(id).set(normalized);
+            const writeTimeout = new Promise((_, reject) => {
+                setTimeout(() => reject(new Error('Upload attempt timed out; record remains pending.')), timeoutMs);
+            });
+
+            await Promise.race([writeAttempt, writeTimeout]);
+            await bulkFeedServerConfirmation(timeoutMs);
+            removeBulkFeedPendingRecordById(id);
+            return { id, pond: normalized.pond, synced: true };
+        }
+
+        async function uploadBulkFeedPendingRecords(options = {}) {
+            const pending = getBulkFeedPendingRecords();
+            const requestedIds = Array.isArray(options.ids) && options.ids.length
+                ? new Set(options.ids.map(id => String(id)))
+                : null;
+            const selected = requestedIds
+                ? pending.filter(record => requestedIds.has(String(record.id)))
+                : pending;
+
+            const result = {
+                attempted: selected.length,
+                synced: 0,
+                pending: 0,
+                results: []
+            };
+
+            let completed = 0;
+            for (const record of selected) {
+                try {
+                    const synced = await uploadOneBulkFeedPendingRecord(record, options);
+                    result.synced += 1;
+                    result.results.push(synced);
+                } catch (error) {
+                    result.results.push({
+                        id: String(record?.id || ''),
+                        pond: record?.pond || '',
+                        synced: false,
+                        error: error?.message || String(error)
+                    });
+                }
+                completed += 1;
+                if (typeof options.onProgress === 'function') {
+                    try {
+                        options.onProgress({
+                            completed,
+                            total: selected.length,
+                            percent: selected.length ? Math.round((completed / selected.length) * 100) : 100,
+                            pending: getBulkFeedPendingRecords().length
+                        });
+                    } catch (_) {}
+                }
+            }
+
+            result.pending = getBulkFeedPendingRecords().length;
+            return result;
+        }
+
+        window.blueCrestBulkFeedSync = Object.freeze({
+            uploadOne: uploadOneBulkFeedPendingRecord,
+            uploadPending: uploadBulkFeedPendingRecords
+        });
+
         function handleFormSubmit(e) {
             if (isViewOnlyMode) { e.preventDefault(); alert('View-Only mode: data changes are disabled.'); return; }
             e.preventDefault();
@@ -5051,6 +5442,56 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
 })();
 </script>
 
+
+
+<!-- BULK FEED STAGE 5 — Bulk Feed Entry UI only -->
+<div id="bulkFeedModal" aria-hidden="true">
+  <div class="bf-head">
+    <div class="bf-head-row">
+      <div class="bf-title">Bulk Feed Entry</div>
+      <button class="bf-close" type="button" onclick="closeBulkFeedModal()" aria-label="Close">×</button>
+    </div>
+    <div class="bf-controls">
+      <label>Date
+        <input id="bulkFeedDate" type="date">
+      </label>
+      <label>Feeding Time
+        <select id="bulkFeedSlot">
+          <option>Morning – 6 AM</option>
+          <option>Morning – 10 AM</option>
+          <option>Afternoon – 2 PM</option>
+          <option>Evening – 5 PM</option>
+        </select>
+      </label>
+    </div>
+  </div>
+  <div class="bf-body">
+    <div id="bulkFeedRows"></div>
+  </div>
+  <div class="bf-bottom">
+    <div class="bf-summary">
+      <strong>Total Feed: <span id="bulkFeedTotal">0.0</span> kg</strong>
+      <span>Ponds with feed: <strong id="bulkFeedPondCount">0</strong></span>
+    </div>
+    <div class="bf-actions">
+      <button type="button" onclick="clearBulkFeedForm()">Clear All</button>
+      <button id="bulkFeedSaveBtn" type="button" onclick="saveBulkFeedForm()">Save All (0 Ponds)</button>
+    </div>
+  </div>
+</div>
+
+<!-- BULK FEED STAGE 4 — Pending Status & Progress UI only -->
+<div id="bulkFeedPendingStatus" aria-live="polite">
+  <div class="bfps-row">
+    <div class="bfps-text">
+      <div id="bulkFeedPendingTitle" class="bfps-title">0 Feed Records Pending Upload</div>
+      <div id="bulkFeedPendingDetail" class="bfps-detail"></div>
+    </div>
+    <button id="bulkFeedPendingUploadBtn" class="bfps-btn" type="button">Upload</button>
+  </div>
+  <div id="bulkFeedPendingProgress" class="bfps-progress"><span></span></div>
+</div>
+
 </body>
 </html>
 
@@ -5514,4 +5955,314 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
+
+        
+        // BULK FEED STAGE 5 — Bulk Feed Entry UI only.
+        // Uses Stage 1 builder + Stage 2 queue. Save All does not bypass the tested pending-upload path.
+        // BULK FEED STAGE 5 — local HTML escaping helper for this UI only.
+        function bulkFeedEscapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, ch => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[ch]));
+        }
+
+        function bulkFeedLastQtyForPond(pondId) {
+            const c = getActiveCycle();
+            const rows = getActiveFeedEntries()
+                .filter(e => String(e.pond) === String(pondId) && String(e.cycleId || '') === String(c.id))
+                .slice()
+                .sort((a,b) => getEntryTimestamp(b) - getEntryTimestamp(a));
+            const latest = rows[0];
+            return latest && Number.isFinite(Number(latest.qty)) ? Number(latest.qty) : 0;
+        }
+
+        function bulkFeedLastCodeForPond(pondId) {
+            const c = getActiveCycle();
+            const rows = getActiveFeedEntries()
+                .filter(e => String(e.pond) === String(pondId) && String(e.cycleId || '') === String(c.id))
+                .slice()
+                .sort((a,b) => getEntryTimestamp(b) - getEntryTimestamp(a));
+            const latest = rows[0];
+            return String(latest?.feeds?.[0]?.code || '').trim();
+        }
+
+        function bulkFeedFeedCodes() {
+            const seen = new Set();
+            const codes = [];
+            (mobileProductMaster || []).forEach(product => {
+                const category = String(product?.category || '').trim().toLowerCase();
+                const code = String(product?.name || product?.productName || product?.code || '').trim();
+                if (category === 'feed' && code && !seen.has(code)) {
+                    seen.add(code);
+                    codes.push(code);
+                }
+            });
+            return codes.sort((a,b) => a.localeCompare(b));
+        }
+
+        function bulkFeedSupplementOptions() {
+            return supplementMasterProducts().slice().sort((a,b) => String(a.name).localeCompare(String(b.name)));
+        }
+
+        function renderBulkFeedRows() {
+            const host = document.getElementById('bulkFeedRows');
+            if (!host) return;
+            const feedCodes = bulkFeedFeedCodes();
+            const supplements = bulkFeedSupplementOptions();
+            host.innerHTML = '';
+
+            const activeCycle = getActiveCycle();
+            getActivePonds()
+                .filter(pond => !(typeof window.blueCrestIsPondClosed === 'function' &&
+                    window.blueCrestIsPondClosed(pond.id, activeCycle.id)))
+                .forEach(pond => {
+                const pondId = String(pond.id);
+                const row = document.createElement('div');
+                row.className = 'bf-row';
+                row.dataset.pond = pondId;
+                const previousQty = bulkFeedLastQtyForPond(pondId);
+                const previousCode = bulkFeedLastCodeForPond(pondId);
+
+                row.innerHTML = `
+                  <div class="bf-grid">
+                    <div><div class="bf-cell-title">Pond</div><div class="bf-pond">${pondId}</div></div>
+                    <div><div class="bf-cell-title">Previous Qty</div><div class="bf-prev">${previousQty ? previousQty.toFixed(1) : '—'}</div></div>
+                    <label><span class="bf-cell-title">Feed Code</span>
+                      <input class="bf-feed-code" type="text" list="bf-feed-list-${bulkFeedEscapeHtml(pondId)}" value="${bulkFeedEscapeHtml(previousCode)}" placeholder="Search feed" autocomplete="off">
+                      <datalist id="bf-feed-list-${bulkFeedEscapeHtml(pondId)}">
+                        ${feedCodes.map(code => `<option value="${bulkFeedEscapeHtml(code)}"></option>`).join('')}
+                      </datalist>
+                    </label>
+                    <label><span class="bf-cell-title">Qty (kg)</span><input class="bf-feed-qty" type="number" min="0" step="0.1" inputmode="decimal"></label>
+                    <div><div class="bf-cell-title">Supp.</div><button class="bf-plus" type="button">+</button></div>
+                  </div>
+                  <div class="bf-supp">
+                    <div class="bf-supp-grid">
+                      <label><span class="bf-cell-title">Supplement</span>
+                        <input class="bf-supp-name" type="text" list="bf-supp-list-${bulkFeedEscapeHtml(pondId)}" placeholder="Search supplement" autocomplete="off">
+                        <datalist id="bf-supp-list-${bulkFeedEscapeHtml(pondId)}">
+                          ${supplements.map(p => `<option value="${bulkFeedEscapeHtml(p.name)}"></option>`).join('')}
+                        </datalist>
+                      </label>
+                      <label><span class="bf-cell-title">Dose</span><input class="bf-supp-dose" type="number" min="0" step="0.01" inputmode="decimal"></label>
+                      <label><span class="bf-cell-title">Total Auto</span><input class="bf-supp-total" type="text" readonly></label>
+                      <button class="bf-remove" type="button" title="Remove supplement">×</button>
+                    </div>
+                  </div>`;
+
+                const qty = row.querySelector('.bf-feed-qty');
+                const plus = row.querySelector('.bf-plus');
+                const supp = row.querySelector('.bf-supp');
+                const sname = row.querySelector('.bf-supp-name');
+                const dose = row.querySelector('.bf-supp-dose');
+                const total = row.querySelector('.bf-supp-total');
+
+                const recalc = () => {
+                    const q = Number(qty.value) || 0, d = Number(dose.value) || 0;
+                    total.value = sname.value && q > 0 && d > 0 ? (q*d).toFixed(2) : '';
+                    const entered = !!sname.value && d > 0;
+                    plus.textContent = entered ? '✓' : '+';
+                    plus.classList.toggle('has-supp', entered);
+                    updateBulkFeedSummary();
+                };
+                qty.addEventListener('input', recalc);
+                dose.addEventListener('input', recalc);
+                sname.addEventListener('input', recalc);
+                sname.addEventListener('change', recalc);
+                plus.addEventListener('click', () => {
+                    document.querySelectorAll('#bulkFeedRows .bf-supp.is-open').forEach(el => {
+                        if (el !== supp) el.classList.remove('is-open');
+                    });
+                    supp.classList.toggle('is-open');
+                });
+                row.querySelector('.bf-remove').addEventListener('click', () => {
+                    sname.value=''; dose.value=''; total.value=''; supp.classList.remove('is-open'); recalc();
+                });
+                host.appendChild(row);
+            });
+            updateBulkFeedSummary();
+        }
+
+        function updateBulkFeedSummary() {
+            let total = 0, count = 0;
+            document.querySelectorAll('#bulkFeedRows .bf-row').forEach(row => {
+                const q = Number(row.querySelector('.bf-feed-qty')?.value) || 0;
+                if (q > 0) { total += q; count += 1; }
+            });
+            const totalEl = document.getElementById('bulkFeedTotal');
+            const countEl = document.getElementById('bulkFeedPondCount');
+            const save = document.getElementById('bulkFeedSaveBtn');
+            if (totalEl) totalEl.textContent = total.toFixed(1);
+            if (countEl) countEl.textContent = String(count);
+            if (save) save.textContent = `Save All (${count} Pond${count===1?'':'s'})`;
+        }
+
+        function openBulkFeedModal() {
+            const modal = document.getElementById('bulkFeedModal');
+            if (!modal) return;
+            const date = document.getElementById('bulkFeedDate');
+            if (date && !date.value) {
+                const now = new Date();
+                date.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+            }
+            renderBulkFeedRows();
+            modal.classList.add('is-open');
+            modal.setAttribute('aria-hidden','false');
+        }
+
+        function closeBulkFeedModal() {
+            const modal = document.getElementById('bulkFeedModal');
+            if (!modal) return;
+            modal.classList.remove('is-open');
+            modal.setAttribute('aria-hidden','true');
+        }
+
+        function clearBulkFeedForm() {
+            document.querySelectorAll('#bulkFeedRows .bf-row').forEach(row => {
+                row.querySelector('.bf-feed-qty').value='';
+                row.querySelector('.bf-supp-name').value='';
+                row.querySelector('.bf-supp-dose').value='';
+                row.querySelector('.bf-supp-total').value='';
+                row.querySelector('.bf-supp').classList.remove('is-open');
+                const plus=row.querySelector('.bf-plus'); plus.textContent='+'; plus.classList.remove('has-supp');
+            });
+            updateBulkFeedSummary();
+        }
+
+        function collectBulkFeedFormRows() {
+            const rows = [];
+            document.querySelectorAll('#bulkFeedRows .bf-row').forEach(row => {
+                const feedQty = Number(row.querySelector('.bf-feed-qty').value) || 0;
+                if (feedQty <= 0) return;
+                const feedCode = row.querySelector('.bf-feed-code').value;
+                const sname = row.querySelector('.bf-supp-name');
+                rows.push({
+                    pond: row.dataset.pond,
+                    feedCode,
+                    feedQty,
+                    supplement: sname.value,
+                    supplementProductId: null,
+                    supplementDose: row.querySelector('.bf-supp-dose').value
+                });
+            });
+            return rows;
+        }
+
+        async function saveBulkFeedForm() {
+            try {
+                const rows = collectBulkFeedFormRows();
+                const records = buildBulkFeedRecords({
+                    date: document.getElementById('bulkFeedDate').value,
+                    feedingSlot: document.getElementById('bulkFeedSlot').value,
+                    rows
+                });
+                blueCrestBulkFeedPending.queue(records);
+                closeBulkFeedModal();
+                refreshBulkFeedPendingStatusUI();
+
+                // Stage 5 integration only: after the proven local-first queue succeeds,
+                // immediately invoke the already-tested Stage 4 UI upload path.
+                // Any failed upload remains in the Stage 2 pending queue for Retry.
+                await runBulkFeedPendingUploadFromUI();
+            } catch (error) {
+                alert(error?.message || String(error));
+            }
+        }
+
+        window.openBulkFeedModal = openBulkFeedModal;
+        window.closeBulkFeedModal = closeBulkFeedModal;
+        window.clearBulkFeedForm = clearBulkFeedForm;
+        window.saveBulkFeedForm = saveBulkFeedForm;
+
+        // BULK FEED STAGE 4 — Pending Status & Progress UI only.
+        function refreshBulkFeedPendingStatusUI(detailText = '') {
+            const box = document.getElementById('bulkFeedPendingStatus');
+            const title = document.getElementById('bulkFeedPendingTitle');
+            const detail = document.getElementById('bulkFeedPendingDetail');
+            const button = document.getElementById('bulkFeedPendingUploadBtn');
+            if (!box || !title || !detail || !button || !window.blueCrestBulkFeedPending) return;
+
+            const count = blueCrestBulkFeedPending.records().length;
+            title.textContent = `${count} Feed Record${count === 1 ? '' : 's'} Pending Upload`;
+            detail.textContent = detailText;
+            box.classList.toggle('is-visible', count > 0);
+            if (count === 0) {
+                detail.textContent = '';
+                button.disabled = false;
+                button.textContent = 'Upload';
+                const progress = document.getElementById('bulkFeedPendingProgress');
+                if (progress) progress.classList.remove('is-visible');
+            }
+        }
+
+        async function runBulkFeedPendingUploadFromUI() {
+            const button = document.getElementById('bulkFeedPendingUploadBtn');
+            const detail = document.getElementById('bulkFeedPendingDetail');
+            const progress = document.getElementById('bulkFeedPendingProgress');
+            const bar = progress?.querySelector('span');
+            const total = blueCrestBulkFeedPending.records().length;
+            if (!total || !button) return;
+
+            button.disabled = true;
+            button.textContent = 'Uploading…';
+            if (progress) progress.classList.add('is-visible');
+            if (bar) bar.style.width = '0%';
+            if (detail) detail.textContent = `0/${total} — 0%`;
+
+            try {
+                const result = await blueCrestBulkFeedSync.uploadPending({
+                    onProgress: state => {
+                        if (bar) bar.style.width = `${state.percent}%`;
+                        if (detail) detail.textContent = `${state.completed}/${state.total} — ${state.percent}%`;
+                    }
+                });
+                const remaining = blueCrestBulkFeedPending.records().length;
+                if (remaining > 0) {
+                    refreshBulkFeedPendingStatusUI(`${remaining} record${remaining === 1 ? '' : 's'} still pending. Tap Retry.`);
+                    button.textContent = 'Retry';
+                } else {
+                    refreshBulkFeedPendingStatusUI('');
+                }
+                return result;
+            } finally {
+                button.disabled = false;
+                if (blueCrestBulkFeedPending.records().length > 0 && button.textContent !== 'Retry') button.textContent = 'Retry';
+            }
+        }
+
+        function setupBulkFeedPendingStatusUI() {
+            const button = document.getElementById('bulkFeedPendingUploadBtn');
+            if (!button || button.dataset.bound === '1') return;
+            button.dataset.bound = '1';
+            button.addEventListener('click', runBulkFeedPendingUploadFromUI);
+
+            // Keep Stage 2 queue API behavior intact; refresh UI after queue mutations.
+            const pendingApi = window.blueCrestBulkFeedPending;
+            if (pendingApi && !pendingApi.__stage4Wrapped) {
+                window.blueCrestBulkFeedPending = Object.freeze({
+                    ...pendingApi,
+                    queue(records) {
+                        const result = pendingApi.queue(records);
+                        refreshBulkFeedPendingStatusUI();
+                        return result;
+                    },
+                    clearForStage2Test() {
+                        const result = pendingApi.clearForStage2Test();
+                        refreshBulkFeedPendingStatusUI();
+                        return result;
+                    },
+                    __stage4Wrapped: true
+                });
+            }
+            refreshBulkFeedPendingStatusUI();
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', setupBulkFeedPendingStatusUI, { once: true });
+        } else {
+            setupBulkFeedPendingStatusUI();
+        }
+
+        window.refreshBulkFeedPendingStatusUI = refreshBulkFeedPendingStatusUI;
+
 </script>
