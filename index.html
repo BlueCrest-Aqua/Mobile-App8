@@ -194,6 +194,40 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Ar
 #headerSubtitleDate{color:#c9d9e7!important;}
 #syncStatusBadge{background:rgba(255,255,255,.09)!important;border-color:rgba(255,255,255,.16)!important;color:#dbeafe!important;backdrop-filter:blur(8px);}
 #pondSelector,#mobileYearSelector,#mobileCropSelector{background:rgba(255,255,255,.10)!important;border-color:rgba(255,255,255,.18)!important;color:#fff!important;}
+/* Compact common mobile header: identity/actions on top, cycle status below. */
+.mobile-header-shell{max-width:28rem;margin:0 auto;padding:max(.55rem,env(safe-area-inset-top)) .7rem .55rem;}
+.mobile-header-top-row{display:flex;align-items:center;justify-content:space-between;gap:.45rem;min-width:0;}
+.mobile-header-identity{display:flex;align-items:center;gap:.45rem;min-width:0;}
+.mobile-header-menu,.mobile-header-action{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;border:0;color:#fff;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.17);border-radius:9px;cursor:pointer;}
+.mobile-header-menu{width:30px;height:30px;font-size:1.18rem;line-height:1;}
+.mobile-header-action{width:29px;height:29px;font-size:.9rem;}
+.mobile-header-actions{display:flex;align-items:center;justify-content:flex-end;gap:.35rem;flex:0 0 auto;}
+#headerHomeTitle{min-width:0;font-size:1.18rem!important;line-height:1!important;}
+#headerHomeTitle span{display:none!important;}
+#syncStatusBadge{height:29px;padding:0 .44rem!important;font-size:.65rem!important;white-space:nowrap;border-radius:9px!important;}
+#syncStatusBadge .w-2{width:.42rem!important;height:.42rem!important;}
+.mobile-header-cycle-row{display:flex;align-items:center;gap:.32rem;margin-top:.45rem;padding-top:.45rem;border-top:1px solid rgba(255,255,255,.14);min-width:0;white-space:nowrap;}
+#headerCycleControlsSlot{display:flex;align-items:center;flex:0 0 auto;min-width:0;}
+#headerCycleControls{display:flex!important;align-items:center;gap:.32rem!important;margin:0!important;min-width:0!important;}
+#mobileYearSelector,#mobileCropSelector{height:29px!important;padding:0 .38rem!important;font-size:.69rem!important;border-radius:8px!important;}
+#mobileYearSelector{width:67px;min-width:67px;max-width:67px;}
+#mobileCropSelector{width:88px;min-width:88px;max-width:88px;}
+#headerLockStatusSlot{display:contents;}
+#bcLockStatusBar{display:flex!important;align-items:center;flex:0 1 auto;margin:0!important;min-height:18px;font-size:.61rem!important;white-space:nowrap;overflow:hidden;}
+#bcLockStatusBar span{padding:2px 6px!important;}
+#headerSubtitleDate{flex:0 0 auto;margin:0!important;padding:0!important;min-width:0;font-size:.6rem!important;line-height:1.1!important;text-align:right;white-space:nowrap;}
+@media(max-width:350px){.mobile-header-shell{padding-left:.55rem;padding-right:.55rem}.mobile-header-top-row{gap:.3rem}.mobile-header-identity{gap:.35rem}.mobile-header-actions{gap:.2rem}#syncStatusBadge{padding:0 .31rem!important;font-size:.6rem!important}.mobile-header-cycle-row{gap:.22rem}#mobileYearSelector{width:63px;min-width:63px;max-width:63px}#mobileCropSelector{width:83px;min-width:83px;max-width:83px}#bcLockStatusBar{font-size:.57rem!important}#headerSubtitleDate{font-size:.56rem!important}}
+
+/* Feed controls share one compact, touch-friendly action card. */
+.feed-control-card{display:grid;grid-template-columns:.85fr 1.25fr 1fr;gap:.38rem;padding:.55rem;border-radius:14px;background:linear-gradient(135deg,#0f3c69,#116a78);box-shadow:0 7px 18px rgba(15,39,66,.16);}
+.feed-control-pond{min-width:0;padding:.28rem .38rem;border:1px solid rgba(255,255,255,.18);border-radius:9px;background:rgba(4,31,58,.25);}
+.feed-control-pond label{display:block;margin:0 0 .12rem;color:#c9d9e7;font-size:.56rem;font-weight:800;line-height:1;text-transform:uppercase;}
+#feedPondFilter{width:100%;height:25px;padding:0 .2rem;color:#fff!important;background:rgba(255,255,255,.11)!important;border:0!important;border-radius:6px;font-size:.69rem!important;font-weight:800;outline:none;}
+.feed-control-card button{min-width:0;min-height:34px;padding:.28rem .38rem!important;border-radius:9px!important;font-size:.64rem!important;font-weight:800!important;line-height:1.05!important;white-space:nowrap;justify-content:center;}
+#feedRecordBtn{display:flex!important;background:#0879f9!important;box-shadow:none!important;}
+#bulkFeedOpenBtn{margin:0!important;border:1px solid rgba(255,255,255,.22)!important;background:#147d7a!important;color:#fff!important;}
+.feed-control-card .feed-control-secondary{border:1px solid rgba(255,255,255,.19)!important;background:rgba(255,255,255,.10)!important;color:#fff!important;box-shadow:none!important;}
+@media(max-width:350px){.feed-control-card{gap:.3rem;padding:.45rem}.feed-control-card button{font-size:.59rem!important;padding:.25rem!important;}}
 
 /* Navigation tabs */
 .app-fixed-header > div:nth-child(2){background:#fff!important;border-color:var(--bc-border)!important;}
@@ -472,16 +506,29 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
         
         <!-- Fixed Header & Navigation Container -->
         <div class="app-fixed-header bg-white shadow-sm">
-            <div class="bg-blue-600 text-white p-4 shadow-md">
-                <div class="max-w-md mx-auto flex justify-between items-center">
-                    <div class="flex items-center space-x-3">
-                        <button onclick="switchTab('pond')" class="text-2xl leading-none" title="Pond list" aria-label="Pond list">☰</button>
+            <div class="bg-blue-600 text-white shadow-md">
+                <div class="mobile-header-shell">
+                    <div class="mobile-header-top-row">
+                    <div class="mobile-header-identity">
+                        <button onclick="switchTab('pond')" class="mobile-header-menu" title="Pond list" aria-label="Pond list">☰</button>
                         <div>
                             <div id="headerPondSection" class="hidden">
                                 <select id="pondSelector" onchange="changePond(this.value)" class="bg-blue-700 hover:bg-blue-800 text-white font-bold text-lg rounded-xl w-32 px-3 py-1 outline-none cursor-pointer border border-blue-400/60 shadow-sm transition">
                                 </select>
                             </div>
                             <div id="headerHomeTitle" class="text-xl font-bold">BlueCrest <span class="block text-xs font-medium text-blue-100 tracking-wide">Farm Management</span></div>
+                        </div>
+                    </div>
+                    <div class="mobile-header-actions">
+                        <span id="syncStatusBadge" class="text-xs font-extrabold bg-blue-700 px-2 py-1 rounded-full border border-blue-400/40 text-blue-100 flex items-center gap-1" title="Real-time Cloud Sync Active">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Cloud Sync
+                        </span>
+                        <button type="button" onclick="window.location.reload()" class="mobile-header-action" title="Refresh" aria-label="Refresh">🔄</button>
+                        <button type="button" onclick="lockDevice()" class="mobile-header-action" title="Lock App" aria-label="Lock App">🔒</button>
+                    </div>
+                    </div>
+                    <div class="mobile-header-cycle-row">
+                        <div id="headerCycleControlsSlot">
                             <div id="headerCycleControls" class="flex items-center gap-1.5 mt-1">
                                 <select id="mobileYearSelector" onchange="changeMobileCycleYear(this.value)"
                                     class="bg-blue-700 text-white text-[11px] font-bold rounded-lg px-1.5 py-1 border border-blue-400/60 outline-none">
@@ -492,15 +539,9 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                                     <option value="Crop 2">Crop 2</option>
                                 </select>
                             </div>
-                            <p id="headerSubtitleDate" class="text-xs text-blue-100 pl-0.5 pt-0.5 font-medium"></p>
                         </div>
-                    </div>
-                    <div class="flex items-center space-x-3 text-lg">
-                        <span id="syncStatusBadge" class="text-xs font-extrabold bg-blue-700 px-2 py-1 rounded-full border border-blue-400/40 text-blue-100 flex items-center gap-1" title="Real-time Cloud Sync Active">
-                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Cloud Sync
-                        </span>
-                        <span onclick="window.location.reload()" class="cursor-pointer" title="Refresh">🔄</span>
-                        <span onclick="lockDevice()" class="cursor-pointer text-sm" title="Lock App">🔒</span>
+                        <div id="headerLockStatusSlot"></div>
+                        <p id="headerSubtitleDate" class="text-xs text-blue-100 pl-0.5 pt-0.5 font-medium"></p>
                     </div>
                 </div>
             </div>
@@ -571,37 +612,19 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
 
             <!-- 3. Feed View -->
             <div id="feedView" class="hidden space-y-3">
-                <div class="flex justify-between items-center bg-white p-3 rounded-2xl border border-slate-100 shadow-sm">
-                    <div class="min-w-0">
-                        <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wide">Feed Tracking</h3>
-                        <div class="mt-1 flex items-center gap-2">
-                            <label for="feedPondFilter" class="text-[11px] font-semibold text-slate-400">Pond</label>
-                            <select id="feedPondFilter" onchange="changePond(this.value)" class="text-xs font-bold text-blue-700 bg-blue-50 border border-blue-100 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-blue-400 min-w-[88px]">
-                            </select>
-                        </div>
+                <div class="feed-control-card">
+                    <div class="feed-control-pond">
+                        <label for="feedPondFilter">Pond</label>
+                        <select id="feedPondFilter" onchange="changePond(this.value)"></select>
                     </div>
                     <button id="feedRecordBtn" onclick="blueCrestOpenFeedRecord()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow-sm transition flex items-center gap-1.5">
                         <span>+</span> Record Feed
                     </button>
-<button id="bulkFeedOpenBtn" type="button" onclick="openBulkFeedModal()">Bulk Feed</button>
-                </div>
-
-                <div class="flex justify-between items-center bg-white p-2.5 rounded-xl border border-slate-100 shadow-sm gap-2">
-                    <span class="text-xs font-bold text-slate-500 uppercase">Feed Logs</span>
-                <div class="flex items-center justify-between gap-1.5">
-                        <!-- Restore Button -->
-                        <button onclick="document.getElementById('feedRestoreInput').click()" class="text-xs font-semibold text-purple-700 bg-purple-50 px-2.5 py-1.5 rounded-lg border border-purple-200 hover:bg-purple-100 transition shadow-xs flex items-center gap-1" title="Restore Feed Logs from CSV">
-                            <span>📤</span> Restore
-                        </button>
-                        <input type="file" id="feedRestoreInput" accept=".csv" class="hidden" onchange="importFeedCSV(event)">
-
-                        <button onclick="exportFeedCSV()" class="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1.5 rounded-lg border border-emerald-200 hover:bg-emerald-100 transition shadow-xs flex items-center gap-1" title="Backup Feed Logs to CSV">
-                            <span>📥</span> Backup
-                        </button>
-                        <button onclick="toggleSortOrder()" id="sortBtnText" class="text-xs font-semibold text-blue-600 bg-blue-50 px-2.5 py-1.5 rounded-lg border border-blue-100 hover:bg-blue-100 transition shadow-xs">
-                            Latest First ↓
-                        </button>
-                    </div>
+                    <button id="bulkFeedOpenBtn" type="button" onclick="openBulkFeedModal()">Bulk Feed</button>
+                    <button onclick="document.getElementById('feedRestoreInput').click()" class="feed-control-secondary" title="Restore Feed Logs from CSV"><span>📤</span> Restore</button>
+                    <input type="file" id="feedRestoreInput" accept=".csv" class="hidden" onchange="importFeedCSV(event)">
+                    <button onclick="exportFeedCSV()" class="feed-control-secondary" title="Backup Feed Logs to CSV"><span>📥</span> Backup</button>
+                    <button onclick="toggleSortOrder()" id="sortBtnText" class="feed-control-secondary">Latest First ↓</button>
                 </div>
 
                 <div class="flex items-center text-[11px] font-bold text-slate-400 uppercase border-b pb-2 mb-2 gap-1 pt-1">
@@ -1847,9 +1870,9 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
 
         function placeMobileCycleControls() {
             const controls = document.getElementById('headerCycleControls');
-            const headerTitle = document.getElementById('headerHomeTitle');
-            if (!controls || !headerTitle) return;
-            headerTitle.insertAdjacentElement('afterend', controls);
+            const slot = document.getElementById('headerCycleControlsSlot');
+            if (!controls || !slot) return;
+            slot.appendChild(controls);
         }
 
         function formatMobileFinancialValue(value) {
@@ -2561,6 +2584,14 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
 
         async function deleteFeedFromDb(entryId) {
             try {
+                const entry = feedEntries.find(item =>
+                    String(item.id) === String(entryId) ||
+                    String(item.firestoreId || '') === String(entryId) ||
+                    String(item.legacyRecordId || '') === String(entryId)
+                );
+                const cycleId = entry?.cycleId || (entry?.year && entry?.crop && typeof cycleIdFor === 'function' ? cycleIdFor(entry.year, entry.crop) : '');
+                if (entry && typeof window.blueCrestAssertOperationalWrite === 'function' &&
+                    !window.blueCrestAssertOperationalWrite({ pondId: entry.pondId || entry.pond || entry.pondName, cycleId, pondName: entry.pond || entry.pondName })) return;
                 await deleteCloudRecord('feeds', entryId, feedEntries, () => {
                     feedEntries = feedEntries.filter(item =>
                         String(item.id) !== String(entryId) &&
@@ -2623,6 +2654,14 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
 
         async function deleteSamplingFromDb(sampleId) {
             try {
+                const sample = samplingEntries.find(item =>
+                    String(item.id) === String(sampleId) ||
+                    String(item.firestoreId || '') === String(sampleId) ||
+                    String(item.legacyRecordId || '') === String(sampleId)
+                );
+                const cycleId = sample?.cycleId || (sample?.year && sample?.crop && typeof cycleIdFor === 'function' ? cycleIdFor(sample.year, sample.crop) : '');
+                if (sample && typeof window.blueCrestAssertOperationalWrite === 'function' &&
+                    !window.blueCrestAssertOperationalWrite({ pondId: sample.pondId || sample.pond || sample.pondName, cycleId, pondName: sample.pond || sample.pondName })) return;
                 await deleteCloudRecord('sampling', sampleId, samplingEntries, () => {
                     samplingEntries = samplingEntries.filter(s =>
                         String(s.id) !== String(sampleId) &&
@@ -2698,6 +2737,14 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
 
         async function deleteTreatmentFromDb(treatId) {
             try {
+                const treatment = treatmentEntries.find(item =>
+                    String(item.id) === String(treatId) ||
+                    String(item.firestoreId || '') === String(treatId) ||
+                    String(item.legacyRecordId || '') === String(treatId)
+                );
+                const cycleId = treatment?.cycleId || (treatment?.year && treatment?.crop && typeof cycleIdFor === 'function' ? cycleIdFor(treatment.year, treatment.crop) : '');
+                if (treatment && typeof window.blueCrestAssertOperationalWrite === 'function' &&
+                    !window.blueCrestAssertOperationalWrite({ pondId: treatment.pondId || treatment.pond || treatment.pondName, cycleId, pondName: treatment.pond || treatment.pondName })) return;
                 await deleteCloudRecord('treatments', treatId, treatmentEntries, () => {
                     treatmentEntries = treatmentEntries.filter(t =>
                         String(t.id) !== String(treatId) &&
@@ -2739,6 +2786,14 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
 
         async function deleteHarvestFromDb(harvestId) {
             try {
+                const harvest = harvestEntries.find(item =>
+                    String(item.id) === String(harvestId) ||
+                    String(item.firestoreId || '') === String(harvestId) ||
+                    String(item.legacyRecordId || '') === String(harvestId)
+                );
+                const cycleId = harvest?.cycleId || (harvest?.year && harvest?.crop && typeof cycleIdFor === 'function' ? cycleIdFor(harvest.year, harvest.crop) : '');
+                if (harvest && typeof window.blueCrestAssertOperationalWrite === 'function' &&
+                    !window.blueCrestAssertOperationalWrite({ pondId: harvest.pondId || harvest.pond || harvest.pondName, cycleId, pondName: harvest.pond || harvest.pondName })) return;
                 await deleteCloudRecord('harvests', harvestId, harvestEntries, () => {
                     harvestEntries = harvestEntries.filter(h =>
                         String(h.id) !== String(harvestId) &&
@@ -3126,7 +3181,6 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                 // Feed has its own in-module pond selector; keep the global
                 // header selector hidden so it does not duplicate that control.
                 headerPondSection.classList.add('hidden');
-                headerHomeTitle.classList.add('hidden');
                 ensureOpenFeedPondSelection();
                 const feedPondFilter = document.getElementById('feedPondFilter');
                 if (feedPondFilter) feedPondFilter.value = currentPond || '';
@@ -5693,7 +5747,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
     const c=activeC(); if(!c) return;
     let el=document.getElementById('bcLockStatusBar');
     if(!el){
-      const anchor=document.getElementById('activeCycleBadge') || document.getElementById('headerCycleControls');
+      const anchor=document.getElementById('headerLockStatusSlot') || document.getElementById('activeCycleBadge') || document.getElementById('headerCycleControls');
       if(!anchor) return;
       el=document.createElement('div'); el.id='bcLockStatusBar'; el.style.cssText='display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:11px;font-weight:800;';
       anchor.parentNode.insertBefore(el,anchor.nextSibling);
