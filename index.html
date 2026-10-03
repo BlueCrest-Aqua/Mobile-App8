@@ -6045,15 +6045,20 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                             const option = document.createElement('div');
                             option.className = 'bf-search-option';
                             option.textContent = getLabel(item);
-                            option.addEventListener('pointerdown', event => {
-                                event.preventDefault();
-                            });
-                            option.addEventListener('click', () => {
+                            let selected = false;
+                            const selectOption = event => {
+                                event?.preventDefault();
+                                if (selected) return;
+                                selected = true;
                                 input.value = getLabel(item);
                                 list.classList.add('is-hidden');
+                                list.innerHTML = '';
+                                input.blur();
                                 onSelect?.(item);
                                 input.dispatchEvent(new Event('change', { bubbles: true }));
-                            });
+                            };
+                            option.addEventListener('pointerup', selectOption);
+                            option.addEventListener('click', selectOption);
                             list.appendChild(option);
                         });
                     }
