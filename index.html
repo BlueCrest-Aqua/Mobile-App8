@@ -281,7 +281,10 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
 
 @media(max-width:420px){
   .app-scroll-content{padding-left:.75rem!important;padding-right:.75rem!important;}
-  .app-fixed-header > div:first-child{padding:.75rem!important;}
+  .app-fixed-header > div:first-child{
+    padding:.75rem!important;
+    padding-top:calc(.75rem + env(safe-area-inset-top))!important;
+  }
   .app-fixed-header button[id^="tab"]{font-size:.72rem!important;padding-left:.45rem!important;padding-right:.45rem!important;}
 }
 
