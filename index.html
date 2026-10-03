@@ -2034,6 +2034,9 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                 mobileProductMaster = normalizeMobileProductMaster(doc.exists ? doc.data() : null);
                 mobileProductMasterLoaded = doc.exists;
                 if (!mobileProductMasterLoaded) console.warn('Mobile Product Master document is unavailable.');
+                if (document.getElementById('bulkFeedModal')?.classList.contains('is-open')) {
+                    refreshBulkFeedSupplementOptions();
+                }
             }, err => {
                 mobileProductMaster = [];
                 mobileProductMasterLoaded = false;
@@ -6041,6 +6044,17 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             return supplementMasterProducts().slice().sort((a,b) => String(a.name).localeCompare(String(b.name)));
         }
 
+        function refreshBulkFeedSupplementOptions() {
+            const options = bulkFeedSupplementOptions()
+                .map(product => `<option value="${bulkFeedEscapeHtml(product.name)}"></option>`)
+                .join('');
+            const commonList = document.getElementById('bulkFeedCommonSupplementList');
+            if (commonList) commonList.innerHTML = options;
+            document.querySelectorAll('#bulkFeedRows datalist[id^="bf-supp-list-"]').forEach(list => {
+                list.innerHTML = options;
+            });
+        }
+
         function renderBulkFeedRows() {
             const host = document.getElementById('bulkFeedRows');
             if (!host) return;
@@ -6144,12 +6158,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                 date.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
             }
             renderBulkFeedRows();
-            const commonSupplementList = document.getElementById('bulkFeedCommonSupplementList');
-            if (commonSupplementList) {
-                commonSupplementList.innerHTML = bulkFeedSupplementOptions()
-                    .map(product => `<option value="${bulkFeedEscapeHtml(product.name)}"></option>`)
-                    .join('');
-            }
+            refreshBulkFeedSupplementOptions();
             const commonSupplement = document.getElementById('bulkFeedCommonSupplement');
             const commonDose = document.getElementById('bulkFeedCommonDose');
             if (commonSupplement) commonSupplement.value = '';
