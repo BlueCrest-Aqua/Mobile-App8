@@ -281,10 +281,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
 
 @media(max-width:420px){
   .app-scroll-content{padding-left:.75rem!important;padding-right:.75rem!important;}
-  .app-fixed-header > div:first-child{
-    padding:.75rem!important;
-    padding-top:calc(.75rem + env(safe-area-inset-top))!important;
-  }
+  .app-fixed-header > div:first-child{padding:.75rem!important;}
   .app-fixed-header button[id^="tab"]{font-size:.72rem!important;padding-left:.45rem!important;padding-right:.45rem!important;}
 }
 
@@ -389,26 +386,12 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
 #bulkFeedRows .bf-remove {
   min-height:38px; border:0; background:transparent; font-size:20px; cursor:pointer;
 }
-#bulkFeedRows .bf-search-wrap { position:relative; }
-#bulkFeedRows .bf-search-options {
-  position:absolute; left:0; right:0; top:100%; margin-top:4px; z-index:30;
-  max-height:200px; overflow-y:auto; -webkit-overflow-scrolling:touch;
-  background:#fff; border:1px solid #dbe4ec; border-radius:8px;
-  box-shadow:0 10px 24px rgba(15,39,66,.16);
-}
-#bulkFeedRows .bf-search-options.is-hidden { display:none; }
-#bulkFeedRows .bf-search-option {
-  padding:9px 10px; font-size:12px; font-weight:600; cursor:pointer;
-  border-bottom:1px solid #eef2f6; background:#fff;
-}
-#bulkFeedRows .bf-search-option:last-child { border-bottom:0; }
-#bulkFeedRows .bf-search-empty { padding:9px 10px; font-size:11px; opacity:.65; }
 #bulkFeedModal .bf-bottom {
   position:fixed; left:0; right:0; bottom:0; z-index:4; background:#fff;
   border-top:1px solid #dbe4ec; padding:8px 10px;
 }
 #bulkFeedModal .bf-summary { display:flex; gap:16px; font-size:12px; margin-bottom:7px; }
-#bulkFeedModal .bf-actions { display:grid; grid-template-columns:1fr 2fr; gap:8px; }
+#bulkFeedModal .bf-actions { display:grid; grid-template-columns:1fr 1fr 2fr; gap:8px; }
 #bulkFeedModal .bf-actions button {
   min-height:42px; border-radius:9px; border:1px solid #cbd7e1; font-weight:800; cursor:pointer;
 }
@@ -5492,6 +5475,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
     </div>
     <div class="bf-actions">
       <button type="button" onclick="clearBulkFeedForm()">Clear All</button>
+      <button id="bulkFeedSameBtn" type="button" onclick="applySameFeedQty()">Same Feed</button>
       <button id="bulkFeedSaveBtn" type="button" onclick="saveBulkFeedForm()">Save All (0 Ponds)</button>
     </div>
   </div>
@@ -6028,48 +6012,6 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             const supplements = bulkFeedSupplementOptions();
             host.innerHTML = '';
 
-            const closeBulkFeedSearchLists = (except = null) => {
-                document.querySelectorAll('#bulkFeedRows .bf-search-options').forEach(list => {
-                    if (list !== except) list.classList.add('is-hidden');
-                });
-            };
-            const wireBulkFeedSearch = (input, list, items, getLabel, onSelect) => {
-                const render = () => {
-                    const query = String(input.value || '').trim().toLowerCase();
-                    const matches = items.filter(item => String(getLabel(item) || '').toLowerCase().includes(query));
-                    list.innerHTML = '';
-                    if (!matches.length) {
-                        list.innerHTML = '<div class="bf-search-empty">No matching product</div>';
-                    } else {
-                        matches.forEach(item => {
-                            const option = document.createElement('div');
-                            option.className = 'bf-search-option';
-                            option.textContent = getLabel(item);
-                            let selected = false;
-                            const selectOption = event => {
-                                event?.preventDefault();
-                                if (selected) return;
-                                selected = true;
-                                input.value = getLabel(item);
-                                list.classList.add('is-hidden');
-                                list.innerHTML = '';
-                                input.blur();
-                                onSelect?.(item);
-                                input.dispatchEvent(new Event('change', { bubbles: true }));
-                            };
-                            option.addEventListener('pointerup', selectOption);
-                            option.addEventListener('click', selectOption);
-                            list.appendChild(option);
-                        });
-                    }
-                    closeBulkFeedSearchLists(list);
-                    list.classList.remove('is-hidden');
-                };
-                input.addEventListener('focus', render);
-                input.addEventListener('click', render);
-                input.addEventListener('input', render);
-            };
-
             const activeCycle = getActiveCycle();
             getActivePonds()
                 .filter(pond => !(typeof window.blueCrestIsPondClosed === 'function' &&
@@ -6081,16 +6023,17 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                 row.dataset.pond = pondId;
                 const previousQty = bulkFeedLastQtyForPond(pondId);
                 const previousCode = bulkFeedLastCodeForPond(pondId);
+                row.dataset.previousQty = previousQty > 0 ? String(previousQty) : '';
 
                 row.innerHTML = `
                   <div class="bf-grid">
                     <div><div class="bf-cell-title">Pond</div><div class="bf-pond">${pondId}</div></div>
                     <div><div class="bf-cell-title">Previous Qty</div><div class="bf-prev">${previousQty ? previousQty.toFixed(1) : '—'}</div></div>
                     <label><span class="bf-cell-title">Feed Code</span>
-                      <div class="bf-search-wrap">
-                        <input class="bf-feed-code" type="text" value="${bulkFeedEscapeHtml(previousCode)}" placeholder="Search feed" autocomplete="off">
-                        <div class="bf-search-options bf-feed-options is-hidden"></div>
-                      </div>
+                      <input class="bf-feed-code" type="text" list="bf-feed-list-${bulkFeedEscapeHtml(pondId)}" value="${bulkFeedEscapeHtml(previousCode)}" placeholder="Search feed" autocomplete="off">
+                      <datalist id="bf-feed-list-${bulkFeedEscapeHtml(pondId)}">
+                        ${feedCodes.map(code => `<option value="${bulkFeedEscapeHtml(code)}"></option>`).join('')}
+                      </datalist>
                     </label>
                     <label><span class="bf-cell-title">Qty (kg)</span><input class="bf-feed-qty" type="number" min="0" step="0.1" inputmode="decimal"></label>
                     <div><div class="bf-cell-title">Supp.</div><button class="bf-plus" type="button">+</button></div>
@@ -6098,10 +6041,10 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                   <div class="bf-supp">
                     <div class="bf-supp-grid">
                       <label><span class="bf-cell-title">Supplement</span>
-                        <div class="bf-search-wrap">
-                          <input class="bf-supp-name" type="text" placeholder="Search supplement" autocomplete="off">
-                          <div class="bf-search-options bf-supp-options is-hidden"></div>
-                        </div>
+                        <input class="bf-supp-name" type="text" list="bf-supp-list-${bulkFeedEscapeHtml(pondId)}" placeholder="Search supplement" autocomplete="off">
+                        <datalist id="bf-supp-list-${bulkFeedEscapeHtml(pondId)}">
+                          ${supplements.map(p => `<option value="${bulkFeedEscapeHtml(p.name)}"></option>`).join('')}
+                        </datalist>
                       </label>
                       <label><span class="bf-cell-title">Dose</span><input class="bf-supp-dose" type="number" min="0" step="0.01" inputmode="decimal"></label>
                       <label><span class="bf-cell-title">Total Auto</span><input class="bf-supp-total" type="text" readonly></label>
@@ -6109,13 +6052,10 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                     </div>
                   </div>`;
 
-                const feedInput = row.querySelector('.bf-feed-code');
-                const feedList = row.querySelector('.bf-feed-options');
                 const qty = row.querySelector('.bf-feed-qty');
                 const plus = row.querySelector('.bf-plus');
                 const supp = row.querySelector('.bf-supp');
                 const sname = row.querySelector('.bf-supp-name');
-                const suppList = row.querySelector('.bf-supp-options');
                 const dose = row.querySelector('.bf-supp-dose');
                 const total = row.querySelector('.bf-supp-total');
 
@@ -6127,35 +6067,23 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                     plus.classList.toggle('has-supp', entered);
                     updateBulkFeedSummary();
                 };
-                wireBulkFeedSearch(feedInput, feedList, feedCodes, code => code);
-                wireBulkFeedSearch(sname, suppList, supplements, product => product.name, () => {
-                    recalc();
-                    dose.focus();
-                });
                 qty.addEventListener('input', recalc);
                 dose.addEventListener('input', recalc);
                 sname.addEventListener('input', recalc);
                 sname.addEventListener('change', recalc);
                 plus.addEventListener('click', () => {
-                    closeBulkFeedSearchLists();
                     document.querySelectorAll('#bulkFeedRows .bf-supp.is-open').forEach(el => {
                         if (el !== supp) el.classList.remove('is-open');
                     });
                     supp.classList.toggle('is-open');
                 });
                 row.querySelector('.bf-remove').addEventListener('click', () => {
-                    sname.value=''; dose.value=''; total.value=''; supp.classList.remove('is-open'); closeBulkFeedSearchLists(); recalc();
+                    sname.value=''; dose.value=''; total.value=''; supp.classList.remove('is-open'); recalc();
                 });
                 host.appendChild(row);
             });
             updateBulkFeedSummary();
         }
-
-        document.addEventListener('pointerdown', event => {
-            if (!event.target.closest('#bulkFeedModal .bf-search-wrap')) {
-                document.querySelectorAll('#bulkFeedRows .bf-search-options').forEach(list => list.classList.add('is-hidden'));
-            }
-        });
 
         function updateBulkFeedSummary() {
             let total = 0, count = 0;
@@ -6189,6 +6117,18 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             if (!modal) return;
             modal.classList.remove('is-open');
             modal.setAttribute('aria-hidden','true');
+        }
+
+        function applySameFeedQty() {
+            document.querySelectorAll('#bulkFeedRows .bf-row').forEach(row => {
+                const previousQty = Number(row.dataset.previousQty) || 0;
+                const qty = row.querySelector('.bf-feed-qty');
+                if (qty && previousQty > 0) {
+                    qty.value = String(previousQty);
+                    qty.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            });
+            updateBulkFeedSummary();
         }
 
         function clearBulkFeedForm() {
