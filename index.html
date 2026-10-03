@@ -380,6 +380,21 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
   margin-bottom:10px; padding:9px; background:#f8fbff; border:1px solid #dce5ed; border-radius:10px;
 }
 #bulkFeedModal .bf-common-supplement label { margin:0; }
+#bulkFeedModal .bf-picker { position:relative; }
+#bulkFeedModal .bf-picker-options {
+  position:absolute; left:0; right:0; top:calc(100% + 3px); z-index:20;
+  max-height:180px; overflow:auto; border:1px solid #cbd7e1; border-radius:8px;
+  background:#fff; box-shadow:0 10px 24px rgba(15,35,64,.18);
+}
+#bulkFeedModal .bf-picker-options[hidden] { display:none; }
+#bulkFeedModal .bf-picker-option, #bulkFeedModal .bf-picker-empty {
+  display:block; width:100%; box-sizing:border-box; min-height:40px; padding:9px 10px;
+  border:0; border-bottom:1px solid #edf2f7; background:#fff; color:#263c54;
+  text-align:left; font:inherit; font-size:13px;
+}
+#bulkFeedModal .bf-picker-option:last-child { border-bottom:0; }
+#bulkFeedModal .bf-picker-option:active { background:#eaf4ff; }
+#bulkFeedModal .bf-picker-empty { color:#718096; font-style:italic; }
 #bulkFeedModal .bf-common-all-btn {
   min-height:38px; border:1px solid #1686df; border-radius:8px;
   background:#1686df; color:#fff; font-weight:800; cursor:pointer;
@@ -5496,8 +5511,10 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
   <div class="bf-body">
     <div class="bf-common-supplement">
       <label><span class="bf-cell-title">Supplement</span>
-        <input id="bulkFeedCommonSupplement" type="text" list="bulkFeedCommonSupplementList" placeholder="Search supplement" autocomplete="off">
-        <datalist id="bulkFeedCommonSupplementList"></datalist>
+        <div class="bf-picker" data-bf-picker="supplement">
+          <input id="bulkFeedCommonSupplement" type="text" placeholder="Search supplement" autocomplete="off">
+          <div class="bf-picker-options" hidden></div>
+        </div>
       </label>
       <label><span class="bf-cell-title">Dose</span>
         <input id="bulkFeedCommonDose" type="number" min="0" step="0.01" inputmode="decimal">
@@ -6044,29 +6061,84 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             return supplementMasterProducts().slice().sort((a,b) => String(a.name).localeCompare(String(b.name)));
         }
 
-        function refreshBulkFeedCatalogueOptions() {
-            const feedOptions = bulkFeedFeedCodes()
-                .map(code => `<option value="${bulkFeedEscapeHtml(code)}"></option>`)
-                .join('');
-            document.querySelectorAll('#bulkFeedRows datalist[id^="bf-feed-list-"]').forEach(list => {
-                list.innerHTML = feedOptions;
+        function closeBulkFeedPickers(except = null) {
+            document.querySelectorAll('#bulkFeedModal .bf-picker-options').forEach(list => {
+                if (list !== except) list.hidden = true;
             });
+        }
 
-            const supplementOptions = bulkFeedSupplementOptions()
-                .map(product => `<option value="${bulkFeedEscapeHtml(product.name)}"></option>`)
-                .join('');
-            const commonList = document.getElementById('bulkFeedCommonSupplementList');
-            if (commonList) commonList.innerHTML = supplementOptions;
-            document.querySelectorAll('#bulkFeedRows datalist[id^="bf-supp-list-"]').forEach(list => {
-                list.innerHTML = supplementOptions;
+        function bulkFeedPickerValues(kind) {
+            return kind === 'feed'
+                ? bulkFeedFeedCodes()
+                : bulkFeedSupplementOptions().map(product => product.name);
+        }
+
+        function renderBulkFeedPickerOptions(picker) {
+            if (!picker) return;
+            const input = picker.querySelector('input');
+            const list = picker.querySelector('.bf-picker-options');
+            if (!input || !list) return;
+            const query = String(input.value || '').trim().toLowerCase();
+            const matches = bulkFeedPickerValues(picker.dataset.bfPicker)
+                .filter(value => String(value).toLowerCase().includes(query));
+            list.innerHTML = '';
+            if (!matches.length) {
+                const empty = document.createElement('div');
+                empty.className = 'bf-picker-empty';
+                empty.textContent = picker.dataset.bfPicker === 'feed' ? 'No matching feed product' : 'No matching supplement';
+                list.appendChild(empty);
+                return;
+            }
+            matches.forEach(value => {
+                const option = document.createElement('button');
+                option.type = 'button';
+                option.className = 'bf-picker-option';
+                option.dataset.bfPickerValue = value;
+                option.textContent = value;
+                list.appendChild(option);
+            });
+        }
+
+        function bindBulkFeedPicker(input, kind, onSelect) {
+            const picker = input?.closest('.bf-picker');
+            const list = picker?.querySelector('.bf-picker-options');
+            if (!picker || !list || picker.dataset.bound === '1') return;
+            picker.dataset.bfPicker = kind;
+            picker.dataset.bound = '1';
+            const open = () => {
+                closeBulkFeedPickers(list);
+                renderBulkFeedPickerOptions(picker);
+                list.hidden = false;
+            };
+            input.addEventListener('focus', open);
+            input.addEventListener('click', open);
+            input.addEventListener('input', open);
+            list.addEventListener('click', event => {
+                const option = event.target.closest('.bf-picker-option');
+                if (!option) return;
+                input.value = option.dataset.bfPickerValue || '';
+                list.hidden = true;
+                if (typeof onSelect === 'function') onSelect();
+            });
+        }
+
+        function bindBulkFeedPickerDismissal() {
+            if (document.documentElement.dataset.bulkFeedPickerDismissalBound === '1') return;
+            document.documentElement.dataset.bulkFeedPickerDismissalBound = '1';
+            document.addEventListener('click', event => {
+                if (!event.target.closest('#bulkFeedModal .bf-picker')) closeBulkFeedPickers();
+            });
+        }
+
+        function refreshBulkFeedCatalogueOptions() {
+            document.querySelectorAll('#bulkFeedModal .bf-picker-options:not([hidden])').forEach(list => {
+                renderBulkFeedPickerOptions(list.closest('.bf-picker'));
             });
         }
 
         function renderBulkFeedRows() {
             const host = document.getElementById('bulkFeedRows');
             if (!host) return;
-            const feedCodes = bulkFeedFeedCodes();
-            const supplements = bulkFeedSupplementOptions();
             host.innerHTML = '';
 
             const activeCycle = getActiveCycle();
@@ -6087,10 +6159,10 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                     <div><div class="bf-cell-title">Pond</div><div class="bf-pond">${pondId}</div></div>
                     <div><div class="bf-cell-title">Previous Qty</div><div class="bf-prev">${previousQty ? previousQty.toFixed(1) : '—'}</div></div>
                     <label><span class="bf-cell-title">Feed Code</span>
-                      <input class="bf-feed-code" type="text" list="bf-feed-list-${bulkFeedEscapeHtml(pondId)}" value="${bulkFeedEscapeHtml(previousCode)}" placeholder="Search feed" autocomplete="off">
-                      <datalist id="bf-feed-list-${bulkFeedEscapeHtml(pondId)}">
-                        ${feedCodes.map(code => `<option value="${bulkFeedEscapeHtml(code)}"></option>`).join('')}
-                      </datalist>
+                      <div class="bf-picker" data-bf-picker="feed">
+                        <input class="bf-feed-code" type="text" value="${bulkFeedEscapeHtml(previousCode)}" placeholder="Search feed" autocomplete="off">
+                        <div class="bf-picker-options" hidden></div>
+                      </div>
                     </label>
                     <label><span class="bf-cell-title">Qty (kg)</span><input class="bf-feed-qty" type="number" min="0" step="0.1" inputmode="decimal"></label>
                     <div><div class="bf-cell-title">Supp.</div><button class="bf-plus" type="button">+</button></div>
@@ -6098,10 +6170,10 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                   <div class="bf-supp">
                     <div class="bf-supp-grid">
                       <label><span class="bf-cell-title">Supplement</span>
-                        <input class="bf-supp-name" type="text" list="bf-supp-list-${bulkFeedEscapeHtml(pondId)}" placeholder="Search supplement" autocomplete="off">
-                        <datalist id="bf-supp-list-${bulkFeedEscapeHtml(pondId)}">
-                          ${supplements.map(p => `<option value="${bulkFeedEscapeHtml(p.name)}"></option>`).join('')}
-                        </datalist>
+                        <div class="bf-picker" data-bf-picker="supplement">
+                          <input class="bf-supp-name" type="text" placeholder="Search supplement" autocomplete="off">
+                          <div class="bf-picker-options" hidden></div>
+                        </div>
                       </label>
                       <label><span class="bf-cell-title">Dose</span><input class="bf-supp-dose" type="number" min="0" step="0.01" inputmode="decimal"></label>
                       <label><span class="bf-cell-title">Total Auto</span><input class="bf-supp-total" type="text" readonly></label>
@@ -6128,6 +6200,8 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                 dose.addEventListener('input', recalc);
                 sname.addEventListener('input', recalc);
                 sname.addEventListener('change', recalc);
+                bindBulkFeedPicker(row.querySelector('.bf-feed-code'), 'feed');
+                bindBulkFeedPicker(sname, 'supplement', recalc);
                 plus.addEventListener('click', () => {
                     document.querySelectorAll('#bulkFeedRows .bf-supp.is-open').forEach(el => {
                         if (el !== supp) el.classList.remove('is-open');
@@ -6164,10 +6238,12 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                 const now = new Date();
                 date.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
             }
+            bindBulkFeedPickerDismissal();
             renderBulkFeedRows();
             refreshBulkFeedCatalogueOptions();
             const commonSupplement = document.getElementById('bulkFeedCommonSupplement');
             const commonDose = document.getElementById('bulkFeedCommonDose');
+            bindBulkFeedPicker(commonSupplement, 'supplement');
             if (commonSupplement) commonSupplement.value = '';
             if (commonDose) commonDose.value = '';
             modal.classList.add('is-open');
@@ -6177,6 +6253,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
         function closeBulkFeedModal() {
             const modal = document.getElementById('bulkFeedModal');
             if (!modal) return;
+            closeBulkFeedPickers();
             modal.classList.remove('is-open');
             modal.setAttribute('aria-hidden','true');
         }
