@@ -2035,7 +2035,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                 mobileProductMasterLoaded = doc.exists;
                 if (!mobileProductMasterLoaded) console.warn('Mobile Product Master document is unavailable.');
                 if (document.getElementById('bulkFeedModal')?.classList.contains('is-open')) {
-                    refreshBulkFeedSupplementOptions();
+                    refreshBulkFeedCatalogueOptions();
                 }
             }, err => {
                 mobileProductMaster = [];
@@ -6044,14 +6044,21 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             return supplementMasterProducts().slice().sort((a,b) => String(a.name).localeCompare(String(b.name)));
         }
 
-        function refreshBulkFeedSupplementOptions() {
-            const options = bulkFeedSupplementOptions()
+        function refreshBulkFeedCatalogueOptions() {
+            const feedOptions = bulkFeedFeedCodes()
+                .map(code => `<option value="${bulkFeedEscapeHtml(code)}"></option>`)
+                .join('');
+            document.querySelectorAll('#bulkFeedRows datalist[id^="bf-feed-list-"]').forEach(list => {
+                list.innerHTML = feedOptions;
+            });
+
+            const supplementOptions = bulkFeedSupplementOptions()
                 .map(product => `<option value="${bulkFeedEscapeHtml(product.name)}"></option>`)
                 .join('');
             const commonList = document.getElementById('bulkFeedCommonSupplementList');
-            if (commonList) commonList.innerHTML = options;
+            if (commonList) commonList.innerHTML = supplementOptions;
             document.querySelectorAll('#bulkFeedRows datalist[id^="bf-supp-list-"]').forEach(list => {
-                list.innerHTML = options;
+                list.innerHTML = supplementOptions;
             });
         }
 
@@ -6158,7 +6165,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                 date.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
             }
             renderBulkFeedRows();
-            refreshBulkFeedSupplementOptions();
+            refreshBulkFeedCatalogueOptions();
             const commonSupplement = document.getElementById('bulkFeedCommonSupplement');
             const commonDose = document.getElementById('bulkFeedCommonDose');
             if (commonSupplement) commonSupplement.value = '';
