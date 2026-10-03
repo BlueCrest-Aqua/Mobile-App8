@@ -6047,6 +6047,8 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                             option.textContent = getLabel(item);
                             option.addEventListener('pointerdown', event => {
                                 event.preventDefault();
+                            });
+                            option.addEventListener('click', () => {
                                 input.value = getLabel(item);
                                 list.classList.add('is-hidden');
                                 onSelect?.(item);
