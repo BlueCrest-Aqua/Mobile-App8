@@ -3109,9 +3109,11 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                 // header selector hidden so it does not duplicate that control.
                 headerPondSection.classList.add('hidden');
                 headerHomeTitle.classList.add('hidden');
+                ensureOpenFeedPondSelection();
                 const feedPondFilter = document.getElementById('feedPondFilter');
                 if (feedPondFilter) feedPondFilter.value = currentPond || '';
                 renderHistory();
+                window.blueCrestRefreshMobileRecordButtons?.();
             } else {
                 headerPondSection.classList.add('hidden');
                 headerHomeTitle.classList.remove('hidden');
@@ -3147,6 +3149,17 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             if (feedPondFilter) feedPondFilter.value = pond;
         }
 
+        function ensureOpenFeedPondSelection() {
+            const cycle = getActiveCycle();
+            const activePonds = getActivePonds();
+            const isClosed = pond => typeof window.blueCrestIsPondClosed === 'function' &&
+                window.blueCrestIsPondClosed(pond.id, cycle.id);
+            const selected = activePonds.find(pond => pond.id === currentPond);
+            const firstOpen = activePonds.find(pond => !isClosed(pond));
+            if ((!selected || isClosed(selected)) && firstOpen) currentPond = firstOpen.id;
+            return currentPond;
+        }
+
         function changePond(pond) {
             const activePonds = getActivePonds();
             if (!activePonds.some(p => p.id === pond)) return;
@@ -3158,6 +3171,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             const pondDisplay = document.getElementById('currentFeedPondDisplay');
             if (pondDisplay) pondDisplay.innerText = `Current: Pond ${logicalPondIdFromRef(currentPond)}`;
             renderHistory();
+            window.blueCrestRefreshMobileRecordButtons?.();
         }
 
         function changeSamplingPondFilter(v) {
@@ -5802,6 +5816,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
     const pondBtn=document.querySelector('#pondView button[onclick="openPondModal()"]');
     if(pondBtn) styleRecordButton(pondBtn,{blocked:cropBlocked,msg:`🔒 Crop Closed\n\n${c.year} • ${c.crop} is closed. Pond setup changes are locked until the crop is reactivated from the laptop.`});
   }
+  window.blueCrestRefreshMobileRecordButtons=refreshMobileRecordButtons;
 
   // Definitive entry-point protection: the modal cannot even open for a locked pond/crop.
   // The existing save guards remain in place as the final safety layer.
