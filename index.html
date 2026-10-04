@@ -113,7 +113,7 @@
 .app-fixed-header button[id^="tab"]{flex:1;display:flex;flex-direction:column;align-items:center;gap:.08rem;padding:.55rem .15rem!important;border:0!important;font-size:.65rem!important;line-height:1.05!important;}
 .app-fixed-header button[id^="tab"]::before{font-size:1.32rem;line-height:1;}
 #tabHome::before{content:"⌂"} #tabFeed::before{content:"▣"} #tabSampling::before{content:"▥"} #tabTreatment::before{content:"✦"} #tabHarvest::before{content:"◒"}
-#tabPond{display:none!important;}
+#tabPond,#tabReports{display:none!important;}
 .app-fixed-header button[id^="tab"].text-blue-600{background:#eff6ff!important;color:#075eae!important;border-radius:12px!important;}
 .app-scroll-content{padding-bottom:5.55rem!important;}
 .app-scroll-content.mobile-home-scroll{overflow:hidden!important;padding:0 0 5.55rem!important;max-width:32rem!important;}
@@ -206,7 +206,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Ar
 #headerHomeTitle span{display:none!important;}
 #syncStatusBadge{height:29px;padding:0 .44rem!important;font-size:.65rem!important;white-space:nowrap;border-radius:9px!important;}
 #syncStatusBadge .w-2{width:.42rem!important;height:.42rem!important;}
-.mobile-header-cycle-row{display:flex;align-items:center;gap:.32rem;margin-top:.45rem;padding-top:.45rem;border-top:1px solid rgba(255,255,255,.14);min-width:0;white-space:nowrap;}
+.mobile-hamburger-overlay{position:fixed;inset:0;z-index:60;background:rgba(15,39,66,.34);opacity:0;pointer-events:none;transition:opacity .2s ease;}
+.mobile-hamburger-overlay.is-open{opacity:1;pointer-events:auto;}
+.mobile-hamburger-menu{position:fixed;inset:0 auto 0 0;z-index:61;display:flex;width:min(78vw,21rem);max-width:21rem;box-sizing:border-box;flex-direction:column;padding:max(1rem,env(safe-area-inset-top)) 1rem 1rem;background:#0f2742;color:#fff;box-shadow:10px 0 28px rgba(15,39,66,.28);transform:translateX(-100%);transition:transform .2s ease;pointer-events:none;}
+.mobile-hamburger-menu.is-open{transform:translateX(0);pointer-events:auto;}
+.mobile-hamburger-menu-header{display:flex;align-items:center;justify-content:space-between;padding:.25rem 0 1rem;border-bottom:1px solid rgba(255,255,255,.16);}
+.mobile-hamburger-menu-title{font-size:1.18rem;font-weight:900;letter-spacing:-.02em;}
+.mobile-hamburger-close{display:inline-flex;width:32px;height:32px;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.2);border-radius:9px;background:rgba(255,255,255,.08);color:#fff;font-size:1.35rem;line-height:1;}
+.mobile-hamburger-menu nav{display:grid;gap:.5rem;padding-top:1rem;}
+.mobile-hamburger-menu nav button{min-height:42px;padding:.65rem .75rem;border:1px solid rgba(255,255,255,.14);border-radius:10px;background:rgba(255,255,255,.07);color:#fff;text-align:left;font-size:.82rem;font-weight:800;}
+.mobile-hamburger-menu nav button:active{background:rgba(255,255,255,.16);}.mobile-header-cycle-row{display:flex;align-items:center;gap:.32rem;margin-top:.45rem;padding-top:.45rem;border-top:1px solid rgba(255,255,255,.14);min-width:0;white-space:nowrap;}
 #headerCycleControlsSlot{display:flex;align-items:center;flex:0 0 auto;min-width:0;}
 #headerCycleControls{display:flex!important;align-items:center;gap:.32rem!important;margin:0!important;min-width:0!important;}
 #mobileYearSelector,#mobileCropSelector{height:29px!important;padding:0 .38rem!important;font-size:.69rem!important;border-radius:8px!important;}
@@ -219,15 +228,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Ar
 @media(max-width:350px){.mobile-header-shell{padding-left:.55rem;padding-right:.55rem}.mobile-header-top-row{gap:.3rem}.mobile-header-identity{gap:.35rem}.mobile-header-actions{gap:.2rem}#syncStatusBadge{padding:0 .31rem!important;font-size:.6rem!important}.mobile-header-cycle-row{gap:.22rem}#mobileYearSelector{width:63px;min-width:63px;max-width:63px}#mobileCropSelector{width:83px;min-width:83px;max-width:83px}#bcLockStatusBar{font-size:.57rem!important}#headerSubtitleDate{font-size:.56rem!important}}
 
 /* Feed controls share one compact, touch-friendly action card. */
-.feed-control-card{display:grid;grid-template-columns:.85fr 1.25fr 1fr;gap:.38rem;padding:.55rem;border-radius:14px;background:linear-gradient(135deg,#0f3c69,#116a78);box-shadow:0 7px 18px rgba(15,39,66,.16);}
-.feed-control-pond{min-width:0;padding:.28rem .38rem;border:1px solid rgba(255,255,255,.18);border-radius:9px;background:rgba(4,31,58,.25);}
-.feed-control-pond label{display:block;margin:0 0 .12rem;color:#c9d9e7;font-size:.56rem;font-weight:800;line-height:1;text-transform:uppercase;}
-#feedPondFilter{width:100%;height:25px;padding:0 .2rem;color:#fff!important;background:rgba(255,255,255,.11)!important;border:0!important;border-radius:6px;font-size:.69rem!important;font-weight:800;outline:none;}
-.feed-control-card button{min-width:0;min-height:34px;padding:.28rem .38rem!important;border-radius:9px!important;font-size:.64rem!important;font-weight:800!important;line-height:1.05!important;white-space:nowrap;justify-content:center;}
+.feed-control-card{display:grid;grid-template-columns:.85fr 1.25fr 1fr;gap:.28rem;padding:.32rem;border-radius:14px;background:linear-gradient(135deg,#0f3c69,#116a78);box-shadow:0 7px 18px rgba(15,39,66,.16);}
+.feed-control-pond{min-width:0;padding:.12rem .28rem;border:1px solid rgba(255,255,255,.18);border-radius:9px;background:rgba(4,31,58,.25);}
+
+#feedPondFilter{width:100%;height:30px;padding:0 .2rem;color:#fff!important;background:rgba(255,255,255,.11)!important;border:0!important;border-radius:6px;font-size:.69rem!important;font-weight:800;outline:none;}
+.feed-control-card button{display:flex!important;min-width:0;min-height:30px;align-items:center;justify-content:center;padding:.18rem .3rem!important;border-radius:9px!important;font-size:.8rem!important;font-weight:900!important;line-height:1!important;white-space:nowrap;}
 #feedRecordBtn{display:flex!important;background:#0879f9!important;box-shadow:none!important;}
 #bulkFeedOpenBtn{margin:0!important;border:1px solid rgba(255,255,255,.22)!important;background:#147d7a!important;color:#fff!important;}
 .feed-control-card .feed-control-secondary{border:1px solid rgba(255,255,255,.19)!important;background:rgba(255,255,255,.10)!important;color:#fff!important;box-shadow:none!important;}
-@media(max-width:350px){.feed-control-card{gap:.3rem;padding:.45rem}.feed-control-card button{font-size:.59rem!important;padding:.25rem!important;}}
+@media(max-width:350px){.feed-control-card{gap:.25rem;padding:.3rem}.feed-control-card button{font-size:.7rem!important;padding:.16rem!important;}}
 
 /* Navigation tabs */
 .app-fixed-header > div:nth-child(2){background:#fff!important;border-color:var(--bc-border)!important;}
@@ -510,7 +519,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                 <div class="mobile-header-shell">
                     <div class="mobile-header-top-row">
                     <div class="mobile-header-identity">
-                        <button onclick="switchTab('pond')" class="mobile-header-menu" title="Pond list" aria-label="Pond list">☰</button>
+                        <button id="mobileHamburgerTrigger" type="button" onclick="toggleMobileHamburgerMenu()" class="mobile-header-menu" title="Menu" aria-label="Open menu" aria-expanded="false">☰</button>
                         <div>
                             <div id="headerPondSection" class="hidden">
                                 <select id="pondSelector" onchange="changePond(this.value)" class="bg-blue-700 hover:bg-blue-800 text-white font-bold text-lg rounded-xl w-32 px-3 py-1 outline-none cursor-pointer border border-blue-400/60 shadow-sm transition">
@@ -527,6 +536,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                         <button type="button" onclick="lockDevice()" class="mobile-header-action" title="Lock App" aria-label="Lock App">🔒</button>
                     </div>
                     </div>
+
                     <div class="mobile-header-cycle-row">
                         <div id="headerCycleControlsSlot">
                             <div id="headerCycleControls" class="flex items-center gap-1.5 mt-1">
@@ -555,9 +565,22 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                     <button onclick="switchTab('sampling')" id="tabSampling" class="py-3 px-2 hover:text-blue-600 font-medium whitespace-nowrap">Sampling</button>
                     <button onclick="switchTab('treatment')" id="tabTreatment" class="py-3 px-2 hover:text-blue-600 font-medium whitespace-nowrap">Treatment</button>
                     <button onclick="switchTab('harvest')" id="tabHarvest" class="py-3 px-2 hover:text-blue-600 font-medium whitespace-nowrap">Harvest</button>
+                    <button id="tabReports" type="button" class="hidden" aria-hidden="true" tabindex="-1"></button>
                 </div>
             </div>
         </div>
+
+        <button id="mobileHamburgerOverlay" type="button" class="mobile-hamburger-overlay" aria-label="Close menu" onclick="closeMobileHamburgerMenu()"></button>
+        <aside id="mobileHamburgerMenu" class="mobile-hamburger-menu" aria-hidden="true" aria-label="BlueCrest menu">
+            <div class="mobile-hamburger-menu-header">
+                <span class="mobile-hamburger-menu-title">BlueCrest</span>
+                <button type="button" class="mobile-hamburger-close" aria-label="Close menu" onclick="closeMobileHamburgerMenu()">×</button>
+            </div>
+            <nav aria-label="Menu">
+                <button type="button" onclick="closeMobileHamburgerMenu(); switchTab('pond')">Pond Management</button>
+                <button type="button" onclick="closeMobileHamburgerMenu(); switchTab('reports')">Reports</button>
+            </nav>
+        </aside>
 
         <!-- Read-only view of the Laptop-published Year + Crop financial result. -->
         <div id="mobileFinancialSummaryModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-slate-950/60 p-4" onclick="if(event.target === this) closeMobileFinancialSummary()">
@@ -614,17 +637,12 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             <div id="feedView" class="hidden space-y-3">
                 <div class="feed-control-card">
                     <div class="feed-control-pond">
-                        <label for="feedPondFilter">Pond</label>
                         <select id="feedPondFilter" onchange="changePond(this.value)"></select>
                     </div>
                     <button id="feedRecordBtn" onclick="blueCrestOpenFeedRecord()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow-sm transition flex items-center gap-1.5">
                         <span>+</span> Record Feed
                     </button>
                     <button id="bulkFeedOpenBtn" type="button" onclick="openBulkFeedModal()">Bulk Feed</button>
-                    <button onclick="document.getElementById('feedRestoreInput').click()" class="feed-control-secondary" title="Restore Feed Logs from CSV"><span>📤</span> Restore</button>
-                    <input type="file" id="feedRestoreInput" accept=".csv" class="hidden" onchange="importFeedCSV(event)">
-                    <button onclick="exportFeedCSV()" class="feed-control-secondary" title="Backup Feed Logs to CSV"><span>📥</span> Backup</button>
-                    <button onclick="toggleSortOrder()" id="sortBtnText" class="feed-control-secondary">Latest First ↓</button>
                 </div>
 
                 <div class="flex items-center text-[11px] font-bold text-slate-400 uppercase border-b pb-2 mb-2 gap-1 pt-1">
@@ -723,6 +741,21 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                     <div class="text-right"><span class="block text-[10px] font-bold text-slate-400">Total Harvest</span><strong id="harvestMobileTotal" class="text-lg text-blue-700">0 kg</strong></div>
                 </div>
                 <div id="harvestSummaryCards" class="space-y-2"></div><div id="harvestCardsList" class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"></div>
+            </div>
+
+            <!-- 7. Reports View -->
+            <div id="reportsView" class="hidden space-y-4">
+                <div class="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm space-y-3">
+                    <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wide">REPORTS</h3>
+                    <section aria-labelledby="feedDataReportsTitle">
+                        <h4 id="feedDataReportsTitle" class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Feed Data</h4>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button type="button" onclick="exportFeedCSV()" class="rounded-xl bg-blue-600 px-3 py-2.5 text-xs font-bold text-white shadow-sm" title="Backup Feed Logs to CSV">📥 Backup / Export</button>
+                            <button type="button" onclick="document.getElementById('feedRestoreInput').click()" class="rounded-xl border border-blue-200 bg-blue-50 px-3 py-2.5 text-xs font-bold text-blue-700" title="Restore Feed Logs from CSV">📤 Restore / Import</button>
+                            <input type="file" id="feedRestoreInput" accept=".csv" class="hidden" onchange="importFeedCSV(event)">
+                        </div>
+                    </section>
+                </div>
             </div>
 
         </div>
@@ -1822,7 +1855,6 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
         ];
 
         let currentPond = 'P2';
-        let sortDirection = 'desc';
 
         // Year + Crop is the foundational operational context.
         const DEFAULT_CYCLE_YEAR = 2026;
@@ -3152,6 +3184,24 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             syncAppLayout();
         }
 
+        function closeMobileHamburgerMenu() {
+            document.getElementById('mobileHamburgerMenu')?.classList.remove('is-open');
+            document.getElementById('mobileHamburgerOverlay')?.classList.remove('is-open');
+            document.getElementById('mobileHamburgerMenu')?.setAttribute('aria-hidden', 'true');
+            document.getElementById('mobileHamburgerTrigger')?.setAttribute('aria-expanded', 'false');
+        }
+
+        function toggleMobileHamburgerMenu() {
+            const menu = document.getElementById('mobileHamburgerMenu');
+            const overlay = document.getElementById('mobileHamburgerOverlay');
+            const trigger = document.getElementById('mobileHamburgerTrigger');
+            const isOpen = !menu?.classList.contains('is-open');
+            menu?.classList.toggle('is-open', isOpen);
+            overlay?.classList.toggle('is-open', isOpen);
+            menu?.setAttribute('aria-hidden', String(!isOpen));
+            trigger?.setAttribute('aria-expanded', String(isOpen));
+        }
+
         function switchTab(tab) {
             const scrollContent = document.querySelector('.app-scroll-content');
             currentMobileTab = tab;
@@ -3160,7 +3210,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             // Every tab opens from the top of the shared scroll area.
             if (scrollContent) scrollContent.scrollTop = 0;
 
-            const tabs = ['home', 'pond', 'feed', 'sampling', 'treatment', 'harvest'];
+            const tabs = ['home', 'pond', 'feed', 'sampling', 'treatment', 'harvest', 'reports'];
             const headerPondSection = document.getElementById('headerPondSection');
             const headerHomeTitle = document.getElementById('headerHomeTitle');
 
@@ -3264,11 +3314,6 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             if (typeof refreshMobileRecordButtons === 'function') setTimeout(refreshMobileRecordButtons, 0);
         }
 
-        function toggleSortOrder() {
-            sortDirection = sortDirection === 'desc' ? 'asc' : 'desc';
-            document.getElementById('sortBtnText').innerText = sortDirection === 'desc' ? 'Latest First ↓' : 'Oldest First ↑';
-            renderHistory();
-        }
 
         function renderAllPondsSummary() {
             const container = document.getElementById('allPondsDashboardContainer');
@@ -3486,11 +3531,11 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             pondEntries.sort((a, b) => {
                 let dtA = getEntryTimestamp(a);
                 let dtB = getEntryTimestamp(b);
-                return sortDirection === 'desc' ? dtB - dtA : dtA - dtB;
+                return dtB - dtA;
             });
 
             let dates = [...new Set(pondEntries.map(e => e.date))];
-            dates.sort((d1, d2) => sortDirection === 'desc' ? new Date(d2) - new Date(d1) : new Date(d1) - new Date(d2));
+            dates.sort((d1, d2) => new Date(d2) - new Date(d1));
 
             dates.forEach(dateStr => {
                 const dateHeader = document.createElement('div');
@@ -3507,7 +3552,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                 entriesForDate.sort((a, b) => {
                     let dtA = getEntryTimestamp(a);
                     let dtB = getEntryTimestamp(b);
-                    return sortDirection === 'desc' ? dtB - dtA : dtA - dtB;
+                    return dtB - dtA;
                 });
 
                 entriesForDate.forEach(entry => {
