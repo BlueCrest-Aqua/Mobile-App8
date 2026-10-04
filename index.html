@@ -238,6 +238,23 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Ar
 .feed-control-card .feed-control-secondary{border:1px solid rgba(255,255,255,.19)!important;background:rgba(255,255,255,.10)!important;color:#fff!important;box-shadow:none!important;}
 @media(max-width:350px){.feed-control-card{gap:.25rem;padding:.3rem}.feed-control-card button{font-size:.7rem!important;padding:.16rem!important;}}
 
+/* Compact table-style Feed History retains the existing date/DOC group structure. */
+.feed-history-table{overflow:hidden;border:1px solid #dce8f2;border-radius:12px;background:#fff;box-shadow:0 3px 10px rgba(15,39,66,.05);}
+.feed-history-header,.feed-history-row{display:grid;grid-template-columns:3.8rem minmax(0,1fr)3.65rem 2.1rem 2.15rem;align-items:center;gap:.3rem;}
+.feed-history-header{min-height:34px;padding:.3rem .5rem;border-bottom:1px solid #dce8f2;background:#f8fbfe;color:#64748b;font-size:.58rem;font-weight:900;letter-spacing:.04em;text-transform:uppercase;}
+.feed-history-row{min-height:46px;padding:.38rem .5rem;margin:0;border:0;border-bottom:1px solid #e3ecf4;background:transparent;}
+.feed-history-row:last-child{border-bottom:0;}
+.feed-history-date-group{display:flex;align-items:center;gap:.5rem;min-height:38px;padding:.38rem .5rem;border-bottom:1px solid #dce8f2;background:#edf5fb;color:#526b85;font-size:.72rem;font-weight:900;}
+.feed-history-time{font-size:.7rem;font-weight:800;color:#334155;white-space:nowrap;}
+.feed-history-feed{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.72rem;font-weight:800;color:#334155;}
+.feed-history-feed strong{color:#0967c2;font-weight:900;}
+.feed-history-cumulative{text-align:right;font-size:.72rem;font-weight:800;color:#475569;white-space:nowrap;}
+.feed-supplement-note,.feed-history-edit{display:inline-flex;width:30px;height:30px;align-items:center;justify-content:center;border-radius:8px;font-size:.82rem;line-height:1;}
+.feed-supplement-note{border:1px solid #f9dca7;background:#fff9eb;color:#b7791f;}
+.feed-history-edit{border:0;background:transparent;color:#64748b;}
+.feed-history-edit:active{background:#eff6ff;color:#2563eb;}
+@media(max-width:350px){.feed-history-header,.feed-history-row{grid-template-columns:3.35rem minmax(0,1fr)3.2rem 1.9rem 1.9rem;gap:.2rem}.feed-history-header{padding:.3rem .38rem;font-size:.53rem}.feed-history-row{min-height:44px;padding:.34rem .38rem}.feed-history-date-group{padding:.35rem .38rem;font-size:.67rem}.feed-history-time,.feed-history-cumulative{font-size:.64rem}.feed-history-feed{font-size:.68rem}.feed-supplement-note,.feed-history-edit{width:28px;height:28px;}}
+
 /* Navigation tabs */
 .app-fixed-header > div:nth-child(2){background:#fff!important;border-color:var(--bc-border)!important;}
 .app-fixed-header > div:nth-child(2) > div{gap:.1rem;}
@@ -645,15 +662,16 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                     <button id="bulkFeedOpenBtn" type="button" onclick="openBulkFeedModal()">Bulk Feed</button>
                 </div>
 
-                <div class="flex items-center text-[11px] font-bold text-slate-400 uppercase border-b pb-2 mb-2 gap-1 pt-1">
-                    <span class="w-16">Hours</span>
-                    <span class="flex-1 pl-1">Feed & Supp</span>
-                    <span class="w-14 text-right">Cumul.</span>
-                    <span class="w-5 text-center">Note</span>
-                    <span class="w-14 text-right pr-1">Action</span>
+                <div class="feed-history-table">
+                    <div class="feed-history-header">
+                        <span>Time</span>
+                        <span>Feed &amp; Qty</span>
+                        <span class="text-right">Cumul.</span>
+                        <span class="text-center">Supp.</span>
+                        <span class="text-center">Edit</span>
+                    </div>
+                    <div id="feedHistoryList"></div>
                 </div>
-
-                <div id="feedHistoryList" class="space-y-3"></div>
             </div>
 
             <!-- 4. Sampling View -->
@@ -3539,7 +3557,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
 
             dates.forEach(dateStr => {
                 const dateHeader = document.createElement('div');
-                dateHeader.className = 'flex items-center gap-2 text-xs font-bold text-slate-500 bg-slate-100 p-2 rounded mt-3 mb-2';
+                dateHeader.className = 'feed-history-date-group';
                 const pondForDate = getActivePonds().find(p => p.id === currentPond);
                 const dateDoc = pondForDate ? calculateDOC(pondForDate.stockingDate, dateStr) : '-';
                 dateHeader.innerHTML = `
@@ -3557,45 +3575,25 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
 
                 entriesForDate.forEach(entry => {
                     const row = document.createElement('div');
-                    row.className = 'flex justify-between items-start bg-white p-3 rounded-xl border border-slate-100 shadow-sm text-sm mb-2 gap-1';
-                    
-                    let feedContent = '';
-                    if (entry.fasting) {
-                        feedContent = `<span class="text-slate-500 font-semibold text-xs py-1 block">Fasting</span>`;
-                    } else {
-                        const feedHtml = (entry.feeds || []).map(f => `
-                            <div class="flex items-center justify-between bg-blue-50/60 border border-blue-100 px-2 py-1 rounded-lg mb-1">
-                                <span class="font-bold text-slate-700 text-xs">${f.code}</span>
-                                <span class="font-extrabold text-blue-600 text-xs whitespace-nowrap">${f.qty} kg</span>
-                            </div>
-                        `).join('');
-
-                        let suppHtml = '';
-                        if (entry.supplement && entry.supplement.code) {
-                            suppHtml = `
-                                <div class="flex items-center justify-between bg-amber-50/60 border border-amber-100 px-2 py-1 rounded-lg mb-1 gap-2">
-                                    <span class="font-bold text-amber-800 text-xs truncate max-w-[190px]">${entry.supplement.code} (${entry.supplement.dose})</span>
-                                    <span class="font-extrabold text-amber-600 text-xs whitespace-nowrap">${(entry.supplement.qty || 0).toFixed(2)}</span>
-                                </div>
-                            `;
-                        }
-                        feedContent = feedHtml + suppHtml;
-                    }
+                    row.className = 'feed-history-row';
+                    const hasSupplement = Boolean(entry.supplement && entry.supplement.code);
+                    const feedContent = entry.fasting
+                        ? '<span class="text-slate-500">Fasting</span>'
+                        : (entry.feeds || []).map(f => `<span>${f.code} <strong>${f.qty} kg</strong></span>`).join('<span class="text-slate-300"> · </span>');
 
                     row.innerHTML = `
-                        <div class="w-16 pt-1">
-                            <span class="font-semibold text-slate-700 text-xs block whitespace-nowrap">${entry.time}</span>
-                        </div>
-                        <div class="flex-1 pl-1 min-w-0">${feedContent}</div>
-                        <div class="w-14 pt-1 text-right">
-                            <span class="text-slate-600 text-xs font-semibold whitespace-nowrap">${(entry.cumulative || 0).toFixed(1)}</span>
-                        </div>
-                        <div class="w-5 pt-1 text-center text-blue-500">${entry.notes ? '💬' : ''}</div>
-                        <div class="w-14 pt-1 flex items-center justify-end gap-2 pr-1">
-                            <button onclick='blueCrestEditFeed(${JSON.stringify(String(entry.id))})' class="text-slate-500 hover:text-blue-600 transition">✏️</button>
-                            <button onclick='deleteFeed(${JSON.stringify(String(entry.id))})' class="text-slate-400 hover:text-rose-600 transition text-sm">🗑️</button>
-                        </div>
+                        <span class="feed-history-time">${entry.time}</span>
+                        <div class="feed-history-feed">${feedContent}</div>
+                        <span class="feed-history-cumulative">${(entry.cumulative || 0).toFixed(1)}</span>
+                        <div class="flex justify-center">${hasSupplement ? '<button type="button" class="feed-supplement-note" title="View supplement">💬</button>' : ''}</div>
+                        <div class="flex justify-center"><button type="button" onclick='blueCrestEditFeed(${JSON.stringify(String(entry.id))})' class="feed-history-edit" title="Edit feed record" aria-label="Edit feed record">✏️</button></div>
                     `;
+                    const supplementButton = row.querySelector('.feed-supplement-note');
+                    if (supplementButton) supplementButton.addEventListener('click', event => {
+                        event.stopPropagation();
+                        const supplement = entry.supplement;
+                        alert(`${supplement.code}\nQuantity: ${Number(supplement.qty || 0).toFixed(2)}${supplement.dose ? `\nDose: ${supplement.dose}` : ''}`);
+                    });
                     row.addEventListener('click', event => {
                         if (event.target.closest('button')) return;
                         openFeedRecordView(entry.id);
