@@ -117,8 +117,8 @@
 .app-fixed-header button[id^="tab"].text-blue-600{background:#eff6ff!important;color:#075eae!important;border-radius:12px!important;}
 .app-scroll-content{padding-bottom:5.55rem!important;}
 .app-scroll-content.mobile-home-scroll{overflow:hidden!important;padding:0 0 5.55rem!important;max-width:32rem!important;}
-.mobile-home-scroll #homeView{height:100%;min-height:0;padding:.85rem .9rem 0;}
-#allPondsDashboardContainer{height:100%;min-height:0;display:flex;flex-direction:column;gap:.6rem!important;}
+.mobile-home-scroll #homeView{height:100%;min-height:0;padding:.85rem .9rem 0;display:flex;flex-direction:column;gap:.6rem;}
+#allPondsDashboardContainer{height:auto;min-height:0;flex:1;display:flex;flex-direction:column;gap:.6rem!important;}
 .mobile-farm-summary{flex:0 0 auto;padding:1rem!important;border-radius:16px!important;box-shadow:0 6px 18px rgba(15,39,66,.07)!important;}
 .mobile-farm-summary > div:first-child{margin-bottom:.68rem!important;}
 .mobile-farm-summary > div:first-child h3{font-size:.94rem!important;font-weight:900!important;letter-spacing:.045em!important;}
@@ -405,6 +405,18 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
   transition: width .15s linear;
 }
 
+/* Pending Feed uploads: a brief Feed toast and a persistent Home-only status card. */
+#bulkFeedPendingStatus { bottom: max(12px, env(safe-area-inset-bottom)); pointer-events: none; }
+#bulkFeedPendingStatus .bfps-btn { display: none; }
+.mobile-pending-feed-card{display:flex;align-items:center;gap:.65rem;padding:.62rem .7rem;border:1px solid #bfdbfe;border-radius:12px;background:#eff6ff;color:#0f3f72;box-shadow:0 3px 10px rgba(15,64,114,.08);}
+.mobile-pending-feed-card[hidden]{display:none!important;}
+.mobile-pending-feed-card .pending-feed-icon{width:24px;height:24px;display:grid;place-items:center;flex:0 0 auto;border-radius:8px;background:#dbeafe;color:#075eae;font-size:14px;font-weight:900;}
+.mobile-pending-feed-card .pending-feed-copy{min-width:0;flex:1;line-height:1.18;}
+.mobile-pending-feed-card .pending-feed-title{font-size:.78rem;font-weight:800;}
+.mobile-pending-feed-card .pending-feed-detail{margin-top:2px;font-size:.67rem;color:#4b6b8f;}
+.mobile-pending-feed-card .pending-feed-retry{min-height:34px;padding:0 .7rem;border:1px solid #93c5fd;border-radius:8px;background:#fff;color:#075eae;font-size:.72rem;font-weight:800;}
+.mobile-pending-feed-card .pending-feed-retry:disabled{opacity:.58;}
+
 
 /* BULK FEED STAGE 5 — Bulk Feed Entry UI only */
 #bulkFeedModal {
@@ -645,6 +657,14 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             
             <!-- 1. Home View -->
             <div id="homeView" class="space-y-4">
+                <section id="homePendingFeedUploads" class="mobile-pending-feed-card" hidden aria-live="polite">
+                    <span class="pending-feed-icon" aria-hidden="true">↑</span>
+                    <div class="pending-feed-copy">
+                        <div id="homePendingFeedTitle" class="pending-feed-title">0 Feed Records Pending Upload</div>
+                        <div class="pending-feed-detail">Saved locally and ready to upload.</div>
+                    </div>
+                    <button id="homePendingFeedRetryBtn" class="pending-feed-retry" type="button">Retry</button>
+                </section>
                 <div class="space-y-4" id="allPondsDashboardContainer"></div>
             </div>
 
@@ -1216,7 +1236,10 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                         <textarea id="notes" rows="2" placeholder="Optional comments..." class="w-full border border-slate-200 p-2.5 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"></textarea>
                     </div>
 
-                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-medium shadow-md transition">Save Entry</button>
+                    <div class="flex gap-2">
+                        <button type="button" id="feedDeleteEntryBtn" hidden class="border border-rose-200 bg-rose-50 text-rose-700 px-4 py-3 rounded-xl font-medium transition">Delete Entry</button>
+                        <button type="submit" id="feedSaveEntryBtn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-medium shadow-md transition">Save Entry</button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -1269,6 +1292,18 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
 
         const LEGACY_ELITE_FARM_ID = '5a7a4AYQ1o3Jf69VZ1Mx';
         let blueCrestSession = null;
+        function hasFullEntitlementAccess(entitlement) {
+            if (!entitlement || typeof entitlement !== 'object' || entitlement.status !== 'active') return false;
+            if (entitlement.plan === 'activated') return true;
+            if (entitlement.plan !== 'trial') return false;
+            const trialEndsAt = entitlement.trialEndsAt;
+            if (!trialEndsAt || typeof trialEndsAt.toDate !== 'function') return false;
+            const endsAt = trialEndsAt.toDate();
+            return endsAt instanceof Date && !Number.isNaN(endsAt.getTime()) && endsAt.getTime() > Date.now();
+        }
+        function assertEntitlementWriteAllowed() {
+            if (blueCrestSession?.hasFullEntitlementAccess !== true) throw new Error('This farm is currently view-only.');
+        }
 
         // PHASE 2B — FUTURE FARM-SCOPED FIRESTORE INFRASTRUCTURE
         // Existing operational collections remain legacy top-level until a separately
@@ -1309,7 +1344,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
         function isOperationalGroupScoped(name){const g=getOperationalMigrationGroup(name);return OPERATIONAL_MIGRATION_ROUTING_ENABLED===true&&['scoped-read','scoped-active'].includes(getOperationalGroupState(g))&&blueCrestOperationalMigrationControl?.groups?.[g]?.routing==='scoped';}
         function isOperationalGroupFrozen(name){return getOperationalGroupState(getOperationalMigrationGroup(name))==='freeze';}
         function farmOperationalCollection(name){getOperationalMigrationGroup(name);if(!db||typeof db.collection!=='function')throw new Error('Firebase Firestore is unavailable.');return isOperationalGroupScoped(name)?db.collection('farms').doc(getActiveFarmId()).collection(name):db.collection(name);}
-        function group1OperationalCollectionOrLegacy(name){return OPERATIONAL_MIGRATION_GROUPS.biological.includes(name)?farmOperationalCollection(name):db.collection(name);} function accountingSourceCollectionOrLegacy(name){return OPERATIONAL_MIGRATION_GROUPS.accountingSource.includes(name)?farmOperationalCollection(name):group1OperationalCollectionOrLegacy(name);} function assertOperationalWriteAllowed(name){if(!OPERATIONAL_MIGRATION_GROUPS.accountingSource.includes(name))return;if(getOperationalWriteMode(name)!==OPERATIONAL_WRITE_MODE.LEGACY&&getOperationalWriteMode(name)!==OPERATIONAL_WRITE_MODE.SCOPED_WRITABLE)throw new Error('Accounting-source writes are not authorized.');}
+        function group1OperationalCollectionOrLegacy(name){return OPERATIONAL_MIGRATION_GROUPS.biological.includes(name)?farmOperationalCollection(name):db.collection(name);} function accountingSourceCollectionOrLegacy(name){return OPERATIONAL_MIGRATION_GROUPS.accountingSource.includes(name)?farmOperationalCollection(name):group1OperationalCollectionOrLegacy(name);} function assertOperationalWriteAllowed(name){assertEntitlementWriteAllowed();if(!OPERATIONAL_MIGRATION_GROUPS.accountingSource.includes(name))return;if(getOperationalWriteMode(name)!==OPERATIONAL_WRITE_MODE.LEGACY&&getOperationalWriteMode(name)!==OPERATIONAL_WRITE_MODE.SCOPED_WRITABLE)throw new Error('Accounting-source writes are not authorized.');}
         function getFinancialSummaryMigrationState(){return blueCrestOperationalMigrationControl?.groups?.financialSummary?.state||'legacy';} function isFinancialSummaryScoped(){return OPERATIONAL_MIGRATION_ROUTING_ENABLED===true&&['scoped-read','scoped-active'].includes(getFinancialSummaryMigrationState())&&blueCrestOperationalMigrationControl?.groups?.financialSummary?.routing==='scoped';} function isFinancialSummaryActive(){return getFinancialSummaryMigrationState()==='scoped-active'&&isFinancialSummaryScoped();} function financialSummaryCollectionOrLegacy(name){if(name!=='cropFinancialSummaries')throw new Error('Financial-summary collection is invalid.');if(!db||typeof db.collection!=='function')throw new Error('Firebase Firestore is unavailable.');return isFinancialSummaryScoped()?db.collection('farms').doc(getActiveFarmId()).collection(name):db.collection(name);}
         function getProductCatalogueMigrationState(){return blueCrestOperationalMigrationControl?.groups?.productCatalogue?.state||'legacy';} function isProductCatalogueScoped(){return OPERATIONAL_MIGRATION_ROUTING_ENABLED===true&&['scoped-read','scoped-active'].includes(getProductCatalogueMigrationState())&&blueCrestOperationalMigrationControl?.groups?.productCatalogue?.routing==='scoped';} function mobileProductMasterDocument(){if(!db||typeof db.collection!=='function')throw new Error('Firebase Firestore is unavailable.');if(!isProductCatalogueScoped())throw new Error('Scoped Product Catalogue authority is unavailable.');return db.collection('farms').doc(getActiveFarmId()).collection('masterData').doc('productCatalogue');}
         function getOperationalWriteMode(name){const g=getOperationalMigrationGroup(name),state=getOperationalGroupState(g);if(state==='freeze'||(isOperationalGroupScoped(name)&&state==='scoped-read'))return OPERATIONAL_WRITE_MODE.VERIFY_READ_ONLY;return isOperationalGroupScoped(name)&&state==='scoped-active'&&blueCrestOperationalGroupReadiness.get(g)?.verified?OPERATIONAL_WRITE_MODE.SCOPED_WRITABLE:(isOperationalGroupScoped(name)?OPERATIONAL_WRITE_MODE.VERIFY_READ_ONLY:OPERATIONAL_WRITE_MODE.LEGACY);}
@@ -1350,7 +1385,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
         function isFoundationMigrationFrozen(){return FOUNDATION_MIGRATION_FREEZE===true;} function isFoundationScopedRoutingEnabled(){return FOUNDATION_SCOPED_ROUTING===true;}
         function setFoundationWriteMode(nextMode) { if (!Object.values(FOUNDATION_WRITE_MODE).includes(nextMode)) throw new Error('Unknown Foundation write mode.'); blueCrestFoundationWriteMode = nextMode; return nextMode; }
         function foundationCacheIsVerified() { try { const result = inspectFoundationStorageMigrationState({ farmId: getActiveFarmId(), mode: 'post-cutover' }); return result?.classification === 'verified' && Array.isArray(result.failures) && result.failures.length === 0; } catch (error) { return false; } }
-        function isFoundationScopedWritableAuthorized() { const control = blueCrestFoundationValidatedControl, session = blueCrestSession, readiness = getFoundationReadiness(); if (!control || blueCrestFoundationMigrationControlStatus.controlHealthy !== true || control.version !== 1 || control.state !== 'active' || control.routing !== 'scoped') return false; if (isFoundationMigrationFrozen() || !isFoundationScopedRoutingEnabled() || blueCrestFoundationMigrationControlFarmId !== control.farmId) return false; if (!session || session.farmId !== control.farmId || session.membershipStatus !== 'active' || session.role !== 'owner' || session.canWrite !== true || session.entitlementStatus !== 'active' || session.plan !== 'activated' || session.setupStatus !== FARM_SETUP_STATUS.ACTIVE) return false; if (readiness.state !== FOUNDATION_READINESS.FIRESTORE_VERIFIED || readiness.route !== 'scoped' || readiness.verified !== true || !Array.isArray(readiness.expected) || !Array.isArray(readiness.snapshots) || readiness.expected.length !== FOUNDATION_HYDRATION_SOURCES.length || FOUNDATION_HYDRATION_SOURCES.some(source => !readiness.expected.includes(source) || !readiness.snapshots.includes(source))) return false; return foundationCacheIsVerified(); }
+        function isFoundationScopedWritableAuthorized() { const control = blueCrestFoundationValidatedControl, session = blueCrestSession, readiness = getFoundationReadiness(); if (!control || blueCrestFoundationMigrationControlStatus.controlHealthy !== true || control.version !== 1 || control.state !== 'active' || control.routing !== 'scoped') return false; if (isFoundationMigrationFrozen() || !isFoundationScopedRoutingEnabled() || blueCrestFoundationMigrationControlFarmId !== control.farmId) return false; if (!session || session.farmId !== control.farmId || session.membershipStatus !== 'active' || session.role !== 'owner' || session.canWrite !== true || session.hasFullEntitlementAccess !== true || session.setupStatus !== FARM_SETUP_STATUS.ACTIVE) return false; if (readiness.state !== FOUNDATION_READINESS.FIRESTORE_VERIFIED || readiness.route !== 'scoped' || readiness.verified !== true || !Array.isArray(readiness.expected) || !Array.isArray(readiness.snapshots) || readiness.expected.length !== FOUNDATION_HYDRATION_SOURCES.length || FOUNDATION_HYDRATION_SOURCES.some(source => !readiness.expected.includes(source) || !readiness.snapshots.includes(source))) return false; return foundationCacheIsVerified(); }
         function refreshFoundationWriteMode() { const control = blueCrestFoundationValidatedControl; const nextMode = control?.state === 'freeze' && control?.routing === 'scoped' ? FOUNDATION_WRITE_MODE.VERIFY_READ_ONLY : (isFoundationScopedWritableAuthorized() ? FOUNDATION_WRITE_MODE.SCOPED_WRITABLE : FOUNDATION_WRITE_MODE.LEGACY); return setFoundationWriteMode(nextMode); }
         function isFoundationVerifyReadOnly() { return isFoundationMigrationFrozen() || blueCrestFoundationWriteMode !== FOUNDATION_WRITE_MODE.SCOPED_WRITABLE || !isFoundationScopedWritableAuthorized(); }
         function canWriteFoundation() { return isFoundationScopedWritableAuthorized() && blueCrestFoundationWriteMode === FOUNDATION_WRITE_MODE.SCOPED_WRITABLE; }
@@ -1744,10 +1779,12 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             if(!farmId) throw accessError('USER_FARM_ID_MISSING','This account does not have a BlueCrest farm assignment.');
             const farm=await db.collection('farms').doc(farmId).get(); const membership=await db.collection('farms').doc(farmId).collection('members').doc(uid).get(); const entitlement=await db.collection('farms').doc(farmId).collection('entitlement').doc('current').get();
             const farmData=farm.data()||{}; const membershipData=membership.data()||{}; const entitlementData=entitlement.data()||{}; const role=typeof membershipData.role==='string'?membershipData.role.trim().toLowerCase():'';
-            if(!farm.exists) throw accessError('FARM_NOT_FOUND','The assigned farm record was not found.'); if(farmData.status!=='active') throw accessError('FARM_INACTIVE','The assigned farm is not active.'); if(!membership.exists) throw accessError('MEMBERSHIP_NOT_FOUND','No membership record exists for this account.'); if(membershipData.status!=='active') throw accessError('MEMBERSHIP_INACTIVE','This membership is not active.'); if(!['owner','admin','viewer','investor'].includes(role)) throw accessError('MEMBERSHIP_ROLE_INVALID','This membership role is not authorized.'); if(!entitlement.exists) throw accessError('ENTITLEMENT_NOT_FOUND','The farm entitlement record was not found.'); if(entitlementData.status!=='active') throw accessError('ENTITLEMENT_INACTIVE','The farm entitlement is not active.'); if(entitlementData.plan!=='activated') throw accessError('ENTITLEMENT_NOT_ACTIVATED','The farm entitlement plan is not activated.');
+            if(!farm.exists) throw accessError('FARM_NOT_FOUND','The assigned farm record was not found.'); if(farmData.status!=='active') throw accessError('FARM_INACTIVE','The assigned farm is not active.'); if(!membership.exists) throw accessError('MEMBERSHIP_NOT_FOUND','No membership record exists for this account.'); if(membershipData.status!=='active') throw accessError('MEMBERSHIP_INACTIVE','This membership is not active.'); if(!['owner','admin','viewer','investor'].includes(role)) throw accessError('MEMBERSHIP_ROLE_INVALID','This membership role is not authorized.');
             const normalizedSetupStatus=resolveFarmSetupStatus(farmData);
             // Provisioning metadata for future startup routing; it does not alter current startup behavior.
-            blueCrestSession={uid,email:user.email||'',farmId,farmName:farmData.farmName||'BlueCrest Farm',role,membershipStatus:membershipData.status,plan:entitlementData.plan||'',entitlementStatus:entitlementData.status,setupStatus:normalizedSetupStatus,canWrite:['owner','admin'].includes(role)};
+            const hasEntitlementAccess=hasFullEntitlementAccess(entitlement.exists?entitlementData:null);
+            blueCrestSession={uid,email:user.email||'',farmId,farmName:farmData.farmName||'BlueCrest Farm',role,membershipStatus:membershipData.status,plan:entitlementData.plan||'',entitlementStatus:entitlementData.status||'',trialEndsAt:entitlementData.trialEndsAt||null,hasFullEntitlementAccess:hasEntitlementAccess,setupStatus:normalizedSetupStatus,canWrite:['owner','admin'].includes(role)};
+            isViewOnlyMode=!hasEntitlementAccess;
             document.getElementById('mobileFarmName').textContent=blueCrestSession.farmName;
         }
         async function hasValidMobilePendingRegistration(user) {
@@ -2673,9 +2710,11 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                     renderAllPondsSummary();
                     renderHistory();
                 });
+                return true;
             } catch (err) {
                 console.error('Firestore feed delete error:', err);
                 alert('Feed record could not be deleted. Please try again.');
+                return false;
             }
         }
 
@@ -4375,7 +4414,8 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             // Keep the feed screen focused on the pond actually selected for this entry.
             currentPond = pond;
 
-            const id = editingEntryId !== null ? editingEntryId : Date.now();
+            const isNewEntry = editingEntryId === null;
+            const id = isNewEntry ? `feed-${Date.now()}-${Math.random().toString(36).slice(2, 8)}` : editingEntryId;
             const existing = editingEntryId !== null ? feedEntries.find(e => e.id === editingEntryId) : null;
             const entryObj = {
                 ...(existing || {}),
@@ -4394,6 +4434,29 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                 supplement
             };
 
+            if (isNewEntry) {
+                const saveButton = document.getElementById('feedSaveEntryBtn');
+                if (saveButton?.dataset.queueing === '1') return;
+                if (saveButton) {
+                    saveButton.dataset.queueing = '1';
+                    saveButton.disabled = true;
+                }
+                try {
+                    blueCrestBulkFeedPending.queue([entryObj]);
+                    closeModal();
+                    void runBulkFeedPendingUploadFromUI().catch(error => console.error('Pending feed upload could not start:', error));
+                } catch (error) {
+                    console.error('Feed pending queue error:', error);
+                    alert(error?.message || 'Feed record could not be saved locally.');
+                } finally {
+                    if (saveButton) {
+                        delete saveButton.dataset.queueing;
+                        saveButton.disabled = false;
+                    }
+                }
+                return;
+            }
+
             saveFeedToDb(entryObj).then(cloudSaved => {
                 if (cloudSaved === true) {
                     document.querySelectorAll('#feedRowsContainer .feed-qty-input').forEach(input => { input.value = ''; });
@@ -4410,8 +4473,9 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
         function deleteFeed(id) {
             if (isViewOnlyMode) { alert('View-Only mode: data changes are disabled.'); return; }
             if (confirm("Delete this feed record? This will update cloud data on both phones.")) {
-                deleteFeedFromDb(id);
+                return deleteFeedFromDb(id);
             }
+            return false;
         }
 
         function handleSamplingSubmit(e) {
@@ -5234,6 +5298,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
         function openModal(id = null) {
             syncPondDropdown();
             const feedPondSelect = document.getElementById('feedPond');
+            const deleteButton = document.getElementById('feedDeleteEntryBtn');
             document.getElementById('feedModal').classList.remove('hidden');
             const modalTitle = document.getElementById('modalTitleText');
             document.getElementById('modalSubtitle').innerText = `Farm: Elite Aqualines ${getActiveCycle().year} ${getActiveCycle().crop} | ${currentPond}`;
@@ -5247,6 +5312,12 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                 if (!entry) { alert('Entry could not be found.'); closeModal(); return; }
                 if (entry) {
                     editingEntryId = entry.id;
+                    if (deleteButton) {
+                        deleteButton.hidden = false;
+                        deleteButton.onclick = async () => {
+                            if (await deleteFeed(entry.id)) closeModal();
+                        };
+                    }
                     const entryPond = String(entry.pond || entry.pondId || currentPond || '');
                     if (feedPondSelect) feedPondSelect.value = entryPond;
                     onFeedPondChange(entryPond);
@@ -5278,6 +5349,10 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                 }
             } else {
                 editingEntryId = null;
+                if (deleteButton) {
+                    deleteButton.hidden = true;
+                    deleteButton.onclick = null;
+                }
                 const selectedPond = currentPond || (getActivePonds().length ? getActivePonds()[0].id : '');
                 if (feedPondSelect) feedPondSelect.value = selectedPond;
                 onFeedPondChange(selectedPond);
@@ -5768,6 +5843,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
   window.blueCrestIsPondClosed=isPondClosed;
   window.blueCrestIsCropClosed=isCropClosed;
   window.blueCrestAssertOperationalWrite=function(opts){
+    try { assertEntitlementWriteAllowed(); } catch (error) { return deny(`🔒 View-Only Access\n\n${error.message}`); }
     const cid=String(opts?.cycleId || activeC().id || '');
     if(isCropClosed(cid)) return deny(`🔒 Crop Closed\n\n${activeC().year} • ${activeC().crop} is closed. No new, edited, or deleted operational data can be entered until the crop is reactivated from the laptop.`);
     const pid=String(opts?.pondId || '');
@@ -6518,6 +6594,39 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
         window.clearBulkFeedForm = clearBulkFeedForm;
         window.saveBulkFeedForm = saveBulkFeedForm;
 
+        // Pending Feed status presentation only; queue and uploader remain unchanged.
+        let bulkFeedPendingToastTimer = null;
+
+        function refreshHomePendingFeedUploads(count) {
+            const card = document.getElementById('homePendingFeedUploads');
+            const title = document.getElementById('homePendingFeedTitle');
+            if (!card || !title) return;
+            card.hidden = count <= 0;
+            title.textContent = `${count} Feed Record${count === 1 ? '' : 's'} Pending Upload`;
+        }
+
+        function hideBulkFeedPendingToast() {
+            if (bulkFeedPendingToastTimer) {
+                clearTimeout(bulkFeedPendingToastTimer);
+                bulkFeedPendingToastTimer = null;
+            }
+            document.getElementById('bulkFeedPendingStatus')?.classList.remove('is-visible');
+        }
+
+        function showBulkFeedPendingToast() {
+            const box = document.getElementById('bulkFeedPendingStatus');
+            const title = document.getElementById('bulkFeedPendingTitle');
+            const detail = document.getElementById('bulkFeedPendingDetail');
+            const feedView = document.getElementById('feedView');
+            const count = window.blueCrestBulkFeedPending?.records?.().length || 0;
+            if (!box || !title || !detail || count <= 0 || feedView?.classList.contains('hidden')) return;
+            title.textContent = `${count} Feed Record${count === 1 ? '' : 's'} Pending Upload`;
+            detail.textContent = 'Saved locally. Upload will retry automatically.';
+            box.classList.add('is-visible');
+            if (bulkFeedPendingToastTimer) clearTimeout(bulkFeedPendingToastTimer);
+            bulkFeedPendingToastTimer = setTimeout(hideBulkFeedPendingToast, 2600);
+        }
+
         // BULK FEED STAGE 4 — Pending Status & Progress UI only.
         function refreshBulkFeedPendingStatusUI(detailText = '') {
             const box = document.getElementById('bulkFeedPendingStatus');
@@ -6528,10 +6637,10 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
 
             const count = blueCrestBulkFeedPending.records().length;
             title.textContent = `${count} Feed Record${count === 1 ? '' : 's'} Pending Upload`;
-            detail.textContent = detailText;
-            box.classList.toggle('is-visible', count > 0);
+            detail.textContent = count ? 'Saved locally. Upload will retry automatically.' : '';
+            refreshHomePendingFeedUploads(count);
             if (count === 0) {
-                detail.textContent = '';
+                hideBulkFeedPendingToast();
                 button.disabled = false;
                 button.textContent = 'Upload';
                 const progress = document.getElementById('bulkFeedPendingProgress');
@@ -6580,6 +6689,19 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             button.dataset.bound = '1';
             button.addEventListener('click', runBulkFeedPendingUploadFromUI);
 
+            const homeRetryButton = document.getElementById('homePendingFeedRetryBtn');
+            if (homeRetryButton && homeRetryButton.dataset.bound !== '1') {
+                homeRetryButton.dataset.bound = '1';
+                homeRetryButton.addEventListener('click', async () => {
+                    homeRetryButton.disabled = true;
+                    try {
+                        await runBulkFeedPendingUploadFromUI();
+                    } finally {
+                        homeRetryButton.disabled = false;
+                    }
+                });
+            }
+
             // Keep Stage 2 queue API behavior intact; refresh UI after queue mutations.
             const pendingApi = window.blueCrestBulkFeedPending;
             if (pendingApi && !pendingApi.__stage4Wrapped) {
@@ -6588,6 +6710,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                     queue(records) {
                         const result = pendingApi.queue(records);
                         refreshBulkFeedPendingStatusUI();
+                        showBulkFeedPendingToast();
                         return result;
                     },
                     clearForStage2Test() {
