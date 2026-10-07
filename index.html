@@ -92,6 +92,38 @@
         .dropdown-scroll-list::-webkit-scrollbar-thumb:hover {
             background: #94a3b8;
         }
+        /* Sampling Priority 2: six compact metrics remain readable without a
+           horizontal scroll at phone widths. */
+        .sampling-priority-grid { display:grid; grid-template-columns:minmax(46px,1.25fr) .68fr .9fr .9fr 1fr .82fr; gap:3px; align-items:center; }
+        .sampling-priority-grid > * { min-width:0; }
+        .sampling-priority-header { font-size:9px; line-height:1; letter-spacing:.03em; text-transform:uppercase; color:#64748b; }
+        .sampling-priority-row { min-height:48px; border-top:1px solid #e2e8f0; border-left:4px solid #cbd5e1; background:#fff; }
+        .sampling-priority-row.status-on-track { border-left-color:#22c55e; }
+        .sampling-priority-row.status-watch { border-left-color:#eab308; }
+        .sampling-priority-row.status-attention { border-left-color:#ef4444; }
+        .sampling-priority-row.status-insufficient { border-left-color:#94a3b8; }
+        .sampling-priority-value { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:10px; line-height:1.2; color:#334155; text-align:right; }
+        .sampling-priority-value:first-child { text-align:left; font-weight:700; }
+        .sampling-priority-status { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:8px; font-weight:700; line-height:1.25; }
+        .status-on-track .sampling-priority-status { color:#15803d; } .status-watch .sampling-priority-status { color:#a16207; } .status-attention .sampling-priority-status { color:#b91c1c; } .status-insufficient .sampling-priority-status { color:#64748b; }
+        .sampling-fullscreen { position:fixed; inset:0; z-index:70; display:flex; flex-direction:column; background:#f8fafc; }
+        .sampling-fullscreen.hidden { display:none; }
+        .sampling-fullscreen-body { flex:1 1 auto; min-height:0; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch; padding:12px 12px calc(20px + env(safe-area-inset-bottom)); }
+        #samplingView:not(.hidden) { height:100%; min-height:0; display:flex; flex-direction:column; gap:.5rem; }
+        #samplingView:not(.hidden) > :not([hidden]) ~ :not([hidden]) { margin-top:0!important; }
+        #samplingLatestSection { flex:1 1 auto; min-height:0; display:flex; flex-direction:column; }
+        #latestPondSamplingList { flex:1 1 auto; min-height:0; max-height:none; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch; overscroll-behavior-y:contain; background:#fff; }
+        #latestPondSamplingList > .sampling-priority-header { position:sticky; top:0; z-index:1; }
+        #samplingHistoryAction { display:flex!important; min-height:46px; align-items:center; justify-content:space-between; padding:.5rem .75rem!important; border:1px solid #e2e8f0!important; border-radius:.75rem!important; background:#fff!important; color:#334155!important; box-shadow:0 1px 2px rgba(15,23,42,.05)!important; font-size:.875rem!important; line-height:1.1!important; }
+        #samplingHistoryAction .sampling-history-icon { color:#2563eb; font-size:1rem; }
+        #samplingHistoryAction .sampling-history-arrow { color:#94a3b8; font-size:1.35rem; font-weight:400; }
+        #samplingHistoryTools { display:grid; grid-template-columns:minmax(0,1.12fr) minmax(0,.88fr); gap:.4rem; align-items:stretch; }
+        #samplingTipsBar { display:flex; min-height:46px; align-items:center; gap:.35rem; padding:.4rem .5rem; border:1px solid #dbeafe; border-radius:.75rem; background:#eff6ff; color:#334155; font-size:.66rem; line-height:1.2; }
+        #samplingTipsBar strong { color:#1d4ed8; }
+        .sampling-attention-sheet { position:fixed; inset:0; z-index:80; display:flex; align-items:flex-end; background:rgba(15,23,42,.42); }
+        .sampling-attention-sheet.hidden { display:none; }
+        .sampling-attention-card { width:100%; max-height:min(78vh,40rem); overflow-y:auto; border-radius:1.25rem 1.25rem 0 0; background:#fff; padding:1rem 1rem calc(1rem + env(safe-area-inset-bottom)); box-shadow:0 -12px 32px rgba(15,23,42,.2); }
+        .sampling-attention-detail { display:grid; grid-template-columns:1.3rem 5.75rem minmax(0,1fr); gap:.5rem; align-items:center; border-top:1px solid #e2e8f0; padding:.7rem 0; font-size:.78rem; color:#334155; }
     </style>
 
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -117,16 +149,19 @@
 .app-fixed-header button[id^="tab"].text-blue-600{background:#eff6ff!important;color:#075eae!important;border-radius:12px!important;}
 .app-scroll-content{padding-bottom:5.55rem!important;}
 .app-scroll-content.mobile-home-scroll{overflow:hidden!important;padding:0 0 5.55rem!important;max-width:32rem!important;}
-.mobile-home-scroll #homeView{height:100%;min-height:0;padding:.85rem .9rem 0;display:flex;flex-direction:column;gap:.6rem;}
-#allPondsDashboardContainer{height:auto;min-height:0;flex:1;display:flex;flex-direction:column;gap:.6rem!important;}
+.mobile-home-scroll #homeView{height:100%;min-height:0;padding:.5rem .9rem 0;display:flex;flex-direction:column;gap:.6rem;}
+#allPondsDashboardContainer{height:auto;min-height:0;flex:1;display:flex;flex-direction:column;gap:.42rem!important;}
+#allPondsDashboardContainer > :not([hidden]) ~ :not([hidden]){margin-top:0!important;}
 .mobile-farm-summary{flex:0 0 auto;padding:1rem!important;border-radius:16px!important;box-shadow:0 6px 18px rgba(15,39,66,.07)!important;}
 .mobile-farm-summary > div:first-child{margin-bottom:.68rem!important;}
 .mobile-farm-summary > div:first-child h3{font-size:.94rem!important;font-weight:900!important;letter-spacing:.045em!important;}
 .mobile-farm-summary > div:first-child span{font-size:.68rem!important;}
-.mobile-farm-summary .grid{gap:.65rem!important;}
-.mobile-home-kpi{height:4.78rem!important;min-height:4.78rem!important;display:flex!important;flex-direction:column!important;align-items:flex-start!important;justify-content:center!important;padding:.62rem .72rem!important;border-radius:13px!important;}
+.mobile-farm-summary .grid{gap:.48rem!important;}
+.mobile-home-kpi{height:3.85rem!important;min-height:3.85rem!important;display:flex!important;flex-direction:column!important;align-items:flex-start!important;justify-content:center!important;padding:.5rem .62rem!important;border-radius:13px!important;}
 .mobile-expense-kpi{background:#f8fbff!important;border:1px solid #bfdbfe!important;}
 .mobile-feed-kpi{background:#eff7ff!important;border:1px solid #cfe8ff!important;}
+.mobile-survival-kpi{background:#f0fdf4!important;border:1px solid #bbf7d0!important;}
+.mobile-biomass-kpi{background:#f7f5ff!important;border:1px solid #ddd6fe!important;}
 .mobile-kpi-heading{display:flex;width:100%;align-items:center;gap:.42rem;min-width:0;line-height:1;margin-bottom:.28rem;}
 .mobile-kpi-icon{display:block;flex:0 0 auto;width:1.55rem;height:1.55rem;background-repeat:no-repeat;background-position:center;background-size:contain;}
 .mobile-expense-kpi .mobile-kpi-icon{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath fill='%2310b981' d='M8 15h30a5 5 0 0 1 5 5v19a5 5 0 0 1-5 5H10a5 5 0 0 1-5-5V19a4 4 0 0 1 3-4Z'/%3E%3Cpath fill='%232563eb' d='M5 18h34a5 5 0 0 1 5 5v16a5 5 0 0 1-5 5H10a5 5 0 0 1-5-5V23a5 5 0 0 1 5-5Z'/%3E%3Ctext x='24' y='36' text-anchor='middle' font-family='Arial' font-size='21' font-weight='700' fill='white'%3E₹%3C/text%3E%3C/svg%3E");}
@@ -136,12 +171,13 @@
 .mobile-kpi-value{display:block;margin:0;font-size:clamp(.92rem,3.7vw,1.2rem)!important;font-weight:850!important;letter-spacing:-.025em;line-height:1.05;white-space:nowrap;}
 .mobile-expense-kpi .mobile-kpi-value{color:#0f172a!important;}
 .mobile-feed-kpi .mobile-kpi-value{color:#145ce8!important;}
-@media(max-width:380px){.mobile-farm-summary{padding:.85rem!important}.mobile-farm-summary .grid{gap:.55rem!important}.mobile-home-kpi{height:4.62rem!important;min-height:4.62rem!important;padding:.58rem!important}.mobile-kpi-label{font-size:.67rem}.mobile-kpi-icon{width:1.42rem;height:1.42rem}.mobile-kpi-value{font-size:.88rem!important}}
+.mobile-survival-kpi .mobile-kpi-value{color:#047857!important;}.mobile-biomass-kpi .mobile-kpi-value{color:#6d28d9!important;}
+@media(max-width:380px){.mobile-farm-summary{padding:.85rem!important}.mobile-farm-summary .grid{gap:.42rem!important}.mobile-home-kpi{height:3.68rem!important;min-height:3.68rem!important;padding:.48rem!important}.mobile-kpi-label{font-size:.67rem}.mobile-kpi-icon{width:1.42rem;height:1.42rem}.mobile-kpi-value{font-size:.88rem!important}}
 .mobile-pond-performance{display:flex;flex:1 1 auto;flex-direction:column;min-height:0;gap:.42rem;}
-.mobile-pond-performance-heading{font-size:.72rem;font-weight:900;letter-spacing:.07em;color:#173b68;background:#eef5fb;border:1px solid #dce9f4;border-radius:10px;padding:.48rem .68rem;text-transform:uppercase;}
+.mobile-pond-performance-heading{display:flex;min-width:0;align-items:center;justify-content:space-between;gap:.42rem;color:#173b68;background:#eef5fb;border:1px solid #dce9f4;border-radius:10px;padding:.35rem .42rem .35rem .68rem;text-transform:uppercase;}.mobile-pond-performance-heading h3{min-width:0;font-size:.72rem;font-weight:900;letter-spacing:.07em;white-space:nowrap;}.mobile-pond-performance-filters{display:flex;flex:0 0 auto;gap:.2rem;}.mobile-pond-performance-filter{border:1px solid #cbdceb;border-radius:7px;background:#fff;padding:.2rem .36rem;color:#47637f;font-size:.59rem;font-weight:900;line-height:1.1;white-space:nowrap;}.mobile-pond-performance-filter.is-selected{border-color:#2563eb;background:#2563eb;color:#fff;}
 .mobile-pond-list{display:flex;flex:1 1 auto;flex-direction:column;gap:.42rem;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:.05rem .1rem 1rem;}
 .mobile-pond-list > div{flex:0 0 auto!important;}
-.mobile-pond-row{display:grid;grid-template-columns:3.55rem minmax(4.45rem,1fr) 6.05rem 1rem;align-items:center;min-height:3.18rem;padding:.28rem .34rem .28rem .42rem;background:#fff;border:1px solid #e8eef3;border-radius:11px;box-shadow:0 3px 10px rgba(15,39,66,.055);cursor:pointer;overflow:hidden;}
+.mobile-pond-row{display:grid;grid-template-columns:3.55rem minmax(4.15rem,1fr) 6.35rem 1rem;align-items:center;min-height:3.18rem;padding:.28rem .34rem .28rem .42rem;background:#fff;border:1px solid #e8eef3;border-radius:11px;box-shadow:0 3px 10px rgba(15,39,66,.055);cursor:pointer;overflow:hidden;}
 .mobile-pond-row:active{background:#f8fbff;transform:scale(.995);}
 .mobile-pond-id{display:flex;align-items:center;gap:.38rem;min-width:0;font-size:.72rem;font-weight:900;color:#1c304b;white-space:nowrap;}
 .mobile-pond-water{display:grid;place-items:center;width:1.38rem;height:1.38rem;border-radius:50%;background:linear-gradient(145deg,#8edbff,#3aa8ed);color:#fff;font-size:.86rem;font-weight:900;line-height:1;box-shadow:inset 0 1px 1px rgba(255,255,255,.6);}
@@ -150,8 +186,13 @@
 .mobile-pond-harvest{display:flex;min-width:0;height:2.42rem;box-sizing:border-box;flex-direction:column;justify-content:center;padding:.3rem .43rem;border-radius:8px;background:#eafaf1;color:#23814e;line-height:1.22;white-space:nowrap;}
 .mobile-pond-harvest span{display:block;font-size:.56rem;font-weight:700;}
 .mobile-pond-harvest strong{display:block;font-size:.7rem;font-weight:900;color:#087443;overflow:hidden;text-overflow:ellipsis;}
+.mobile-pond-status{display:flex;min-width:0;height:2.42rem;box-sizing:border-box;align-items:center;gap:.24rem;padding:.3rem .43rem;border-radius:8px;line-height:1.12;}
+.mobile-pond-status span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.66rem;font-weight:900;}
+.mobile-pond-status.is-on-track{background:#ecfdf5;color:#047857;}.mobile-pond-status.is-watch{background:#fefce8;color:#a16207;}.mobile-pond-status.is-attention{background:#fff1f2;color:#be123c;}.mobile-pond-status.is-neutral{background:#f1f5f9;color:#64748b;}
+.mobile-pond-status-info{flex:0 0 auto;border:0;background:transparent;padding:0;color:inherit;font-size:.78rem;font-weight:900;line-height:1;}
 .mobile-pond-arrow{color:#07905a;font-size:1.2rem;font-weight:900;line-height:1;text-align:right;}
-@media(max-width:350px){.mobile-pond-row{grid-template-columns:3.2rem minmax(4rem,1fr) 5.45rem .85rem;padding-left:.3rem}.mobile-pond-id{gap:.25rem}.mobile-pond-harvest{padding-left:.32rem;padding-right:.32rem;}.mobile-pond-metrics{gap:.28rem;font-size:.58rem;}}
+.mobile-active-ponds-kpi{background:#eff6ff;border-color:#bfdbfe;}.mobile-active-ponds-kpi .mobile-kpi-value{color:#1d4ed8;}
+@media(max-width:350px){.mobile-pond-row{grid-template-columns:3.2rem minmax(3.8rem,1fr) 5.7rem .85rem;padding-left:.3rem}.mobile-pond-id{gap:.25rem}.mobile-pond-harvest,.mobile-pond-status{padding-left:.32rem;padding-right:.32rem;}.mobile-pond-metrics{gap:.28rem;font-size:.58rem;}}
 .mobile-financial-modal-panel{width:calc(100% - 2rem);max-width:25rem;max-height:calc(100vh - 3rem);overflow-y:auto;}
 .mobile-financial-section{border-radius:15px;padding:.9rem;}
 @media(max-width:380px){.mobile-home-scroll #homeView{padding-left:.65rem;padding-right:.65rem}.app-fixed-header button[id^="tab"]{font-size:.59rem!important}}
@@ -195,7 +236,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Ar
 #syncStatusBadge{background:rgba(255,255,255,.09)!important;border-color:rgba(255,255,255,.16)!important;color:#dbeafe!important;backdrop-filter:blur(8px);}
 #pondSelector,#mobileYearSelector,#mobileCropSelector{background:rgba(255,255,255,.10)!important;border-color:rgba(255,255,255,.18)!important;color:#fff!important;}
 /* Compact common mobile header: identity/actions on top, cycle status below. */
-.mobile-header-shell{max-width:28rem;margin:0 auto;padding:max(.55rem,env(safe-area-inset-top)) .7rem .55rem;}
+.mobile-header-shell{max-width:28rem;margin:0 auto;padding:max(.48rem,env(safe-area-inset-top)) .7rem .36rem;}
 .mobile-header-top-row{display:flex;align-items:center;justify-content:space-between;gap:.45rem;min-width:0;}
 .mobile-header-identity{display:flex;align-items:center;gap:.45rem;min-width:0;}
 .mobile-header-menu,.mobile-header-action{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;border:0;color:#fff;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.17);border-radius:9px;cursor:pointer;}
@@ -215,17 +256,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Ar
 .mobile-hamburger-close{display:inline-flex;width:32px;height:32px;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.2);border-radius:9px;background:rgba(255,255,255,.08);color:#fff;font-size:1.35rem;line-height:1;}
 .mobile-hamburger-menu nav{display:grid;gap:.5rem;padding-top:1rem;}
 .mobile-hamburger-menu nav button{min-height:42px;padding:.65rem .75rem;border:1px solid rgba(255,255,255,.14);border-radius:10px;background:rgba(255,255,255,.07);color:#fff;text-align:left;font-size:.82rem;font-weight:800;}
-.mobile-hamburger-menu nav button:active{background:rgba(255,255,255,.16);}.mobile-header-cycle-row{display:flex;align-items:center;gap:.32rem;margin-top:.45rem;padding-top:.45rem;border-top:1px solid rgba(255,255,255,.14);min-width:0;white-space:nowrap;}
+.mobile-hamburger-menu nav button:active{background:rgba(255,255,255,.16);}.mobile-header-cycle-row{display:flex;align-items:center;gap:.24rem;margin-top:.22rem;padding-top:0;border-top:0;min-width:0;white-space:nowrap;}
 #headerCycleControlsSlot{display:flex;align-items:center;flex:0 0 auto;min-width:0;}
-#headerCycleControls{display:flex!important;align-items:center;gap:.32rem!important;margin:0!important;min-width:0!important;}
-#mobileYearSelector,#mobileCropSelector{height:29px!important;padding:0 .38rem!important;font-size:.69rem!important;border-radius:8px!important;}
-#mobileYearSelector{width:67px;min-width:67px;max-width:67px;}
-#mobileCropSelector{width:88px;min-width:88px;max-width:88px;}
+#headerCycleControls{display:flex!important;align-items:center;gap:.24rem!important;margin:0!important;min-width:0!important;}
+#mobileYearSelector,#mobileCropSelector{height:27px!important;padding:0 .32rem!important;font-size:.66rem!important;border-radius:8px!important;}
+#mobileYearSelector{width:64px;min-width:64px;max-width:64px;}
+#mobileCropSelector{width:84px;min-width:84px;max-width:84px;}
 #headerLockStatusSlot{display:contents;}
-#bcLockStatusBar{display:flex!important;align-items:center;flex:0 1 auto;margin:0!important;min-height:18px;font-size:.61rem!important;white-space:nowrap;overflow:hidden;}
-#bcLockStatusBar span{padding:2px 6px!important;}
-#headerSubtitleDate{flex:0 0 auto;margin:0!important;padding:0!important;min-width:0;font-size:.6rem!important;line-height:1.1!important;text-align:right;white-space:nowrap;}
-@media(max-width:350px){.mobile-header-shell{padding-left:.55rem;padding-right:.55rem}.mobile-header-top-row{gap:.3rem}.mobile-header-identity{gap:.35rem}.mobile-header-actions{gap:.2rem}#syncStatusBadge{padding:0 .31rem!important;font-size:.6rem!important}.mobile-header-cycle-row{gap:.22rem}#mobileYearSelector{width:63px;min-width:63px;max-width:63px}#mobileCropSelector{width:83px;min-width:83px;max-width:83px}#bcLockStatusBar{font-size:.57rem!important}#headerSubtitleDate{font-size:.56rem!important}}
+#bcLockStatusBar{display:flex!important;align-items:center;flex:0 1 auto;margin:0!important;min-height:17px;font-size:.58rem!important;white-space:nowrap;overflow:hidden;}
+#bcLockStatusBar span{padding:1px 5px!important;}
+#headerSubtitleDate{flex:0 0 auto;margin:0!important;padding:0!important;min-width:0;font-size:.57rem!important;line-height:1.05!important;text-align:right;white-space:nowrap;}
+@media(max-width:350px){.mobile-header-shell{padding-left:.55rem;padding-right:.55rem}.mobile-header-top-row{gap:.3rem}.mobile-header-identity{gap:.35rem}.mobile-header-actions{gap:.2rem}#syncStatusBadge{padding:0 .31rem!important;font-size:.6rem!important}.mobile-header-cycle-row{gap:.18rem;margin-top:.18rem}#mobileYearSelector{width:60px;min-width:60px;max-width:60px}#mobileCropSelector{width:79px;min-width:79px;max-width:79px}#bcLockStatusBar{font-size:.55rem!important}#headerSubtitleDate{font-size:.54rem!important}}
 
 /* Feed controls share one compact, touch-friendly action card. */
 .feed-control-card{display:grid;grid-template-columns:.85fr 1.25fr 1fr;gap:.28rem;padding:.32rem;border-radius:14px;background:linear-gradient(135deg,#0f3c69,#116a78);box-shadow:0 7px 18px rgba(15,39,66,.16);}
@@ -353,7 +394,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
 
 @media(max-width:420px){
   .app-scroll-content{padding-left:.75rem!important;padding-right:.75rem!important;}
-  .app-fixed-header > div:first-child{padding:.75rem!important;}
+  .app-fixed-header > div:first-child{padding:.45rem .7rem!important;}
   .app-fixed-header button[id^="tab"]{font-size:.72rem!important;padding-left:.45rem!important;padding-right:.45rem!important;}
 }
 
@@ -531,9 +572,10 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             </div>
             <h2 id="mobileFarmName" class="text-lg font-black text-slate-800">BlueCrest Farm</h2>
             <p class="text-xs text-slate-500 mt-0.5 mb-5">Sign in with your BlueCrest account</p>
-            <form id="mobileAuthForm" class="space-y-3"><input id="authEmailInput" type="email" autocomplete="email" placeholder="Email" required class="w-full px-3 py-3 border-2 border-slate-200 rounded-xl outline-none focus:border-blue-600"><input id="authPasswordInput" type="password" autocomplete="current-password" placeholder="Password" required class="w-full px-3 py-3 border-2 border-slate-200 rounded-xl outline-none focus:border-blue-600"><button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-xl font-black">Sign In</button></form>
-            <button id="mobileForgotPassword" type="button" class="mt-3 text-xs font-bold text-blue-600">Forgot Password?</button><button id="mobileShowRegistration" type="button" class="mt-2 ml-3 text-xs font-bold text-blue-600">Create Farm Account</button><button id="mobileAuthSignOut" type="button" class="mt-2 ml-3 text-xs font-bold text-slate-500">Sign Out</button><div id="authStatusText" class="text-xs font-semibold mt-3 min-h-[18px]"></div>
+            <form id="mobileAuthForm" autocomplete="on" class="space-y-3"><div id="authEmailField" class="relative"><input id="authEmailInput" name="username" type="email" autocomplete="username" placeholder="Email" required aria-autocomplete="list" aria-controls="rememberedEmailSuggestions" class="w-full px-3 py-3 border-2 border-slate-200 rounded-xl outline-none focus:border-blue-600"><div id="rememberedEmailSuggestions" hidden class="absolute left-0 right-0 top-full z-10 mt-1 overflow-hidden rounded-xl border border-slate-200 bg-white text-left shadow-lg"></div></div><input id="authPasswordInput" name="password" type="password" autocomplete="current-password" placeholder="Password" required class="w-full px-3 py-3 border-2 border-slate-200 rounded-xl outline-none focus:border-blue-600"><label class="flex items-center gap-2 text-xs font-semibold text-slate-600 text-left cursor-pointer"><input id="rememberEmail" type="checkbox" class="w-3.5 h-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500">Remember email</label><button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-xl font-black">Sign In</button></form>
+            <button id="mobileForgotPassword" type="button" class="mt-3 text-xs font-bold text-blue-600">Forgot Password?</button><button id="mobileShowRegistration" type="button" class="mt-2 ml-3 text-xs font-bold text-blue-600">Create Account</button><button id="mobileAuthSignOut" type="button" class="mt-2 ml-3 text-xs font-bold text-slate-500">Sign Out</button><div id="authStatusText" class="text-xs font-semibold mt-3 min-h-[18px]"></div>
         </div>
+        <section id="mobileAccountTypePanel" hidden class="bg-white w-full max-w-xs rounded-2xl p-6 shadow-2xl text-center border border-slate-100"><div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-3 text-2xl">✦</div><h2 class="text-lg font-black text-slate-800">Create Account</h2><p class="text-xs text-slate-500 mt-1 mb-4">Choose the account that fits your work.</p><div class="space-y-3 text-left"><button id="mobileChooseFarmerAccount" type="button" class="w-full flex items-center gap-3 p-3 rounded-xl border-2 border-blue-100 bg-blue-50/60 text-left hover:border-blue-300"><span class="text-2xl" aria-hidden="true">🌊🌿</span><span><strong class="block text-sm text-slate-800">Farmer Account</strong><span class="block mt-0.5 text-xs text-slate-500">For farm owners and farm management</span></span></button><button id="mobileChooseTechnicianAccount" type="button" class="w-full flex items-center gap-3 p-3 rounded-xl border-2 border-slate-200 bg-white text-left hover:border-blue-300"><span class="text-2xl" aria-hidden="true">👨‍🔧⚙️</span><span><strong class="block text-sm text-slate-800">Technician Account</strong><span class="block mt-0.5 text-xs text-slate-500">For field technicians and farm visits</span></span></button></div><button id="mobileAccountTypeSignIn" type="button" class="mt-4 text-xs font-bold text-blue-600">Already have an account? Sign In</button></section>
         <form id="mobileRegistrationForm" hidden class="bg-white w-full max-w-sm max-h-[calc(100vh-2rem)] overflow-y-auto rounded-2xl p-5 shadow-2xl border border-slate-100 space-y-3">
             <div><h2 class="text-lg font-black text-slate-800">Create Farm Account</h2><p class="text-xs text-slate-500 mt-1">Your account will be activated after review.</p></div>
             <input id="mobileRegistrationOwnerName" required autocomplete="name" placeholder="Farmer / Owner Name" class="w-full px-3 py-3 border-2 border-slate-200 rounded-xl outline-none focus:border-blue-600">
@@ -548,7 +590,8 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-xl font-black">Submit Registration</button>
             <button id="mobileReturnToSignIn" type="button" class="w-full text-xs font-bold text-blue-600 py-2">Back to Sign In</button><div id="mobileRegistrationStatus" class="text-xs font-semibold min-h-[18px]"></div>
         </form>
-        <section id="mobileRegistrationPendingPanel" hidden class="bg-white w-full max-w-xs rounded-2xl p-6 shadow-2xl text-center border border-slate-100"><div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-3 text-2xl">✓</div><h2 id="mobileRegistrationPendingTitle" class="text-lg font-black text-slate-800">Registration Submitted</h2><p id="mobileRegistrationPendingMessage" class="text-xs text-slate-500 mt-2 mb-5">Your BlueCrest farm account is awaiting activation.</p><button id="mobilePendingSignOut" type="button" class="w-full bg-blue-600 text-white py-3 rounded-xl font-black">Sign Out</button></section>
+        <form id="mobileTechnicianRegistrationForm" hidden class="bg-white w-full max-w-sm max-h-[calc(100vh-2rem)] overflow-y-auto rounded-2xl p-5 shadow-2xl border border-slate-100 space-y-3"><div><h2 class="text-lg font-black text-slate-800">Create Technician Account</h2><p class="text-xs text-slate-500 mt-1">For field technicians and farm visits.</p></div><input id="mobileTechnicianFullName" required autocomplete="name" placeholder="Full Name *" class="w-full px-3 py-3 border-2 border-slate-200 rounded-xl outline-none focus:border-blue-600"><input id="mobileTechnicianMobile" required type="tel" inputmode="numeric" maxlength="10" autocomplete="tel" placeholder="Mobile Number *" class="w-full px-3 py-3 border-2 border-slate-200 rounded-xl outline-none focus:border-blue-600"><p id="mobileTechnicianMobileHint" hidden class="text-xs font-semibold text-red-600 -mt-1">Enter 10-digit mobile number</p><input id="mobileTechnicianEmail" required type="email" autocomplete="email" placeholder="Email Address *" class="w-full px-3 py-3 border-2 border-slate-200 rounded-xl outline-none focus:border-blue-600"><input id="mobileTechnicianState" required list="mobileTechnicianStateOptions" autocomplete="address-level1" placeholder="State / Union Territory *" class="w-full px-3 py-3 border-2 border-slate-200 rounded-xl outline-none focus:border-blue-600"><datalist id="mobileTechnicianStateOptions"></datalist><input id="mobileTechnicianDistrict" required disabled list="mobileTechnicianDistrictOptions" autocomplete="address-level2" placeholder="Select a State / UT first" class="w-full px-3 py-3 border-2 border-slate-200 rounded-xl outline-none focus:border-blue-600"><datalist id="mobileTechnicianDistrictOptions"></datalist><input id="mobileTechnicianPassword" required type="password" minlength="6" autocomplete="new-password" placeholder="Password (minimum 6 characters) *" class="w-full px-3 py-3 border-2 border-slate-200 rounded-xl outline-none focus:border-blue-600"><input id="mobileTechnicianPasswordConfirm" required type="password" minlength="6" autocomplete="new-password" placeholder="Confirm Password *" class="w-full px-3 py-3 border-2 border-slate-200 rounded-xl outline-none focus:border-blue-600"><button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-xl font-black">Create Account</button><button id="mobileTechnicianReturnToSignIn" type="button" class="w-full text-xs font-bold text-blue-600 py-2">Already have an account? Sign In</button><div id="mobileTechnicianRegistrationStatus" class="text-xs font-semibold min-h-[18px]"></div></form>
+        <section id="mobileRegistrationPendingPanel" hidden class="bg-white w-full max-w-xs rounded-2xl p-6 shadow-2xl text-center border border-slate-100"><div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-3 text-2xl">✓</div><h2 id="mobileRegistrationPendingTitle" class="text-lg font-black text-slate-800">Registration Submitted</h2><p id="mobileRegistrationPendingMessage" class="text-xs text-slate-500 mt-2 mb-5">Your BlueCrest farm account is awaiting activation.</p><button id="mobilePendingSignOut" type="button" class="w-full bg-blue-600 text-white py-3 rounded-xl font-black">Sign Out</button></section><section id="mobileTechnicianHome" hidden class="fixed inset-0 z-[10001] bg-slate-50 p-6"><header class="rounded-2xl bg-blue-600 p-5 text-white"><p class="text-xs font-bold uppercase tracking-wider text-blue-100">BlueCrest</p><h2 class="mt-1 text-xl font-black">Technician Home</h2><p id="mobileTechnicianHomeName" class="mt-1 text-sm text-blue-100"></p></header><p class="mt-6 text-sm text-slate-600">Technician access is active. Farms and visits will be available here soon.</p><button id="mobileTechnicianHomeSignOut" type="button" class="mt-6 text-sm font-bold text-blue-600">Sign Out</button></section>
     </div>
 
     <!-- Main App Container -->
@@ -718,20 +761,46 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                     </button>
                 </div>
 
-                <div class="flex items-center bg-white p-2.5 rounded-xl border border-slate-100 shadow-sm gap-2">
-                    <div class="flex items-center gap-1.5">
-                        <span class="text-xs font-bold text-slate-500 uppercase">Filter:</span>
-                        <select id="samplingPondFilterSelect" onchange="changeSamplingPondFilter(this.value)" class="bg-blue-50 border border-blue-100 text-blue-700 font-bold text-xs rounded-lg px-2.5 py-1.5 outline-none cursor-pointer shadow-xs">
-                            <option value="ALL">All Ponds</option>
-                        </select>
+                <div id="samplingLatestSection">
+                    <div class="flex items-center justify-between px-1 pb-1">
+                        <h4 class="text-xs font-bold uppercase tracking-wide text-slate-500">Latest Pond Sampling</h4>
                     </div>
+                    <div id="latestPondSamplingList" class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"></div>
                 </div>
 
-                <div>
-                    <h4 class="px-1 pb-2 text-xs font-bold uppercase tracking-wide text-slate-500">Recent Sampling</h4>
-                    <div id="samplingCardsList" class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"></div>
+                <div id="samplingHistoryTools">
+                    <button id="samplingHistoryAction" type="button" onclick="openSamplingHistoryFullscreen()" class="text-left font-bold active:bg-blue-50">
+                        <span><span class="sampling-history-icon" aria-hidden="true">▥</span> Sampling History</span><span class="sampling-history-arrow" aria-hidden="true">›</span>
+                    </button>
+                    <div id="samplingTipsBar"><span aria-hidden="true">💡</span><span><strong>Tips</strong> Tap ⓘ to see why a pond needs attention.</span></div>
                 </div>
             </div>
+
+            <section id="samplingHistoryFullscreen" class="sampling-fullscreen hidden" aria-hidden="true">
+                <header class="border-b border-slate-200 bg-white px-4 py-3 shadow-sm">
+                    <div class="flex items-center gap-3">
+                        <button type="button" onclick="closeSamplingHistoryFullscreen()" class="text-sm font-bold text-blue-700" aria-label="Back to Sampling">‹ Back</button>
+                        <h3 class="text-sm font-bold text-slate-800">Sampling History</h3>
+                    </div>
+                    <label class="mt-3 flex items-center gap-2 text-xs font-bold uppercase text-slate-500">Pond
+                        <select id="samplingHistoryPondFilterSelect" onchange="changeSamplingPondFilter(this.value)" class="min-w-0 flex-1 rounded-lg border border-blue-100 bg-blue-50 px-2.5 py-1.5 text-xs font-bold normal-case text-blue-700 outline-none"></select>
+                    </label>
+                </header>
+                <div class="sampling-fullscreen-body"><div id="samplingHistoryFullscreenList" class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"></div></div>
+            </section>
+
+            <section id="samplingAttentionSheet" class="sampling-attention-sheet hidden" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="samplingAttentionTitle">
+                <div class="sampling-attention-card">
+                    <div class="flex items-start justify-between gap-3">
+                        <h3 id="samplingAttentionTitle" class="text-base font-bold text-slate-800"></h3>
+                        <button type="button" onclick="closeSamplingAttentionInfo()" class="-mt-1 text-3xl leading-none text-slate-400" aria-label="Close explanation">×</button>
+                    </div>
+                    <div id="samplingAttentionMain" class="mt-3 rounded-xl border border-rose-100 bg-rose-50 p-3 text-sm text-slate-700"></div>
+                    <h4 class="mt-4 text-xs font-bold uppercase tracking-wide text-slate-500">Detailed Status</h4>
+                    <div id="samplingAttentionDetails" class="mt-2"></div>
+                    <div id="samplingAttentionFocus" class="mt-3 rounded-xl border border-blue-100 bg-blue-50 p-3 text-sm text-slate-700"></div>
+                </div>
+            </section>
 
             <!-- 5. Treatment View -->
             <div id="treatmentView" class="hidden space-y-4">
@@ -914,16 +983,25 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                             <label class="block text-xs font-semibold text-slate-600 mb-1">Treatment Date *</label>
                             <input type="date" id="treatmentDate" required class="w-full border border-slate-200 p-2.5 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-xs">
                         </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-600 mb-1">Pond No. *</label>
-                            <select id="treatmentPond" required class="w-full border border-slate-200 p-2.5 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 bg-white font-bold text-xs"></select>
+                        <div class="relative">
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Select Ponds *</label>
+                            <button type="button" id="treatmentPondPickerButton" onclick="openTreatmentPondPicker()" class="w-full border border-slate-200 p-2.5 rounded-lg outline-none bg-white font-bold text-xs text-left flex items-center justify-between gap-2">
+                                <span id="treatmentPondPickerLabel">Select Ponds</span><span class="text-slate-400">▼</span>
+                            </button>
+                            <div id="treatmentPondPickerPanel" class="hidden absolute right-0 left-0 top-full mt-1 z-50 rounded-xl border border-slate-200 bg-white p-2 shadow-2xl">
+                                <div id="treatmentPondPickerOptions" class="max-h-48 overflow-y-auto"></div>
+                                <div class="mt-2 flex justify-end gap-2 border-t border-slate-100 pt-2">
+                                    <button type="button" onclick="cancelTreatmentPondPicker()" class="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-600">Cancel</button>
+                                    <button type="button" onclick="applyTreatmentPondPicker()" class="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-bold text-white">Apply</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
                     <div>
                         <div class="flex items-center justify-between gap-2 mb-1.5">
                             <label class="block text-xs font-semibold text-slate-600">Treatment Items *</label>
-                            <button type="button" id="treatmentAddRowBtn" onclick="addTreatmentRow()" class="text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-lg">+ Add Treatment</button>
+                            <button type="button" id="treatmentAddRowBtn" onclick="addTreatmentRow()" class="text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-lg">+ Add Another Treatment</button>
                         </div>
                         <div id="treatmentItemsRows" class="space-y-3"></div>
                         <p class="text-[10px] text-slate-400 mt-1">Product Master base unit (Kg / Ltr) for clean inventory reconciliation.</p>
@@ -949,7 +1027,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                         <textarea id="treatmentNotes" rows="2" placeholder="e.g. Applied along with aerators running..." class="w-full border border-slate-200 p-2.5 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-xs"></textarea>
                     </div>
 
-                    <button type="submit" id="treatmentSubmitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold shadow-md transition">Save All</button>
+                    <button type="submit" id="treatmentSubmitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold shadow-md transition">Save Treatment</button>
                 </form>
             </div>
         </div>
@@ -1302,7 +1380,11 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             return endsAt instanceof Date && !Number.isNaN(endsAt.getTime()) && endsAt.getTime() > Date.now();
         }
         function assertEntitlementWriteAllowed() {
-            if (blueCrestSession?.hasFullEntitlementAccess !== true) throw new Error('This farm is currently view-only.');
+            const session = blueCrestSession;
+            const hasAccess = hasFullEntitlementAccess({ status:session?.entitlementStatus, plan:session?.plan, trialEndsAt:session?.trialEndsAt });
+            if (session) session.hasFullEntitlementAccess = hasAccess;
+            isViewOnlyMode = !hasAccess;
+            if (!hasAccess) throw new Error('This farm is currently view-only.');
         }
 
         // PHASE 2B — FUTURE FARM-SCOPED FIRESTORE INFRASTRUCTURE
@@ -1313,6 +1395,22 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             const farmId = blueCrestSession?.farmId;
             if (typeof farmId !== 'string' || !farmId.trim()) throw new Error('A validated BlueCrest farm session is required.');
             return farmId.trim();
+        }
+        // Activity receipts are deliberately isolated from operational writes. They are
+        // metadata-only, have deterministic IDs, and must never affect a save result.
+        async function writeMobileModuleActivityReceipt(module, recordId) {
+            try {
+                const id = String(recordId ?? '').trim();
+                const user = firebase?.auth?.().currentUser;
+                const actorUid = typeof user?.uid === 'string' ? user.uid.trim() : '';
+                const farmId = getActiveFarmId();
+                if (!id || !actorUid || actorUid !== blueCrestSession?.uid || !db) return;
+                await db.collection('farms').doc(farmId).collection('moduleActivity')
+                    .doc(`${module}__${id}`)
+                    .set({ module, recordId: id, actorUid, client: 'Mobile', at: firebase.firestore.FieldValue.serverTimestamp() });
+            } catch (error) {
+                console.warn('Mobile activity receipt was not written:', error);
+            }
         }
         function farmCollection(collectionName) {
             if (typeof collectionName !== 'string' || !collectionName.trim()) throw new Error('A non-empty farm collection name is required.');
@@ -1674,16 +1772,29 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
 
         const authEmailInput = document.getElementById('authEmailInput');
         const authPasswordInput = document.getElementById('authPasswordInput');
+        const rememberEmailInput = document.getElementById('rememberEmail');
+        const authEmailField = document.getElementById('authEmailField');
+        const rememberedEmailSuggestions = document.getElementById('rememberedEmailSuggestions');
         const authStatus = document.getElementById('authStatusText');
         const authLoading = document.getElementById('authLoadingScreen');
         const authScreen = document.getElementById('pinAuthScreen');
         const mainApp = document.getElementById('mainAppContainer');
         let mobileOperationalRuntimeFarmId = null;
         let mobileRegistrationSubmissionInProgress = false;
+        const REMEMBERED_EMAIL_STORAGE_KEY = 'bluecrest.rememberedEmail';
+        const REMEMBERED_EMAILS_STORAGE_KEY = 'bluecrest.rememberedEmails';
+        const MAX_REMEMBERED_EMAILS = 5;
+        function rememberedEmails() { try { const legacy=localStorage.getItem(REMEMBERED_EMAIL_STORAGE_KEY)||'',saved=JSON.parse(localStorage.getItem(REMEMBERED_EMAILS_STORAGE_KEY)||'[]'),emails=Array.isArray(saved)?saved:[]; return [legacy,...emails].reduce((list,email)=>{const value=typeof email==='string'?email.trim():'';if(value&&!list.some(savedEmail=>savedEmail.toLowerCase()===value.toLowerCase()))list.push(value);return list;},[]).slice(0,MAX_REMEMBERED_EMAILS); } catch (error) { return []; } }
+        function loadRememberedEmail() { const email=rememberedEmails()[0]||''; if(email&&authEmailInput){authEmailInput.value=email; if(rememberEmailInput)rememberEmailInput.checked=true;} }
+        function updateRememberedEmail(email) { try { if(rememberEmailInput?.checked){const emails=[email,...rememberedEmails().filter(savedEmail=>savedEmail.toLowerCase()!==email.toLowerCase())].slice(0,MAX_REMEMBERED_EMAILS);localStorage.setItem(REMEMBERED_EMAIL_STORAGE_KEY,email);localStorage.setItem(REMEMBERED_EMAILS_STORAGE_KEY,JSON.stringify(emails));}else{localStorage.removeItem(REMEMBERED_EMAIL_STORAGE_KEY);localStorage.removeItem(REMEMBERED_EMAILS_STORAGE_KEY);} } catch (error) {} }
+        function hideRememberedEmailSuggestions() { if(rememberedEmailSuggestions)rememberedEmailSuggestions.hidden=true; }
+        function showRememberedEmailSuggestions() { if(!authEmailInput||!rememberedEmailSuggestions)return;const query=authEmailInput.value.trim().toLowerCase(),matches=rememberedEmails().filter(email=>email.toLowerCase().includes(query));rememberedEmailSuggestions.replaceChildren();if(!matches.length){hideRememberedEmailSuggestions();return;}matches.forEach(email=>{const button=document.createElement('button');button.type='button';button.className='block w-full px-3 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-blue-50 focus:bg-blue-50 focus:outline-none';button.textContent=email;button.addEventListener('click',()=>{authEmailInput.value=email;hideRememberedEmailSuggestions();authEmailInput.focus();});rememberedEmailSuggestions.appendChild(button);});rememberedEmailSuggestions.hidden=false;}
         function setMobileRegistrationMessage(message) { const el=document.getElementById('mobileRegistrationStatus'); if(el) el.textContent=message||''; }
         function updateMobileRegistrationMobileValidation() { const input=document.getElementById('mobileRegistrationMobile'),hint=document.getElementById('mobileRegistrationMobileHint');if(!input||!hint)return;const invalid=input.value.length>0&&!/^\d{10}$/.test(input.value);input.style.borderColor=invalid?'#dc2626':'';hint.hidden=!invalid; }
+        function setMobileTechnicianRegistrationMessage(message) { const el=document.getElementById('mobileTechnicianRegistrationStatus'); if(el) el.textContent=message||''; }
+        function updateMobileTechnicianMobileValidation() { const input=document.getElementById('mobileTechnicianMobile'),hint=document.getElementById('mobileTechnicianMobileHint');if(!input||!hint)return;const invalid=input.value.length>0&&!/^\d{10}$/.test(input.value);input.style.borderColor=invalid?'#dc2626':'';hint.hidden=!invalid; }
         function setMobileAuthView(view) {
-            const views={signIn:document.getElementById('mobileSignInPanel'),registration:document.getElementById('mobileRegistrationForm'),pending:document.getElementById('mobileRegistrationPendingPanel')};
+            const views={signIn:document.getElementById('mobileSignInPanel'),accountType:document.getElementById('mobileAccountTypePanel'),registration:document.getElementById('mobileRegistrationForm'),technician:document.getElementById('mobileTechnicianRegistrationForm'),pending:document.getElementById('mobileRegistrationPendingPanel')};
             Object.entries(views).forEach(([name,el])=>{if(el)el.hidden=name!==view;});
         }
         function showMobileRegistrationPending(title,message) { document.getElementById('mobileRegistrationPendingTitle').textContent=title;document.getElementById('mobileRegistrationPendingMessage').textContent=message;setMobileAuthView('pending'); }
@@ -1769,6 +1880,44 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
           districtInput.addEventListener('blur', () => syncMobileRegistrationDistrictOptions());
           syncMobileRegistrationDistrictOptions({ clearDistrict: true });
         }
+        function syncMobileTechnicianDistrictOptions({ clearDistrict = false } = {}) {
+          const stateInput = document.getElementById('mobileTechnicianState');
+          const districtInput = document.getElementById('mobileTechnicianDistrict');
+          const districtOptions = document.getElementById('mobileTechnicianDistrictOptions');
+          if (!stateInput || !districtInput || !districtOptions) return '';
+          const state = blueCrestCanonicalIndiaOption(stateInput.value, Object.keys(INDIA_STATE_UT_DISTRICTS));
+          stateInput.setCustomValidity(state ? '' : 'Select a State or Union Territory from the list.');
+          if (state) stateInput.value = state;
+          if (clearDistrict || !state) districtInput.value = '';
+          const districts = state ? INDIA_STATE_UT_DISTRICTS[state] : [];
+          districtOptions.innerHTML = districts.map(district => `<option value="${mobileRegistrationEscapeHtml(district)}"></option>`).join('');
+          districtInput.disabled = !state;
+          districtInput.placeholder = state ? 'Search district' : 'Select a State / UT first';
+          const district = blueCrestCanonicalIndiaOption(districtInput.value, districts);
+          districtInput.setCustomValidity(!state || district ? '' : 'Select a district from the list.');
+          if (district) districtInput.value = district;
+          return state;
+        }
+        function initializeMobileTechnicianLocationSelectors() {
+          const stateInput = document.getElementById('mobileTechnicianState');
+          const districtInput = document.getElementById('mobileTechnicianDistrict');
+          const stateOptions = document.getElementById('mobileTechnicianStateOptions');
+          if (!stateInput || !districtInput || !stateOptions || stateInput.dataset.bound === '1') return;
+          stateInput.dataset.bound = '1';
+          stateOptions.innerHTML = Object.keys(INDIA_STATE_UT_DISTRICTS).map(state => `<option value="${mobileRegistrationEscapeHtml(state)}"></option>`).join('');
+          let selectedState = '';
+          stateInput.addEventListener('input', () => {
+            const nextState = blueCrestCanonicalIndiaOption(stateInput.value, Object.keys(INDIA_STATE_UT_DISTRICTS));
+            const changed = nextState !== selectedState;
+            selectedState = syncMobileTechnicianDistrictOptions({ clearDistrict: changed });
+          });
+          stateInput.addEventListener('change', () => { selectedState = syncMobileTechnicianDistrictOptions({ clearDistrict: blueCrestCanonicalIndiaOption(stateInput.value, Object.keys(INDIA_STATE_UT_DISTRICTS)) !== selectedState }); });
+          stateInput.addEventListener('blur', () => { selectedState = syncMobileTechnicianDistrictOptions({ clearDistrict: !blueCrestCanonicalIndiaOption(stateInput.value, Object.keys(INDIA_STATE_UT_DISTRICTS)) }); });
+          districtInput.addEventListener('input', () => syncMobileTechnicianDistrictOptions());
+          districtInput.addEventListener('change', () => syncMobileTechnicianDistrictOptions());
+          districtInput.addEventListener('blur', () => syncMobileTechnicianDistrictOptions());
+          syncMobileTechnicianDistrictOptions({ clearDistrict: true });
+        }
         async function resolveBlueCrestSession(user) {
             const accessError=(code,message)=>{const error=new Error(`${code}: ${message}`); error.code=code; return error;};
             const uid=typeof user?.uid==='string'?user.uid.trim():'';
@@ -1792,16 +1941,40 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             if(!uid||!email||!db)return false;const request=await db.collection('registrationRequests').doc(uid).get();const data=request.exists?(request.data()||{}):{};
             return data.status==='pending'&&data.email===email;
         }
+        async function technicianRegistrationStatus(user) { const uid=typeof user?.uid==='string'?user.uid.trim():'';const email=typeof user?.email==='string'?user.email.trim():'';if(!uid||!email||!db)return '';const request=await db.collection('technicianRegistrationRequests').doc(uid).get();const data=request.exists?(request.data()||{}):{};return data.email===email&&['pending','rejected'].includes(data.status)?data.status:''; }
+        function showTechnicianRegistrationState(status) { if(status==='pending')showMobileRegistrationPending('Technician Registration Submitted','Your Technician account is awaiting activation.');else if(status==='rejected')showMobileRegistrationPending('Technician Registration Not Activated','Your Technician registration was not activated. Please contact BlueCrest support.'); }
         async function mobileBridgeSignOut() { stopOperationalMigrationControlListener(); stopFoundationMigrationControlListener(); clearOperationalRuntimeForFarmSwitch(); clearFoundationRuntimeForFarmSwitch(); blueCrestSession=null; isSyncInitialized=false; if (mobileCropFinancialSummaryUnsubscribe) { mobileCropFinancialSummaryUnsubscribe(); mobileCropFinancialSummaryUnsubscribe=null; } stopFarmListeners(); await firebase.auth().signOut(); location.reload(); }
-        document.getElementById('mobileAuthForm')?.addEventListener('submit',async e=>{e.preventDefault();try{await firebase.auth().signInWithEmailAndPassword(authEmailInput.value.trim(),authPasswordInput.value);authStatus.textContent='';}catch(err){authStatus.textContent=err.message||'Sign in failed.';}});
+        loadRememberedEmail();
+        authEmailInput?.addEventListener('focus',showRememberedEmailSuggestions);
+        authEmailInput?.addEventListener('input',showRememberedEmailSuggestions);
+        document.addEventListener('click',event=>{if(authEmailField&&!authEmailField.contains(event.target))hideRememberedEmailSuggestions();});
+        document.getElementById('mobileAuthForm')?.addEventListener('submit',async e=>{e.preventDefault();const email=authEmailInput.value.trim();try{await firebase.auth().signInWithEmailAndPassword(email,authPasswordInput.value);updateRememberedEmail(email);authStatus.textContent='';}catch(err){authStatus.textContent=err.message||'Sign in failed.';}});
         document.getElementById('mobileForgotPassword')?.addEventListener('click',async()=>{const email=authEmailInput.value.trim();if(!email)return authStatus.textContent='Enter your email first.';try{await firebase.auth().sendPasswordResetEmail(email);authStatus.textContent='Password-reset email sent.';}catch(err){authStatus.textContent=err.message||'Could not send reset email.';}});
         document.getElementById('mobileAuthSignOut')?.addEventListener('click',mobileBridgeSignOut);
         document.getElementById('mobilePendingSignOut')?.addEventListener('click',mobileBridgeSignOut);
+        document.getElementById('mobileTechnicianHomeSignOut')?.addEventListener('click',mobileBridgeSignOut);
         initializeMobileRegistrationLocationSelectors();
+        initializeMobileTechnicianLocationSelectors();
         document.getElementById('mobileRegistrationMobile')?.addEventListener('input',updateMobileRegistrationMobileValidation);
+        document.getElementById('mobileTechnicianMobile')?.addEventListener('input',updateMobileTechnicianMobileValidation);
         updateMobileRegistrationMobileValidation();
-        document.getElementById('mobileShowRegistration')?.addEventListener('click',()=>{if(firebase.auth().currentUser)return;authStatus.textContent='';setMobileRegistrationMessage('');setMobileAuthView('registration');});
+        updateMobileTechnicianMobileValidation();
+        document.getElementById('mobileShowRegistration')?.addEventListener('click',()=>{if(firebase.auth().currentUser)return;authStatus.textContent='';setMobileAuthView('accountType');});
+        document.getElementById('mobileChooseFarmerAccount')?.addEventListener('click',()=>{if(firebase.auth().currentUser)return;setMobileRegistrationMessage('');setMobileAuthView('registration');});
+        document.getElementById('mobileChooseTechnicianAccount')?.addEventListener('click',()=>{if(firebase.auth().currentUser)return;setMobileTechnicianRegistrationMessage('');setMobileAuthView('technician');});
+        document.getElementById('mobileAccountTypeSignIn')?.addEventListener('click',()=>setMobileAuthView('signIn'));
         document.getElementById('mobileReturnToSignIn')?.addEventListener('click',()=>{if(firebase.auth().currentUser)return;setMobileRegistrationMessage('');setMobileAuthView('signIn');});
+        document.getElementById('mobileTechnicianReturnToSignIn')?.addEventListener('click',()=>{if(firebase.auth().currentUser)return;setMobileTechnicianRegistrationMessage('');setMobileAuthView('signIn');});
+        document.getElementById('mobileTechnicianRegistrationForm')?.addEventListener('submit',async event=>{
+            event.preventDefault(); const form=event.currentTarget; const mobile=document.getElementById('mobileTechnicianMobile').value.trim();
+            if(!/^\d{10}$/.test(mobile))return setMobileTechnicianRegistrationMessage('Mobile number must be exactly 10 digits.');
+            const state=syncMobileTechnicianDistrictOptions(),district=blueCrestCanonicalIndiaOption(document.getElementById('mobileTechnicianDistrict').value,INDIA_STATE_UT_DISTRICTS[state]||[]),password=document.getElementById('mobileTechnicianPassword').value,passwordConfirm=document.getElementById('mobileTechnicianPasswordConfirm').value;
+            if(!form.reportValidity())return;
+            if(!state||!district)return setMobileTechnicianRegistrationMessage('Select a valid State / Union Territory and district.');
+            if(password.length<6)return setMobileTechnicianRegistrationMessage('Password must contain at least 6 characters.');
+            if(password!==passwordConfirm)return setMobileTechnicianRegistrationMessage('Password and Confirm Password must match.');
+            const fullName=document.getElementById('mobileTechnicianFullName').value.trim(),email=document.getElementById('mobileTechnicianEmail').value.trim();let user=null;mobileRegistrationSubmissionInProgress=true;try{const credential=await firebase.auth().createUserWithEmailAndPassword(email,password);user=credential.user;await db.collection('technicianRegistrationRequests').doc(user.uid).set({fullName,mobile,email:user.email.trim(),state,district,status:'pending',createdAt:firebase.firestore.FieldValue.serverTimestamp()});mobileRegistrationSubmissionInProgress=false;showTechnicianRegistrationState('pending');}catch(error){mobileRegistrationSubmissionInProgress=false;if(user)showMobileRegistrationPending('Technician Registration Incomplete','Your sign-in account was created, but the Technician request could not be submitted. Please sign out and contact BlueCrest support.');else setMobileTechnicianRegistrationMessage(error.message||'Technician registration could not be completed.');}
+        });
         document.getElementById('mobileRegistrationForm')?.addEventListener('submit',async e=>{
             e.preventDefault();const form=e.currentTarget;if(!db||!isFirebaseConnected)return setMobileRegistrationMessage('Firebase is unavailable. Please refresh and try again.');if(firebase.auth().currentUser)return setMobileRegistrationMessage('Sign out before creating a different farm account.');const mobile=document.getElementById('mobileRegistrationMobile').value.trim();if(!/^\d{10}$/.test(mobile))return setMobileRegistrationMessage('Mobile number must be exactly 10 digits.');if(!form.reportValidity())return;
             const ownerName=document.getElementById('mobileRegistrationOwnerName').value.trim(),farmName=document.getElementById('mobileRegistrationFarmName').value.trim(),requestedEmail=document.getElementById('mobileRegistrationEmail').value.trim(),password=document.getElementById('mobileRegistrationPassword').value,passwordConfirm=document.getElementById('mobileRegistrationPasswordConfirm').value,state=syncMobileRegistrationDistrictOptions(),district=blueCrestCanonicalIndiaOption(document.getElementById('mobileRegistrationDistrict').value,INDIA_STATE_UT_DISTRICTS[state]||[]),totalFarmAreaAcres=Number(document.getElementById('mobileRegistrationArea').value);
@@ -1817,6 +1990,10 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
 
             if (user) {
                 if (mobileRegistrationSubmissionInProgress) return;
+                const technicianProfile=await db.collection('technicians').doc(user.uid).get();
+                if(technicianProfile.exists){const technician=technicianProfile.data()||{};if(technician.role==='technician'&&technician.status==='active'){document.getElementById('mobileTechnicianHomeName').textContent=technician.fullName||user.email||'Technician';document.getElementById('mobileTechnicianHome').hidden=false;return;}}
+                const technicianStatus=await technicianRegistrationStatus(user);
+                if(technicianStatus){authScreen.classList.remove('hidden');mainApp.classList.add('hidden');showTechnicianRegistrationState(technicianStatus);return;}
                 try { await resolveBlueCrestSession(user); if (mobileOperationalRuntimeFarmId && mobileOperationalRuntimeFarmId !== blueCrestSession.farmId) { clearOperationalRuntimeForFarmSwitch(); clearFoundationRuntimeForFarmSwitch(); } mobileOperationalRuntimeFarmId=blueCrestSession.farmId; await startFoundationMigrationControlListener(); if (!isFoundationScopedRoutingEnabled()) throw new Error('Farm-scoped Foundation storage is not ready.'); loadFoundationCacheForActiveFarm(); const operationalStorageMigration=migrateEliteOperationalStorageToFarmScope(); if (!['complete','not-applicable'].includes(operationalStorageMigration.status)) throw new Error(operationalStorageMigration.reason||'Elite operational local-storage migration could not safely complete.'); loadOperationalCacheForActiveFarm(); await startOperationalMigrationControlListener(); assertGenericFarmNativeScopedStartupReady(); authScreen.classList.add('hidden'); mainApp.classList.remove('hidden'); } catch(err) { stopOperationalMigrationControlListener(); stopFoundationMigrationControlListener(); blueCrestSession=null;let pending=false;if(err?.code==='USER_PROFILE_NOT_FOUND'){try{pending=await hasValidMobilePendingRegistration(user);}catch(pendingError){console.error('Mobile pending-registration resolution failed:',pendingError);}}if(pending){authScreen.classList.remove('hidden');mainApp.classList.add('hidden');showMobileRegistrationPending('Registration Submitted','Your BlueCrest farm account is awaiting activation.');return;}authStatus.textContent=err.message||'Access denied.'; authScreen.classList.remove('hidden'); mainApp.classList.add('hidden'); setMobileAuthView('signIn'); return; }
                 // The header was hidden before authentication, so measure it only
                 // after the main app becomes visible.
@@ -1943,6 +2120,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
         let mobileCropFinancialSummary = null;
         let mobileCropFinancialSummaryUnsubscribe = null;
         let currentMobileTab = 'home';
+        let pondPerformanceFilter = 'all';
 
         function ensureActiveMobileCycle() {
             if (!Array.isArray(farmCycles)) farmCycles = [];
@@ -2002,6 +2180,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                 popupProfitEl.textContent = formatMobileFinancialValue(summary?.profitLoss);
                 popupProfitEl.className = summary && Number(summary.profitLoss || 0) < 0 ? 'text-red-600' : (summary ? 'text-emerald-600' : 'text-slate-400');
             }
+            if (currentMobileTab === 'home') renderAllPondsSummary();
         }
 
         function openMobileFinancialSummary() {
@@ -2042,6 +2221,9 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                 mobileCropFinancialSummary = data && Number(data.year) === Number(selected.year)
                     && String(data.crop || '').trim().toLowerCase() === String(selected.crop || '').trim().toLowerCase()
                     ? {
+                        year: Number(data.year),
+                        crop: data.crop,
+                        cycleId: selected.id,
                         revenue: Number(data.revenue || 0),
                         expense: Number(data.expense || 0),
                         profitLoss: Number(data.profitLoss || 0),
@@ -2222,11 +2404,123 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             return { product: null, error: byName.length ? 'Product Master product is ambiguous. Please select it again.' : 'Please select a Product Master product.' };
         }
 
+        let treatmentSelectedPondIds = [];
+        let treatmentPondSelectionDraft = [];
+
+        function getEligibleTreatmentPonds() {
+            const c = getActiveCycle();
+            return getActivePonds().filter(pond => !(typeof window.blueCrestIsPondClosed === 'function' && window.blueCrestIsPondClosed(pond.id, c.id)));
+        }
+
+        function getSelectedTreatmentPonds() {
+            const eligible = new Map(getEligibleTreatmentPonds().map(pond => [String(pond.id), pond]));
+            return treatmentSelectedPondIds.map(id => eligible.get(String(id))).filter(Boolean);
+        }
+
+        function treatmentEscapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[ch]));
+        }
+
+        function updateTreatmentPondPickerLabel() {
+            const label = document.getElementById('treatmentPondPickerLabel');
+            if (!label) return;
+            const selected = getSelectedTreatmentPonds();
+            const eligible = getEligibleTreatmentPonds();
+            label.textContent = !selected.length ? 'Select Ponds'
+                : selected.length === eligible.length ? 'All Ponds'
+                : selected.length === 1 ? (selected[0].name || selected[0].id)
+                : `${selected.length} Ponds Selected`;
+        }
+
+        function renderTreatmentPondPickerOptions() {
+            const target = document.getElementById('treatmentPondPickerOptions');
+            if (!target) return;
+            const eligible = getEligibleTreatmentPonds();
+            const selected = new Set(treatmentPondSelectionDraft.map(String));
+            target.innerHTML = '';
+            if (!eligible.length) {
+                target.innerHTML = '<div class="p-2 text-xs text-slate-400">No open ponds are available.</div>';
+                return;
+            }
+            const allRow = document.createElement('label');
+            allRow.className = 'flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-xs font-bold text-slate-700 active:bg-blue-50';
+            allRow.innerHTML = '<input type="checkbox" class="treatment-pond-all h-4 w-4 accent-blue-600"><span>All Ponds</span>';
+            const allBox = allRow.querySelector('input');
+            allBox.checked = selected.size === eligible.length;
+            allBox.indeterminate = selected.size > 0 && selected.size < eligible.length;
+            allBox.addEventListener('change', () => {
+                treatmentPondSelectionDraft = allBox.checked ? eligible.map(pond => String(pond.id)) : [];
+                renderTreatmentPondPickerOptions();
+            });
+            target.appendChild(allRow);
+            const divider = document.createElement('div');
+            divider.className = 'my-1 border-t border-slate-200';
+            target.appendChild(divider);
+            eligible.forEach(pond => {
+                const id = String(pond.id);
+                const option = document.createElement('label');
+                option.className = 'flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-xs font-semibold text-slate-700 active:bg-blue-50';
+                option.innerHTML = `<input type="checkbox" class="h-4 w-4 accent-blue-600"><span>${treatmentEscapeHtml(pond.name || pond.id)}</span>`;
+                const box = option.querySelector('input');
+                box.checked = selected.has(id);
+                box.addEventListener('change', () => {
+                    const next = new Set(treatmentPondSelectionDraft.map(String));
+                    box.checked ? next.add(id) : next.delete(id);
+                    treatmentPondSelectionDraft = eligible.map(item => String(item.id)).filter(itemId => next.has(itemId));
+                    renderTreatmentPondPickerOptions();
+                });
+                target.appendChild(option);
+            });
+        }
+
+        function openTreatmentPondPicker() {
+            if (editingTreatmentId !== null) return;
+            treatmentPondSelectionDraft = [...treatmentSelectedPondIds];
+            renderTreatmentPondPickerOptions();
+            document.getElementById('treatmentPondPickerPanel')?.classList.remove('hidden');
+        }
+
+        function cancelTreatmentPondPicker() {
+            treatmentPondSelectionDraft = [...treatmentSelectedPondIds];
+            document.getElementById('treatmentPondPickerPanel')?.classList.add('hidden');
+        }
+
+        function applyTreatmentPondPicker() {
+            const eligibleIds = new Set(getEligibleTreatmentPonds().map(pond => String(pond.id)));
+            treatmentSelectedPondIds = treatmentPondSelectionDraft.filter(id => eligibleIds.has(String(id)));
+            updateTreatmentPondPickerLabel();
+            refreshTreatmentPondQuantityRows();
+            document.getElementById('treatmentPondPickerPanel')?.classList.add('hidden');
+        }
+
+        function refreshTreatmentItemHeadings() {
+            getTreatmentItemRows().forEach((row, index) => {
+                const label = row.querySelector('.treatment-item-title');
+                if (label) label.textContent = `Treatment ${index + 1}`;
+            });
+        }
+
+        function renderTreatmentPondQuantityRows(row, values = {}) {
+            const target = row?.querySelector('.treatment-pond-qty-rows');
+            if (!target) return;
+            const currentValues = Object.fromEntries([...target.querySelectorAll('.treatment-pond-qty')].map(input => [input.dataset.pondId, input.value]));
+            const qtyValues = { ...currentValues, ...values };
+            const unit = row.dataset.unit || 'Kg';
+            const unitClass = unit === 'Ltr' ? 'text-cyan-700' : 'text-blue-700';
+            const selected = getSelectedTreatmentPonds();
+            target.innerHTML = selected.length ? `
+                <div class="grid grid-cols-[1fr_80px_38px] gap-2 px-1 pb-1 text-[10px] font-black uppercase tracking-wide text-slate-400"><span>Pond</span><span>Qty</span><span>Unit</span></div>
+                ${selected.map(pond => `<div class="grid grid-cols-[1fr_80px_38px] items-center gap-2 border-t border-slate-200 py-1.5"><span class="text-xs font-bold text-slate-700">${treatmentEscapeHtml(pond.name || pond.id)}</span><input type="number" min="0" step="0.01" inputmode="decimal" data-pond-id="${treatmentEscapeHtml(pond.id)}" value="${treatmentEscapeHtml(qtyValues[String(pond.id)] ?? '')}" class="treatment-pond-qty w-full rounded-lg border border-slate-200 p-2 text-xs font-bold text-slate-800 outline-none focus:ring-1 focus:ring-blue-500" placeholder="0"><span class="text-xs font-black ${unitClass}">${unit}</span></div>`).join('')}
+            ` : '<div class="rounded-lg border border-dashed border-slate-200 px-2 py-2 text-xs text-slate-400">Select ponds above to enter pond-wise quantities.</div>';
+        }
+
+        function refreshTreatmentPondQuantityRows() {
+            getTreatmentItemRows().forEach(row => renderTreatmentPondQuantityRows(row));
+        }
+
         function setTreatmentRowUnitBadge(row, unit) {
-            const badge = row?.querySelector('.treatment-unit-badge');
-            if (!badge) return;
-            badge.innerText = unit;
-            badge.className = `treatment-unit-badge absolute right-2 px-2.5 py-1 rounded text-xs font-black pointer-events-none border ${unit === 'Ltr' ? 'bg-cyan-50 text-cyan-700 border-cyan-200' : 'bg-blue-50 text-blue-700 border border-blue-200'}`;
+            row.dataset.unit = unit || 'Kg';
+            renderTreatmentPondQuantityRows(row);
         }
 
         function getTreatmentItemRows() {
@@ -2240,45 +2534,36 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             const row = document.createElement('div');
             row.className = 'treatment-item-row rounded-xl border border-slate-200 bg-slate-50 p-3';
             row.dataset.productId = initial.productId || '';
+            row.dataset.unit = initial.unit || 'Kg';
             row.innerHTML = `
                 <div class="flex items-center justify-between gap-2 mb-2">
-                    <span class="text-[10px] font-black uppercase tracking-wide text-slate-500">Treatment</span>
-                    <button type="button" class="treatment-row-remove text-slate-400 hover:text-rose-600 text-xl leading-none${removable ? '' : ' invisible'}" aria-label="Remove treatment">&times;</button>
+                    <span class="treatment-item-title text-[10px] font-black uppercase tracking-wide text-slate-500">Treatment</span>
+                    <button type="button" class="treatment-row-remove text-slate-400 hover:text-rose-600 text-base leading-none${removable ? '' : ' invisible'}" aria-label="Remove treatment">🗑</button>
                 </div>
                 <div class="mb-2">
                     <label class="block text-xs font-semibold text-slate-600 mb-1">Category *</label>
                     <select class="treatment-row-category w-full border border-slate-200 p-2 rounded-lg outline-none focus:ring-1 focus:ring-blue-500 bg-white text-xs font-bold text-slate-700">
-                        <option value="Probiotics">Probiotics</option>
-                        <option value="Medicine">Medicine</option>
-                        <option value="Fertilizers">Fertilizers</option>
+                        <option value="Probiotics">Probiotics</option><option value="Medicine">Medicine</option><option value="Fertilizers">Fertilizers</option>
                     </select>
                 </div>
                 <div class="relative treatment-searchable-dropdown z-30">
                     <label class="block text-xs font-semibold text-slate-600 mb-1">Product Name / Chemical *</label>
-                    <div class="relative flex items-center">
-                        <input type="text" class="treatment-row-product w-full border border-slate-200 p-2.5 sm:p-2 pr-6 rounded text-sm sm:text-xs bg-white outline-none focus:ring-1 focus:ring-blue-500 font-medium text-slate-700" placeholder="Tap to search product..." autocomplete="off">
-                        <span class="absolute right-2 text-slate-400 pointer-events-none text-[10px]">▼</span>
-                    </div>
+                    <div class="relative flex items-center"><input type="text" class="treatment-row-product w-full border border-slate-200 p-2.5 sm:p-2 pr-6 rounded text-sm sm:text-xs bg-white outline-none focus:ring-1 focus:ring-blue-500 font-medium text-slate-700" placeholder="Search/select product..." autocomplete="off"><span class="absolute right-2 text-slate-400 pointer-events-none text-[10px]">▼</span></div>
                     <div class="treatment-row-options dropdown-scroll-list absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-2xl z-50 hidden divide-y divide-slate-100"></div>
                 </div>
-                <div class="mt-2">
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Quantity / Dose Applied *</label>
-                    <div class="relative flex items-center">
-                        <input type="number" step="0.01" min="0" class="treatment-row-qty w-full border border-slate-200 p-2.5 sm:p-2 rounded text-sm sm:text-xs bg-white outline-none focus:ring-1 focus:ring-blue-500 font-bold text-slate-800 pr-16" placeholder="e.g. 5 or 0.5" value="${initial.qty ?? ''}">
-                        <span class="treatment-unit-badge absolute right-2 px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded text-xs font-black pointer-events-none">Kg</span>
-                    </div>
-                </div>`;
+                <div class="mt-2"><label class="block text-xs font-semibold text-slate-600 mb-1">Quantity / Dose per Pond *</label><div class="treatment-pond-qty-rows"></div></div>`;
             const productInput = row.querySelector('.treatment-row-product');
             const categorySelect = row.querySelector('.treatment-row-category');
             categorySelect.value = ['Probiotics', 'Medicine', 'Fertilizers'].includes(initial.category) ? initial.category : 'Probiotics';
             productInput.value = String(initial.product || '');
-            setTreatmentRowUnitBadge(row, initial.unit || 'Kg');
             categorySelect.addEventListener('change', () => changeTreatmentRowCategory(row));
             productInput.addEventListener('focus', () => openTreatmentDropdown(row));
             productInput.addEventListener('click', () => openTreatmentDropdown(row));
             productInput.addEventListener('input', () => { row.dataset.productId = ''; filterTreatmentOptions(productInput.value, row); });
-            if (removable) row.querySelector('.treatment-row-remove').addEventListener('click', () => row.remove());
+            if (removable) row.querySelector('.treatment-row-remove').addEventListener('click', () => { row.remove(); refreshTreatmentItemHeadings(); });
             container.appendChild(row);
+            renderTreatmentPondQuantityRows(row, initial.qtyByPond || (initial.qty != null && treatmentSelectedPondIds.length === 1 ? { [treatmentSelectedPondIds[0]]: initial.qty } : {}));
+            refreshTreatmentItemHeadings();
             return row;
         }
 
@@ -2884,12 +3169,14 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             };
             if (isFirebaseConnected && db) {
                 await farmOperationalCollection('harvests').doc(normalized.id.toString()).set(normalized);
+                return true;
             } else {
                 const idx = harvestEntries.findIndex(item => item.id === normalized.id);
                 if (idx >= 0) harvestEntries[idx] = normalized;
                 else harvestEntries.push(normalized);
                 writeOperationalStorage('bc_harvests', JSON.stringify(harvestEntries));
                 renderHarvestList();
+                return true;
             }
         }
 
@@ -3133,7 +3420,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             const feedPondFilter = document.getElementById('feedPondFilter');
             const samplingPondSelect = document.getElementById('samplingPond');
             const samplingFilterSelect = document.getElementById('samplingPondFilterSelect');
-            const treatmentPondSelect = document.getElementById('treatmentPond');
+            const samplingHistoryFilterSelect = document.getElementById('samplingHistoryPondFilterSelect');
             const treatmentFilterSelect = document.getElementById('treatmentPondFilterSelect');
             const harvestPondSelect = document.getElementById('harvestPond');
             const harvestFilterSelect = document.getElementById('harvestPondFilterSelect');
@@ -3142,9 +3429,9 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             if (feedPondSelect) feedPondSelect.innerHTML = '';
             if (feedPondFilter) feedPondFilter.innerHTML = '';
             if (samplingPondSelect) samplingPondSelect.innerHTML = '';
-            if (treatmentPondSelect) treatmentPondSelect.innerHTML = '';
             if (harvestPondSelect) harvestPondSelect.innerHTML = '';
             if (samplingFilterSelect) samplingFilterSelect.innerHTML = '<option value="ALL">All Ponds</option>';
+            if (samplingHistoryFilterSelect) samplingHistoryFilterSelect.innerHTML = '<option value="ALL">All Ponds</option>';
             if (treatmentFilterSelect) treatmentFilterSelect.innerHTML = '<option value="ALL">All Ponds</option>';
             if (harvestFilterSelect) harvestFilterSelect.innerHTML = '<option value="ALL">All Ponds</option>';
 
@@ -3192,13 +3479,6 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                     samplingPondSelect.appendChild(sOpt);
                 }
 
-                if (treatmentPondSelect) {
-                    const tOpt = document.createElement('option');
-                    tOpt.value = p.id;
-                    tOpt.innerText = p.id;
-                    treatmentPondSelect.appendChild(tOpt);
-                }
-
                 if (harvestPondSelect) {
                     const hOpt = document.createElement('option');
                     hOpt.value = p.id;
@@ -3212,6 +3492,13 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                     fOpt.innerText = p.id;
                     if (p.id === samplingPondFilter) fOpt.selected = true;
                     samplingFilterSelect.appendChild(fOpt);
+                }
+                if (samplingHistoryFilterSelect) {
+                    const fOpt = document.createElement('option');
+                    fOpt.value = p.id;
+                    fOpt.innerText = logicalPondIdFromRef(p.id);
+                    if (p.id === samplingPondFilter) fOpt.selected = true;
+                    samplingHistoryFilterSelect.appendChild(fOpt);
                 }
 
                 if (treatmentFilterSelect) {
@@ -3401,12 +3688,21 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
 
             // Financial values are the Laptop-published authoritative result for
             // this selected Year + Crop; Mobile must not independently recalculate them.
+            const activeCycle = getActiveCycle();
             const financialSummary = mobileCropFinancialSummary;
-            const totalFarmExpense = financialSummary ? Number(financialSummary.expense || 0) : null;
+            const hasCurrentFinancialSummary = Boolean(financialSummary
+                && String(financialSummary.cycleId || '') === String(activeCycle.id)
+                && Number(financialSummary.year) === Number(activeCycle.year)
+                && String(financialSummary.crop || '').trim().toLowerCase() === String(activeCycle.crop || '').trim().toLowerCase());
+            const totalFarmExpense = hasCurrentFinancialSummary ? Number(financialSummary.expense || 0) : null;
+            const openPondCount = getActivePonds().filter(pond => !(typeof window.blueCrestIsPondClosed === 'function' && window.blueCrestIsPondClosed(pond.id, activeCycle.id))).length;
             const financialValue = value => value == null ? '—' : `₹ ${Number(value).toLocaleString('en-IN')}`;
             const totalFarmFeed = getActiveFeedEntries().reduce((acc, curr) => {
                 return acc + (curr.fasting ? 0 : (parseFloat(curr.qty) || 0));
             }, 0);
+            const samplingKpis = getMobileFarmSamplingKpis();
+            const survivalValue = samplingKpis.avgSurvival === null ? '—' : `${samplingKpis.avgSurvival.toFixed(1)}%`;
+            const biomassValue = samplingKpis.estimatedBiomass === null ? '—' : `${samplingKpis.estimatedBiomass.toLocaleString('en-IN', { maximumFractionDigits: 1 })} kg`;
 
             const farmSummaryCard = document.createElement('div');
             farmSummaryCard.className = 'mobile-farm-summary bg-white p-4 rounded-2xl shadow-sm border border-slate-100';
@@ -3416,27 +3712,47 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                     <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">All Ponds</span>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
-                    <button type="button" onclick="openMobileFinancialSummary()" class="mobile-home-kpi mobile-expense-kpi text-left active:bg-blue-50" aria-label="Open financial summary">
+                    ${hasCurrentFinancialSummary ? `<button type="button" onclick="openMobileFinancialSummary()" class="mobile-home-kpi mobile-expense-kpi text-left active:bg-blue-50" aria-label="Open financial summary">
                         <span class="mobile-kpi-heading"><span class="mobile-kpi-icon" aria-hidden="true"></span><span class="mobile-kpi-label">Total Expense</span><b class="mobile-kpi-chevron" aria-hidden="true">›</b></span>
                         <strong id="farmTotalExpense" class="mobile-kpi-value">${financialValue(totalFarmExpense)}</strong>
-                    </button>
+                    </button>` : `<div class="mobile-home-kpi mobile-active-ponds-kpi">
+                        <span class="mobile-kpi-heading"><span class="mobile-kpi-label">🌊 Active Ponds</span></span>
+                        <span class="mobile-kpi-value">${openPondCount}</span>
+                    </div>`}
                     <div class="mobile-home-kpi mobile-feed-kpi">
                         <span class="mobile-kpi-heading"><span class="mobile-kpi-icon" aria-hidden="true"></span><span class="mobile-kpi-label">Total Feed</span></span>
                         <span id="farmTotalFeed" class="mobile-kpi-value">${totalFarmFeed.toFixed(1)} kg</span>
                     </div>
+                    <div class="mobile-home-kpi mobile-survival-kpi">
+                        <span class="mobile-kpi-heading"><span class="mobile-kpi-label">🦐 Avg. Survival</span></span>
+                        <span id="farmAvgSurvival" class="mobile-kpi-value">${survivalValue}</span>
+                    </div>
+                    <div class="mobile-home-kpi mobile-biomass-kpi">
+                        <span class="mobile-kpi-heading"><span class="mobile-kpi-label">⚖️ Est. Biomass</span></span>
+                        <span id="farmEstimatedBiomass" class="mobile-kpi-value">${biomassValue}</span>
+                    </div>
                 </div>
             `;
             container.appendChild(farmSummaryCard);
+
+            const attentionRows = getMobileNeedsAttentionPonds();
             const pondPerformance = document.createElement('section');
             pondPerformance.className = 'mobile-pond-performance';
-            pondPerformance.innerHTML = '<h3 class="mobile-pond-performance-heading">Pond Performance</h3>';
+            pondPerformance.innerHTML = `<div class="mobile-pond-performance-heading"><h3>Pond Performance</h3><div class="mobile-pond-performance-filters"><button type="button" class="mobile-pond-performance-filter ${pondPerformanceFilter === 'all' ? 'is-selected' : ''}" data-pond-performance-filter="all" aria-pressed="${pondPerformanceFilter === 'all'}">All</button><button type="button" class="mobile-pond-performance-filter ${pondPerformanceFilter === 'attention' ? 'is-selected' : ''}" data-pond-performance-filter="attention" aria-pressed="${pondPerformanceFilter === 'attention'}">Attention ${attentionRows.length}</button></div></div>`;
+            pondPerformance.querySelectorAll('[data-pond-performance-filter]').forEach(button => button.addEventListener('click', () => {
+                pondPerformanceFilter = button.dataset.pondPerformanceFilter === 'attention' ? 'attention' : 'all';
+                renderAllPondsSummary();
+            }));
             const pondList = document.createElement('div');
             pondList.className = 'mobile-pond-list';
             pondPerformance.appendChild(pondList);
             container.appendChild(pondPerformance);
 
             const activePonds = getActivePonds();
-            const activeCycle = getActiveCycle();
+            const attentionPondIds = new Set(attentionRows.map(({ pond }) => String(pond.id)));
+            const visiblePonds = pondPerformanceFilter === 'attention'
+                ? activePonds.filter(pond => attentionPondIds.has(String(pond.id)))
+                : activePonds;
             const cycleSampling = samplingEntries.filter(item => {
                 const cycleId = item.cycleId || `${Number(item.year || DEFAULT_CYCLE_YEAR)}|${String(item.crop || DEFAULT_CYCLE_CROP).toLowerCase()}`;
                 return String(cycleId) === String(activeCycle.id);
@@ -3445,17 +3761,21 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                 const cycleId = item.cycleId || `${Number(item.year || DEFAULT_CYCLE_YEAR)}|${String(item.crop || DEFAULT_CYCLE_CROP).toLowerCase()}`;
                 return String(cycleId) === String(activeCycle.id);
             });
+            const cycleTransfers = stockTransfers.filter(item => {
+                const cycleId = item.cycleId || `${Number(item.year || DEFAULT_CYCLE_YEAR)}|${String(item.crop || DEFAULT_CYCLE_CROP).toLowerCase()}`;
+                return String(cycleId) === String(activeCycle.id);
+            });
 
-            if (activePonds.length === 0) {
+            if (visiblePonds.length === 0) {
                 const emptyCard = document.createElement('div');
                 emptyCard.className = 'bg-white p-6 rounded-2xl border border-slate-100 text-center text-slate-400 text-sm';
-                emptyCard.innerText = 'No ponds active.';
+                emptyCard.innerText = pondPerformanceFilter === 'attention' ? 'No ponds currently need attention.' : 'No ponds active.';
                 pondList.appendChild(emptyCard);
                 updateHeaderDate();
                 return;
             }
 
-            activePonds.forEach(pond => {
+            visiblePonds.forEach(pond => {
                 const pondId = pond.id;
                 const pondRefs = new Set([
                     pond.id,
@@ -3465,17 +3785,24 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                 const matchesActivePond = record => [record.pondId, record.pond, record.pondName]
                     .map(value => String(value || '').trim().toLowerCase())
                     .some(value => pondRefs.has(value));
+                const closed = typeof window.blueCrestIsPondClosed === 'function' && window.blueCrestIsPondClosed(pond.id, activeCycle.id);
                 const latestSample = cycleSampling
                     .filter(matchesActivePond)
                     .sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')) || Number(b.id || 0) - Number(a.id || 0))[0];
-                const latestAbw = Number(latestSample?.abw ?? (
-                    Number(latestSample?.sampleWeight ?? latestSample?.testWeight ?? 0) /
-                    Number(latestSample?.count || 0)
-                ));
+                const intelligence = closed ? null : mobilePondSamplingIntelligence(pond, cycleSampling, cycleHarvests, cycleTransfers);
+                const latestAbw = Number(closed
+                    ? (latestSample?.abw ?? (Number(latestSample?.sampleWeight ?? latestSample?.testWeight ?? 0) / Number(latestSample?.count || 0)))
+                    : intelligence.abw);
                 const harvestKg = cycleHarvests
                     .filter(matchesActivePond)
                     .reduce((total, item) => total + Number(item.biomass ?? item.biomassKg ?? item.weight ?? 0), 0);
                 const doc = calculateDOC(pond.stockingDate, latestSystemDate);
+                const hasHarvest = harvestKg > 0;
+                const status = closed ? '🔒 Closed' : (intelligence.sample ? intelligence.pondAttention : 'No Sample');
+                const statusClass = closed ? 'is-neutral' : (status === 'On Track' ? 'is-on-track'
+                    : status === 'Watch' || status === 'Check Feeding' ? 'is-watch'
+                    : status === 'Attention' ? 'is-attention' : 'is-neutral');
+                const hasStatusInfo = !closed && intelligence.sample && ['Watch', 'Check Feeding', 'Attention'].includes(status);
                 const card = document.createElement('div');
                 card.className = 'mobile-pond-row';
                 card.setAttribute('role', 'button');
@@ -3490,7 +3817,11 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                         <div>ABW <b>${Number.isFinite(latestAbw) && latestAbw > 0 ? `${latestAbw.toFixed(1)} g` : '—'}</b></div>
                         <div>DOC <b>${doc}</b></div>
                     </div>
-                    <div class="mobile-pond-harvest"><span>Harvest</span><strong>${harvestKg.toLocaleString('en-IN', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} kg</strong></div>
+                    ${closed
+                        ? `<div class="mobile-pond-status ${statusClass}"><span>${status}</span></div>`
+                        : hasHarvest
+                        ? `<div class="mobile-pond-harvest"><span>Harvest</span><strong>${harvestKg.toLocaleString('en-IN', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} kg</strong></div>`
+                        : `<div class="mobile-pond-status ${statusClass}"><span>${status}</span>${hasStatusInfo ? '<button type="button" class="mobile-pond-status-info" aria-label="Explain sampling status">ⓘ</button>' : ''}</div>`}
                     <span class="mobile-pond-arrow" aria-hidden="true">›</span>
                 `;
                 const openPondDetails = () => {
@@ -3504,6 +3835,20 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                         openPondDetails();
                     }
                 });
+                const statusBox = card.querySelector('.mobile-pond-status');
+                const statusInfo = card.querySelector('.mobile-pond-status-info');
+                const openStatusInfo = hasStatusInfo ? event => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        openSamplingAttentionInfo(pond, intelligence);
+                    } : null;
+                if (openStatusInfo) statusBox?.addEventListener('click', openStatusInfo);
+                if (statusInfo && openStatusInfo) {
+                    statusInfo.addEventListener('click', openStatusInfo);
+                    statusInfo.addEventListener('keydown', event => {
+                        if (event.key === 'Enter' || event.key === ' ') openStatusInfo(event);
+                    });
+                }
                 pondList.appendChild(card);
             });
             updateHeaderDate();
@@ -3692,7 +4037,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             return 35;
         }
         function mobileSamplingDetailMetrics(sample) {
-            const pond = getActivePonds().find(p => String(p.id) === String(sample.pond || sample.pondId));
+            const pond = getActivePonds().find(p => logicalPondIdFromRef(p.id) === logicalPondIdFromRef(sample.pond || sample.pondId || sample.pondName));
             const dateKey = value => { const m = String(value || '').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? Date.UTC(+m[1], +m[2]-1, +m[3]) : null; };
             const currentDate = dateKey(sample.date), crop = String(pond?.crop || '').trim().toLowerCase(), year = Number(pond?.year || 0), pondKey = String(pond?.id || '').toLowerCase(), pondName = String(pond?.name || '').toLowerCase();
             const prior = samplingEntries.filter(s => { const ref = String(s.pond || s.pondId || s.pondName || '').toLowerCase(), d = dateKey(s.date); return String(s.id) !== String(sample.id) && d !== null && currentDate !== null && d < currentDate && (ref === pondKey || (pondName && ref === pondName)) && Number(s.year || s.cropYear || 0) === year && String(s.crop || s.cropCycle || '').trim().toLowerCase() === crop; }).sort((a,b) => dateKey(a.date)-dateKey(b.date)).pop() || null;
@@ -3703,7 +4048,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             let days = 7; if (prior && currentDate > dateKey(prior.date)) days = Math.max(1, Math.round((currentDate-dateKey(prior.date))/86400000)); else if (pond?.stockingDate && currentDate >= dateKey(pond.stockingDate)) days = Math.max(1, Math.round((currentDate-dateKey(pond.stockingDate))/86400000));
             const dailyFeed = netFeed > 0 && days > 0 ? netFeed / days : 0, stock = Number(pond?.stockingCount || pond?.initialStockingNumber || 0), type = String(pond?.pondType || pond?.type || '').trim().toLowerCase(), mother = type === 'mother' || type === 'mother pond', transfer = type === 'transferin' || type === 'transfer-in';
             const perShrimp = mobileExpectedFeedPer1Lakh(abw) / 100000; let fcr = null, survival = null;
-            if (transfer) { const toDate = getPondTransferInSummary(pond.id, sample.date); if (toDate.number > 0 && netFeed > 0 && abw > 0 && perShrimp > 0) { const living = dailyFeed / perShrimp; survival = Math.min(120, living / toDate.number * 100); if (!prior && toDate.biomass > 0) { const opening = toDate.biomass * 1000 / toDate.number; growth = abw - opening; const gainKg = living * abw / 1000 - toDate.biomass; if (gainKg > 0) fcr = netFeed / gainKg; } else if (prior) { const priorTransfers = getPondTransferInSummary(pond.id, prior.date), priorNet = Number(prior.currCumulativeFeed ?? prior.currentFeed ?? 0) - Number(prior.prevCumulativeFeed ?? prior.lastFeed ?? 0); const older = samplingEntries.filter(s => String(s.pond || s.pondId) === String(sample.pond || sample.pondId) && String(s.id) !== String(sample.id) && String(s.id) !== String(prior.id) && dateKey(s.date) < dateKey(prior.date)).sort((a,b)=>dateKey(a.date)-dateKey(b.date)).pop(); const priorDays = older ? Math.max(1,Math.round((dateKey(prior.date)-dateKey(older.date))/86400000)) : Math.max(1,Math.round((dateKey(prior.date)-dateKey(pond.stockingDate || prior.date))/86400000)); const prevLiving = priorTransfers.number > 0 && priorNet > 0 && prevAbw > 0 ? (priorNet/priorDays)/(mobileExpectedFeedPer1Lakh(prevAbw)/100000) : 0; const opening = prevLiving > 0 ? Math.min(prevLiving, priorTransfers.number*1.2) : priorTransfers.number; const gainKg = abw > prevAbw && opening > 0 ? ((abw-prevAbw)*opening)/1000 : 0; if (gainKg > 0) fcr = netFeed/gainKg; } } } else if (stock > 0 && netFeed > 0 && abw > 0 && perShrimp > 0) { const living = dailyFeed / perShrimp; if (!mother && growth > 0) { const gainKg = growth * living / 1000; if (gainKg > 0) fcr = netFeed / gainKg; } let denominator = stock; if (mother) { const moves = stockTransfers.filter(t => { const d=String(t.date||''), sameYear=!Number(t.year||t.cropYear)||Number(t.year||t.cropYear)===year, sameCrop=!String(t.crop||t.cropCycle||'').trim()||String(t.crop||t.cropCycle).trim().toLowerCase()===crop, from=String(t.fromPondId||t.fromPond||'').toLowerCase(), to=String(t.toPondId||t.toPond||'').toLowerCase(); return sameYear&&sameCrop&&d<=String(sample.date)&&([pondKey,pondName].includes(from)||[pondKey,pondName].includes(to)); }); denominator=Math.max(0,stock+moves.filter(t=>[pondKey,pondName].includes(String(t.toPondId||t.toPond||'').toLowerCase())).reduce((n,t)=>n+Number(t.number||t.transferredNumber||t.count||0),0)-moves.filter(t=>[pondKey,pondName].includes(String(t.fromPondId||t.fromPond||'').toLowerCase())).reduce((n,t)=>n+Number(t.number||t.transferredNumber||t.count||0),0)); } if (denominator>0) survival=Math.min(120,living/denominator*100); if (!mother && fcr===null && !prior && survival!==null) { const biomass=stock*(survival/100)*abw/1000; if(biomass>0) fcr=netFeed/biomass; } }
+            if (transfer) { const toDate = getPondTransferInSummary(pond.id, sample.date, pond); if (toDate.number > 0 && netFeed > 0 && abw > 0 && perShrimp > 0) { const living = dailyFeed / perShrimp; survival = Math.min(120, living / toDate.number * 100); if (!prior && toDate.biomass > 0) { const opening = toDate.biomass * 1000 / toDate.number; growth = abw - opening; const gainKg = living * abw / 1000 - toDate.biomass; if (gainKg > 0) fcr = netFeed / gainKg; } else if (prior) { const priorTransfers = getPondTransferInSummary(pond.id, prior.date, pond), priorNet = Number(prior.currCumulativeFeed ?? prior.currentFeed ?? 0) - Number(prior.prevCumulativeFeed ?? prior.lastFeed ?? 0); const older = samplingEntries.filter(s => String(s.pond || s.pondId) === String(sample.pond || sample.pondId) && String(s.id) !== String(sample.id) && String(s.id) !== String(prior.id) && dateKey(s.date) < dateKey(prior.date)).sort((a,b)=>dateKey(a.date)-dateKey(b.date)).pop(); const priorDays = older ? Math.max(1,Math.round((dateKey(prior.date)-dateKey(older.date))/86400000)) : Math.max(1,Math.round((dateKey(prior.date)-dateKey(pond.stockingDate || prior.date))/86400000)); const prevLiving = priorTransfers.number > 0 && priorNet > 0 && prevAbw > 0 ? (priorNet/priorDays)/(mobileExpectedFeedPer1Lakh(prevAbw)/100000) : 0; const opening = prevLiving > 0 ? Math.min(prevLiving, priorTransfers.number*1.2) : priorTransfers.number; const gainKg = abw > prevAbw && opening > 0 ? ((abw-prevAbw)*opening)/1000 : 0; if (gainKg > 0) fcr = netFeed/gainKg; } } } else if (stock > 0 && netFeed > 0 && abw > 0 && perShrimp > 0) { const living = dailyFeed / perShrimp; if (!mother && growth > 0) { const gainKg = growth * living / 1000; if (gainKg > 0) fcr = netFeed / gainKg; } let denominator = stock; if (mother) { const moves = stockTransfers.filter(t => { const d=String(t.date||''), sameYear=!Number(t.year||t.cropYear)||Number(t.year||t.cropYear)===year, sameCrop=!String(t.crop||t.cropCycle||'').trim()||String(t.crop||t.cropCycle).trim().toLowerCase()===crop, from=String(t.fromPondId||t.fromPond||'').toLowerCase(), to=String(t.toPondId||t.toPond||'').toLowerCase(); return sameYear&&sameCrop&&d<=String(sample.date)&&([pondKey,pondName].includes(from)||[pondKey,pondName].includes(to)); }); denominator=Math.max(0,stock+moves.filter(t=>[pondKey,pondName].includes(String(t.toPondId||t.toPond||'').toLowerCase())).reduce((n,t)=>n+Number(t.number||t.transferredNumber||t.count||0),0)-moves.filter(t=>[pondKey,pondName].includes(String(t.fromPondId||t.fromPond||'').toLowerCase())).reduce((n,t)=>n+Number(t.number||t.transferredNumber||t.count||0),0)); } if (denominator>0) survival=Math.min(120,living/denominator*100); if (!mother && fcr===null && !prior && survival!==null) { const biomass=stock*(survival/100)*abw/1000; if(biomass>0) fcr=netFeed/biomass; } }
             return { abw, growth, fcr, survival, netFeed, dailyFeed, days };
         }
 
@@ -3712,32 +4057,264 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             return Number.isNaN(date.getTime()) ? '—' : date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
         }
 
-        function renderSamplingList() {
-            const container = document.getElementById('samplingCardsList');
-            const totalCountEl = document.getElementById('totalSamplingCount');
-            if (!container) return;
+        // Read-only Mobile counterpart of Laptop's Pond Attention calculation.
+        // It deliberately keeps the same thresholds, precedence and input rules.
+        function getPondAttentionDecision({ hasPreviousSample, adg, targetAdg, growthTrend, feedStatus, survivalTrend, persistentPoorGrowth = false }) {
+            const growthPoor = adg !== null && targetAdg !== null && adg < targetAdg * .7;
+            const growthEvaluated = !!hasPreviousSample && adg !== null && targetAdg !== null;
+            const growthAbnormal = growthEvaluated && (growthPoor || growthTrend === 'Slowing');
+            const feedEvaluated = ['Adequate', 'Below requirement', 'Above range'].includes(feedStatus);
+            const feedAbnormal = feedEvaluated && feedStatus !== 'Adequate';
+            const survivalEvaluated = ['Stable', 'Declining'].includes(survivalTrend);
+            const survivalAbnormal = survivalEvaluated && survivalTrend === 'Declining';
+            const evaluatedSignals = [growthEvaluated, feedEvaluated, survivalEvaluated].filter(Boolean).length;
+            const abnormalSignals = [growthAbnormal, feedAbnormal, survivalAbnormal].filter(Boolean).length;
+            if (!evaluatedSignals) return { status: 'Insufficient Data', message: 'More biological sampling data is needed before current pond status can be assessed.' };
+            if (persistentPoorGrowth) return { status: 'Attention', message: 'Growth has remained below the approved target across two consecutive sampling intervals.' };
+            if (survivalAbnormal) return { status: 'Attention', message: 'Estimated survival has declined beyond the established practical tolerance.' };
+            if (abnormalSignals >= 3) return { status: 'Attention', message: 'Growth, feed response and survival require immediate attention.' };
+            if (abnormalSignals === 2) {
+                return growthPoor && feedStatus === 'Below requirement'
+                    ? { status: 'Check Feeding', message: 'Feed is below the chart requirement; check feeding before judging pond growth.' }
+                    : { status: 'Watch', message: 'Two biological signals need review at the next sampling.' };
+            }
+            return { status: 'On Track', message: 'Growth, feed response and estimated survival are within the current expected range.' };
+        }
+
+        function mobilePondSamplingIntelligence(pond, samplesForCycle, harvestsForCycle, transfersForCycle) {
+            const dayMs = 86400000;
+            const pondId = logicalPondIdFromRef(pond.id);
+            // Use the established Sampling ADG/history Year/Crop matching rather
+            // than relying on an optional stored cycleId.
             const c = getActiveCycle();
-            const cycleEntries = samplingEntries.filter(item => String(item.cycleId || `${Number(item.year || DEFAULT_CYCLE_YEAR)}|${String(item.crop || DEFAULT_CYCLE_CROP).toLowerCase()}`) === String(c.id));
-            let rows = samplingPondFilter === 'ALL' ? [...cycleEntries] : cycleEntries.filter(item => item.pond === samplingPondFilter);
-            rows.sort((a, b) => new Date(`${b.date}T00:00:00`) - new Date(`${a.date}T00:00:00`));
-            if (totalCountEl) totalCountEl.innerText = `${rows.length} Records Logged`;
-            if (!rows.length) { container.innerHTML = '<div class="p-6 text-center text-slate-400 text-sm">No sampling records found.</div>'; return; }
-            const header = '<colgroup><col style="width:22%"><col style="width:12%"><col style="width:12%"><col style="width:17%"><col style="width:18%"><col style="width:19%"></colgroup><thead class="bg-slate-50 text-[9px] uppercase tracking-wide text-slate-500"><tr><th class="px-1 py-2 text-left">Date</th><th class="px-1 py-2 text-left">Pond</th><th class="px-1 py-2 text-right">DOC</th><th class="px-1 py-2 text-right">Count</th><th class="px-1 py-2 text-right">ABW</th><th class="px-1 py-2 text-right">ADG</th></tr></thead>';
-            // Same compact pond-badge mapping used by Treatment and Harvest.
-            const badge = pond => {
-                const n = Number(String(pond).match(/\d+/)?.[0] || 0);
-                const colors = ['bg-sky-100 text-sky-700','bg-amber-100 text-amber-700','bg-emerald-100 text-emerald-700','bg-cyan-100 text-cyan-700','bg-violet-100 text-violet-700'];
-                return colors[(Math.max(1, n) - 1) % colors.length];
+            const cropKey = String(c.crop || '').trim().toLowerCase();
+            const records = samplingEntries.filter(record => logicalPondIdFromRef(record.pondId || record.pond || record.pondName) === pondId &&
+                Number(record.year || record.cropYear) === Number(c.year) &&
+                String(record.crop || record.cropCycle || '').trim().toLowerCase() === cropKey
+            ).sort((a, b) => new Date(a.date) - new Date(b.date));
+            const samePondHarvests = (harvestsForCycle || []).filter(harvest => logicalPondIdFromRef(harvest.pondId || harvest.pond || harvest.pondName) === pondId);
+            const harvestPieces = harvest => {
+                const stored = Number(harvest.totalPieces || harvest.pieces || 0);
+                return stored > 0 ? stored : Number(harvest.biomass ?? harvest.biomassKg ?? harvest.weight ?? 0) * Number(harvest.count ?? harvest.piecesPerKg ?? 0);
             };
-            const body = rows.map(item => {
-                const pond = getActivePonds().find(p => String(p.id) === String(item.pond));
+            const harvestedThrough = date => samePondHarvests.filter(h => String(h.date || '') <= String(date || '')).reduce((total, h) => total + harvestPieces(h), 0);
+            const chartFeed = abw => Number.isFinite(abw) && abw >= 3 && abw <= 30 ? Number(mobileExpectedFeedPer1Lakh(abw)) : null;
+            const initialPopulation = date => {
+                const transferIn = String(pond.pondType || '').trim() === 'transferIn';
+                const stocked = transferIn
+                    ? getPondTransferInSummary(pond.id, date, pond).number
+                    : Number(pond.stockingCount || pond.initialStockingNumber || 0);
+                return stocked > 0 ? stocked : null;
+            };
+            const history = [];
+            records.forEach((sample, index) => {
+                const previousSample = index ? records[index - 1] : null;
+                const previous = index ? history[index - 1] : null;
+                const abw = Number(sample.abw != null ? sample.abw : Number(sample.sampleWeight || sample.testWeight) / Number(sample.count));
+                const priorDate = previousSample?.date || pond.stockingDate;
+                const feedIntervalDays = priorDate && sample.date ? Math.max(1, Math.round((new Date(sample.date) - new Date(priorDate)) / dayMs)) : null;
+                const netFeed = Number(sample.currentFeed || sample.currCumulativeFeed || 0) - Number(sample.lastFeed || sample.prevCumulativeFeed || 0);
+                const actualFeedPerDay = feedIntervalDays && netFeed > 0 ? netFeed / feedIntervalDays : null;
+                const chartFeedPerLakh = chartFeed(abw);
+                const estimatedLivePieces = actualFeedPerDay !== null && chartFeedPerLakh !== null ? actualFeedPerDay / chartFeedPerLakh * 100000 : null;
+                const denominator = initialPopulation(sample.date);
+                const estimatedSurvivalPct = estimatedLivePieces !== null && denominator !== null ? (estimatedLivePieces + harvestedThrough(sample.date)) / denominator * 100 : null;
+                const intervalDays = previousSample ? Math.round((new Date(sample.date) - new Date(previousSample.date)) / dayMs) : null;
+                const gain = previousSample ? abw - previous.abw : null;
+                const adg = previousSample && intervalDays > 0 ? gain / intervalDays : null;
+                const targetAdg = previousSample ? (previous.abw < 5 ? .18 : previous.abw < 10 ? .21 : .29) : null;
+                const previousAdg = index > 1 ? history[index - 1].adg : null;
+                const growthTrend = adg === null || previousAdg === null ? '—' : adg > previousAdg + .03 ? 'Improving' : adg < previousAdg - .03 ? 'Slowing' : 'Stable';
+                const intervalHarvestedPieces = previousSample ? samePondHarvests.filter(h => String(h.date || '') > String(previousSample.date || '') && String(h.date || '') <= String(sample.date || '')).reduce((total, h) => total + harvestPieces(h), 0) : harvestedThrough(sample.date);
+                let expectedPopulationBasis = previous?.estimatedLivePieces ?? initialPopulation(sample.date);
+                if (expectedPopulationBasis !== null) expectedPopulationBasis -= intervalHarvestedPieces;
+                if (!(expectedPopulationBasis >= 0)) expectedPopulationBasis = null;
+                const expectedFeedPerDay = chartFeedPerLakh !== null && expectedPopulationBasis !== null ? chartFeedPerLakh * expectedPopulationBasis / 100000 : null;
+                const feedStatus = abw > 30 ? 'Outside feed-chart range' : chartFeedPerLakh === null || actualFeedPerDay === null || expectedFeedPerDay === null ? 'Insufficient data' : actualFeedPerDay < expectedFeedPerDay * .8 ? 'Below requirement' : actualFeedPerDay > expectedFeedPerDay * 1.2 ? 'Above range' : 'Adequate';
+                const survivalChange = estimatedSurvivalPct !== null && previous?.estimatedSurvivalPct != null ? estimatedSurvivalPct - previous.estimatedSurvivalPct : null;
+                const survivalTrend = survivalChange === null ? 'Insufficient Data' : survivalChange <= -10 ? 'Declining' : 'Stable';
+                const growthPoor = adg !== null && targetAdg !== null && adg < targetAdg * .7;
+                const persistentPoorGrowth = growthPoor && previous?.growthPoor === true;
+                const decision = getPondAttentionDecision({ hasPreviousSample: !!previousSample, adg, targetAdg, growthTrend, feedStatus, survivalTrend, persistentPoorGrowth });
+                history.push({ sample, abw, gain, adg, estimatedSurvivalPct, estimatedLivePieces, effectiveStockedPopulation: denominator, growthTrend, feedStatus, survivalTrend, growthPoor, persistentPoorGrowth, pondAttention: decision.status, pondAttentionMessage: decision.message });
+            });
+            return history[history.length - 1] || { sample: null, abw: null, gain: null, adg: null, estimatedSurvivalPct: null, estimatedLivePieces: null, effectiveStockedPopulation: null, pondAttention: 'Insufficient Data', pondAttentionMessage: 'No sampling data has been recorded for this pond.' };
+        }
+
+        function samplingCycleEntries() {
+            const c = getActiveCycle();
+            return samplingEntries.filter(item => String(item.cycleId || `${Number(item.year || DEFAULT_CYCLE_YEAR)}|${String(item.crop || DEFAULT_CYCLE_CROP).toLowerCase()}`) === String(c.id));
+        }
+
+        function activeSamplingPonds() {
+            const c = getActiveCycle();
+            return getActivePonds().filter(pond => !(typeof window.blueCrestIsPondClosed === 'function' && window.blueCrestIsPondClosed(pond.id, c.id)));
+        }
+
+        function getSamplingMainConcern(latest) {
+            const concerns = [
+                (latest.growthPoor || latest.growthTrend === 'Slowing') && 'Growth',
+                (latest.feedStatus === 'Below requirement' || latest.feedStatus === 'Above range') && 'Feed',
+                latest.survivalTrend === 'Declining' && 'Survival'
+            ].filter(Boolean);
+            return concerns.join(' + ') || 'Review';
+        }
+
+        function getMobileNeedsAttentionPonds() {
+            const c = getActiveCycle();
+            const samples = samplingCycleEntries();
+            const harvests = harvestEntries.filter(item => String(item.cycleId || `${Number(item.year || DEFAULT_CYCLE_YEAR)}|${String(item.crop || DEFAULT_CYCLE_CROP).toLowerCase()}`) === String(c.id));
+            const transfers = stockTransfers.filter(item => String(item.cycleId || `${Number(item.year || DEFAULT_CYCLE_YEAR)}|${String(item.crop || DEFAULT_CYCLE_CROP).toLowerCase()}`) === String(c.id));
+            return activeSamplingPonds().map(pond => {
+                const intelligence = mobilePondSamplingIntelligence(pond, samples, harvests, transfers);
+                return { pond, intelligence, mainConcern: getSamplingMainConcern(intelligence) };
+            }).filter(({ intelligence }) => ['Attention', 'Watch', 'Check Feeding'].includes(intelligence.pondAttention));
+        }
+
+        function getMobileFarmSamplingKpis() {
+            const c = getActiveCycle();
+            const samples = samplingCycleEntries();
+            const harvests = harvestEntries.filter(item => String(item.cycleId || `${Number(item.year || DEFAULT_CYCLE_YEAR)}|${String(item.crop || DEFAULT_CYCLE_CROP).toLowerCase()}`) === String(c.id));
+            const transfers = stockTransfers.filter(item => String(item.cycleId || `${Number(item.year || DEFAULT_CYCLE_YEAR)}|${String(item.crop || DEFAULT_CYCLE_CROP).toLowerCase()}`) === String(c.id));
+            let totalLivePieces = 0;
+            let totalStockedPopulation = 0;
+            let totalBiomass = 0;
+            let hasBiomass = false;
+
+            activeSamplingPonds().forEach(pond => {
+                const latest = mobilePondSamplingIntelligence(pond, samples, harvests, transfers);
+                const livePieces = Number(latest.estimatedLivePieces);
+                const population = Number(latest.effectiveStockedPopulation);
+                if (!latest.sample || !Number.isFinite(livePieces) || livePieces < 0 || !Number.isFinite(population) || population <= 0) return;
+
+                totalLivePieces += livePieces;
+                totalStockedPopulation += population;
+
+                const abw = Number(latest.abw);
+                if (Number.isFinite(abw) && abw > 0) {
+                    totalBiomass += (livePieces * abw) / 1000;
+                    hasBiomass = true;
+                }
+            });
+
+            return {
+                avgSurvival: totalStockedPopulation > 0 ? (totalLivePieces / totalStockedPopulation) * 100 : null,
+                estimatedBiomass: hasBiomass ? totalBiomass : null
+            };
+        }
+
+        function samplingAttentionClass(status) {
+            return status === 'On Track' ? 'status-on-track' : status === 'Attention' ? 'status-attention' : status === 'Watch' || status === 'Check Feeding' ? 'status-watch' : 'status-insufficient';
+        }
+
+        function samplingCompactNumber(value, decimals, suffix = '') {
+            if (value === null || value === undefined || value === '') return '—';
+            return Number.isFinite(Number(value)) ? `${Number(value).toFixed(decimals)}${suffix}` : '—';
+        }
+
+        function openSamplingAttentionInfo(pond, latest) {
+            const sheet = document.getElementById('samplingAttentionSheet');
+            if (!sheet || !latest) return;
+            const growthAbnormal = latest.growthPoor || latest.growthTrend === 'Slowing';
+            const feedAbnormal = latest.feedStatus === 'Below requirement' || latest.feedStatus === 'Above range';
+            const survivalAbnormal = latest.survivalTrend === 'Declining';
+            const growthText = latest.persistentPoorGrowth ? 'Below target for 2 consecutive sampling periods.' : growthAbnormal ? (latest.growthPoor ? 'Below target for the current sampling period.' : 'Growth is slowing compared with the previous interval.') : latest.adg === null ? 'Not enough data to assess.' : 'Within expected range.';
+            const feedText = latest.feedStatus === 'Below requirement' ? 'Below the present biomass requirement.' : latest.feedStatus === 'Above range' ? 'Above the present biomass requirement.' : latest.feedStatus === 'Adequate' ? 'As per requirement.' : 'Not enough data to assess.';
+            const survivalText = survivalAbnormal ? 'Estimated survival declined beyond the established tolerance.' : latest.survivalTrend === 'Stable' ? 'Within normal range.' : 'Not enough data to assess.';
+            const mainConcern = getSamplingMainConcern(latest);
+            const mainText = latest.persistentPoorGrowth ? 'Growth has remained below target for 2 consecutive sampling periods.' : survivalAbnormal ? 'Estimated survival has declined beyond the established tolerance.' : feedAbnormal && growthAbnormal ? 'Growth is below target and feed response needs review.' : 'Current status is based on the latest available biological signals.';
+            const factor = (icon, label, text, abnormal) => `<div class="sampling-attention-detail"><span class="text-base">${abnormal ? '🔴' : icon}</span><strong>${label}</strong><span>${text}</span></div>`;
+            document.getElementById('samplingAttentionTitle').textContent = `${logicalPondIdFromRef(pond.id)} — ${latest.pondAttention}`;
+            document.getElementById('samplingAttentionMain').innerHTML = `<strong class="block text-base text-rose-700">Main Concern: ${mainConcern}</strong><span class="mt-1 block">${mainText}</span>`;
+            document.getElementById('samplingAttentionDetails').innerHTML =
+                factor('🟢', 'Growth', growthText, growthAbnormal) +
+                factor('🟢', 'Survival', survivalText, survivalAbnormal) +
+                factor('🟢', 'Feed', feedText, feedAbnormal);
+            const focus = [
+                growthAbnormal && 'Check why shrimp weight gain is below target.',
+                feedAbnormal && 'Review feeding against the present biomass requirement.',
+                survivalAbnormal && 'Check the reason for the decline in estimated survival.'
+            ].filter(Boolean);
+            const focusEl = document.getElementById('samplingAttentionFocus');
+            focusEl.innerHTML = `<strong class="block text-blue-700">Focus</strong><span class="mt-1 block">${focus.join(' ') || 'Continue monitoring the next sampling.'}</span><button type="button" data-sampling-attention-history class="mt-2 flex w-full items-center justify-between rounded-lg border border-blue-100 bg-white px-2.5 py-1.5 text-xs font-bold text-blue-700 active:bg-blue-50">View Sampling History <span aria-hidden="true">›</span></button>`;
+            focusEl.querySelector('[data-sampling-attention-history]')?.addEventListener('click', () => {
+                closeSamplingAttentionInfo();
+                openSamplingHistoryFullscreen(pond.id);
+            });
+            sheet.classList.remove('hidden');
+            sheet.setAttribute('aria-hidden', 'false');
+        }
+
+        function closeSamplingAttentionInfo() {
+            const sheet = document.getElementById('samplingAttentionSheet');
+            sheet?.classList.add('hidden');
+            sheet?.setAttribute('aria-hidden', 'true');
+        }
+
+        function renderLatestPondSampling() {
+            const targets = [document.getElementById('latestPondSamplingList')].filter(Boolean);
+            const cycleSamples = samplingCycleEntries();
+            const cycleHarvests = harvestEntries.filter(item => String(item.cycleId || `${Number(item.year || DEFAULT_CYCLE_YEAR)}|${String(item.crop || DEFAULT_CYCLE_CROP).toLowerCase()}`) === String(getActiveCycle().id));
+            const cycleTransfers = stockTransfers.filter(item => String(item.cycleId || `${Number(item.year || DEFAULT_CYCLE_YEAR)}|${String(item.crop || DEFAULT_CYCLE_CROP).toLowerCase()}`) === String(getActiveCycle().id));
+            const rows = activeSamplingPonds().map(pond => {
+                const latest = mobilePondSamplingIntelligence(pond, cycleSamples, cycleHarvests, cycleTransfers);
+                const detail = latest.sample ? mobileSamplingDetailMetrics(latest.sample) : null;
+                return { pond, latest, detail };
+            });
+            const render = (list, data) => {
+                if (!data.length) { list.innerHTML = '<div class="p-5 text-center text-sm text-slate-400">No active ponds.</div>'; return; }
+                const header = '<div class="sampling-priority-grid sampling-priority-header bg-slate-50 px-2 py-2"><span>Pond</span><span class="text-right">DOC</span><span class="text-right">ABW</span><span class="text-right">Gain</span><span class="text-right">Survival</span><span class="text-right">FCR</span></div>';
+                const body = data.map(({ pond, latest, detail }, index) => {
+                    const pondId = String(pond.id).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+                    const doc = latest.sample ? calculateDOC(pond.stockingDate, latest.sample.date) : '—';
+                    const survival = latest.estimatedSurvivalPct !== null ? samplingCompactNumber(latest.estimatedSurvivalPct, 0, '%') : (detail?.survival != null ? samplingCompactNumber(detail.survival, 0, '%') : '—');
+                    const hasInfo = ['Watch', 'Check Feeding', 'Attention'].includes(latest.pondAttention);
+                    return `<button type="button" data-sampling-history-pond="${pondId}" class="sampling-priority-grid sampling-priority-row ${samplingAttentionClass(latest.pondAttention)} w-full px-2 py-2 text-left active:bg-blue-50" title="${latest.pondAttentionMessage}"><span class="sampling-priority-value">${logicalPondIdFromRef(pond.id)}<small class="sampling-priority-status">${latest.pondAttention}${hasInfo ? ` <span data-sampling-attention-info="${index}" role="button" tabindex="0" aria-label="Why is this pond ${latest.pondAttention}?" class="ml-0.5 text-[11px] text-slate-500">ⓘ</span>` : ''}</small></span><span class="sampling-priority-value">${doc}</span><span class="sampling-priority-value">${samplingCompactNumber(latest.abw, 2)}</span><span class="sampling-priority-value">${samplingCompactNumber(latest.gain, 2)}</span><span class="sampling-priority-value">${survival}</span><span class="sampling-priority-value">${detail?.fcr != null ? samplingCompactNumber(detail.fcr, 2) : '—'}</span></button>`;
+                }).join('');
+                list.innerHTML = header + body;
+                list.querySelectorAll('[data-sampling-history-pond]').forEach(row => row.addEventListener('click', () => openSamplingHistoryFullscreen(row.dataset.samplingHistoryPond)));
+                list.querySelectorAll('[data-sampling-attention-info]').forEach(icon => {
+                    const openInfo = event => { event.preventDefault(); event.stopPropagation(); const row = data[Number(icon.dataset.samplingAttentionInfo)]; if (row) openSamplingAttentionInfo(row.pond, row.latest); };
+                    icon.addEventListener('click', openInfo);
+                    icon.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') openInfo(event); });
+                });
+            };
+            targets.forEach(target => render(target, rows));
+        }
+
+        function renderSamplingHistory(rows, target, preview = false) {
+            if (!target) return;
+            const visible = preview ? rows.slice(0, 5) : rows;
+            if (!visible.length) { target.innerHTML = '<div class="p-6 text-center text-slate-400 text-sm">No sampling records found.</div>'; return; }
+            const header = '<colgroup><col style="width:22%"><col style="width:12%"><col style="width:12%"><col style="width:17%"><col style="width:18%"><col style="width:19%"></colgroup><thead class="bg-slate-50 text-[9px] uppercase tracking-wide text-slate-500"><tr><th class="px-1 py-2 text-left">Date</th><th class="px-1 py-2 text-left">Pond</th><th class="px-1 py-2 text-right">DOC</th><th class="px-1 py-2 text-right">Count</th><th class="px-1 py-2 text-right">ABW</th><th class="px-1 py-2 text-right">ADG</th></tr></thead>';
+            const badge = pond => { const n = Number(String(pond).match(/\d+/)?.[0] || 0); const colors = ['bg-sky-100 text-sky-700','bg-amber-100 text-amber-700','bg-emerald-100 text-emerald-700','bg-cyan-100 text-cyan-700','bg-violet-100 text-violet-700']; return colors[(Math.max(1, n) - 1) % colors.length]; };
+            const body = visible.map(item => {
+                const pond = getActivePonds().find(p => String(p.id) === String(item.pond || item.pondId));
                 const doc = pond ? calculateDOC(pond.stockingDate, item.date) : '—';
                 const abw = Number(item.abw != null ? item.abw : Number(item.sampleWeight || item.testWeight) / Number(item.count));
                 const adg = getSamplingAdg(item);
-                return `<tr data-sampling-detail-id="${String(item.id).replace(/&/g, '&amp;').replace(/"/g, '&quot;')}" class="border-t border-slate-100 cursor-pointer active:bg-blue-50"><td class="px-1 py-3 whitespace-nowrap text-[11px] font-medium text-slate-700">${formatSamplingTableDate(item.date)}</td><td class="px-1 py-3"><span class="inline-block rounded-full px-1 py-0.5 text-[10px] font-bold ${badge(item.pond)}">${logicalPondIdFromRef(item.pond)}</span></td><td class="px-1 py-3 text-right text-[11px] text-slate-600">${doc}</td><td class="px-1 py-3 text-right text-[11px] text-slate-700">${item.count || '—'}</td><td class="px-1 py-3 text-right text-[11px] font-semibold text-slate-700">${Number.isFinite(abw) ? abw.toFixed(2) : '—'}</td><td class="px-1 py-3 text-right text-[11px] font-semibold text-slate-700">${adg !== null ? adg.toFixed(3) : '—'}</td></tr>`;
+                const id = String(item.id).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+                return `<tr data-sampling-detail-id="${id}" class="border-t border-slate-100 cursor-pointer active:bg-blue-50"><td class="px-1 py-3 whitespace-nowrap text-[11px] font-medium text-slate-700">${formatSamplingTableDate(item.date)}</td><td class="px-1 py-3"><span class="inline-block rounded-full px-1 py-0.5 text-[10px] font-bold ${badge(item.pond || item.pondId)}">${logicalPondIdFromRef(item.pond || item.pondId)}</span></td><td class="px-1 py-3 text-right text-[11px] text-slate-600">${doc}</td><td class="px-1 py-3 text-right text-[11px] text-slate-700">${item.count || '—'}</td><td class="px-1 py-3 text-right text-[11px] font-semibold text-slate-700">${Number.isFinite(abw) ? abw.toFixed(2) : '—'}</td><td class="px-1 py-3 text-right text-[11px] font-semibold text-slate-700">${adg !== null ? adg.toFixed(3) : '—'}</td></tr>`;
             }).join('');
-            container.innerHTML = `<table class="w-full table-fixed border-collapse">${header}<tbody>${body}</tbody></table>`;
-            container.querySelectorAll('[data-sampling-detail-id]').forEach(row => row.addEventListener('click', () => openSamplingDetail(row.dataset.samplingDetailId)));
+            target.innerHTML = `<table class="w-full table-fixed border-collapse">${header}<tbody>${body}</tbody></table>`;
+            target.querySelectorAll('[data-sampling-detail-id]').forEach(row => row.addEventListener('click', () => openSamplingDetail(row.dataset.samplingDetailId)));
+        }
+
+        function openSamplingHistoryFullscreen(pondId = 'ALL') { samplingPondFilter = pondId; const panel = document.getElementById('samplingHistoryFullscreen'); panel?.classList.remove('hidden'); panel?.setAttribute('aria-hidden', 'false'); renderSamplingList(); }
+        function closeSamplingHistoryFullscreen() { const panel = document.getElementById('samplingHistoryFullscreen'); panel?.classList.add('hidden'); panel?.setAttribute('aria-hidden', 'true'); }
+
+        function renderSamplingList() {
+            const container = document.getElementById('samplingCardsList');
+            const totalCountEl = document.getElementById('totalSamplingCount');
+            const cycleEntries = samplingCycleEntries();
+            let rows = samplingPondFilter === 'ALL' ? [...cycleEntries] : cycleEntries.filter(item => String(item.pond || item.pondId) === String(samplingPondFilter));
+            rows.sort((a, b) => new Date(`${b.date}T00:00:00`) - new Date(`${a.date}T00:00:00`));
+            if (totalCountEl) totalCountEl.innerText = `${rows.length} Records Logged`;
+            renderSamplingHistory(rows, container, true);
+            renderSamplingHistory(rows, document.getElementById('samplingHistoryFullscreenList'), false);
+            const filters = [document.getElementById('samplingPondFilterSelect'), document.getElementById('samplingHistoryPondFilterSelect')];
+            filters.forEach(filter => { if (filter) filter.value = samplingPondFilter; });
+            renderLatestPondSampling();
         }
 
         function renderTreatmentList() {
@@ -4041,7 +4618,8 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             const abw = parseFloat((1000 / count).toFixed(2));
             const totalPieces = Math.round(biomass * count);
             const finalValue = Math.round(biomass * price);
-            const id = editingHarvestId !== null ? editingHarvestId : Date.now();
+            const isNewHarvest = editingHarvestId === null;
+            const id = isNewHarvest ? Date.now() : editingHarvestId;
 
             const c = getActiveCycle();
             const harvestObj = {
@@ -4063,8 +4641,10 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             };
 
             try {
-                await saveHarvestToDb(harvestObj);
+                const saved = await saveHarvestToDb(harvestObj);
+                if (saved !== true) return;
                 closeHarvestModal();
+                if (isNewHarvest) void writeMobileModuleActivityReceipt('Harvest', harvestObj.id);
             } catch (err) {
                 console.error('Firestore harvest write error:', err);
                 alert('Harvest could not be saved to cloud data. Please try again.' + (err?.code ? '\n\nCode: ' + err.code : '') + (err?.message ? '\n\nMessage: ' + err.message : ''));
@@ -4295,6 +4875,9 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             await Promise.race([writeAttempt, writeTimeout]);
             await bulkFeedServerConfirmation(timeoutMs);
             removeBulkFeedPendingRecordById(id);
+            // The pending record is removed only after confirmed cloud sync; write this
+            // best-effort receipt afterwards so it can never delay or alter the upload.
+            void writeMobileModuleActivityReceipt('Feed', id);
             return { id, pond: normalized.pond, synced: true };
         }
 
@@ -4519,8 +5102,12 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                 notes 
             };
 
+            const isNewSample = editingSampleId === null;
             saveSamplingToDb(sampleObj).then(saved => {
-                if (saved) closeSamplingModal();
+                if (saved) {
+                    closeSamplingModal();
+                    if (isNewSample) void writeMobileModuleActivityReceipt('Sampling', sampleObj.id);
+                }
             });
         }
 
@@ -4565,13 +5152,12 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             if (treatmentSaveInProgress) return;
 
             const date = document.getElementById('treatmentDate').value;
-            const pond = document.getElementById('treatmentPond').value;
             const purpose = document.getElementById('treatmentPurpose').value;
             const notes = document.getElementById('treatmentNotes').value.trim();
             const c = getActiveCycle();
-            const activePonds = getActivePonds();
-            if (!activePonds.some(p => String(p.id) === String(pond))) {
-                alert(`Please select a pond from ${c.year} • ${c.crop}.`);
+            const selectedPonds = getSelectedTreatmentPonds();
+            if (!selectedPonds.length) {
+                alert('Select at least one open pond.');
                 return;
             }
 
@@ -4579,11 +5165,10 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             for (const [index, row] of getTreatmentItemRows().entries()) {
                 const category = row.querySelector('.treatment-row-category')?.value || 'Probiotics';
                 const product = row.querySelector('.treatment-row-product').value.trim();
-                const rawQty = row.querySelector('.treatment-row-qty').value.trim();
-                if (!product && !rawQty) continue;
-                const qty = Number(rawQty);
-                if (!product || !Number.isFinite(qty) || qty <= 0) {
-                    alert(`Treatment row ${index + 1}: select a product and enter a quantity greater than zero.`);
+                const qtyInputs = [...row.querySelectorAll('.treatment-pond-qty')];
+                if (!product && !qtyInputs.some(input => input.value.trim())) continue;
+                if (!product) {
+                    alert(`Treatment ${index + 1}: select a product.`);
                     return;
                 }
                 const resolution = resolveMobileMasterProduct(row.dataset.productId, product);
@@ -4600,27 +5185,39 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                     alert(`Treatment row ${index + 1}: Product Master unit for ${masterProduct.name} must be Kg or Ltr.`);
                     return;
                 }
-                resolvedRows.push({ category, masterProduct, qty, unit: masterProduct.stockUnit });
+                const pondQtys = new Map();
+                for (const pond of selectedPonds) {
+                    const input = qtyInputs.find(item => String(item.dataset.pondId) === String(pond.id));
+                    const qty = Number(input?.value || '');
+                    if (!Number.isFinite(qty) || qty <= 0) {
+                        alert(`Treatment ${index + 1}: enter a quantity greater than zero for ${pond.name || pond.id}.`);
+                        return;
+                    }
+                    pondQtys.set(String(pond.id), qty);
+                }
+                resolvedRows.push({ category, masterProduct, pondQtys, unit: masterProduct.stockUnit });
             }
             if (!resolvedRows.length) {
                 alert('Add at least one treatment product and quantity.');
                 return;
             }
-            if (editingTreatmentId !== null && resolvedRows.length !== 1) {
+            if (editingTreatmentId !== null && (resolvedRows.length !== 1 || selectedPonds.length !== 1)) {
                 alert('Edit Treatment updates one existing record only.');
                 return;
             }
 
             const baseId = Date.now();
-            const records = resolvedRows.map((row, index) => {
+            const records = [];
+            resolvedRows.forEach(row => selectedPonds.forEach(pond => {
                 const record = {
-                    id: editingTreatmentId !== null ? editingTreatmentId : baseId + index,
-                    date, pond, category: row.category, product: row.masterProduct.name, qty: row.qty, unit: row.unit,
+                    id: editingTreatmentId !== null ? editingTreatmentId : baseId + records.length,
+                    date, pond: pond.id, category: row.category, product: row.masterProduct.name,
+                    qty: row.pondQtys.get(String(pond.id)), unit: row.unit,
                     purpose, notes, year: Number(c.year), crop: c.crop, cycleId: c.id
                 };
                 if (row.masterProduct.productId) record.productId = row.masterProduct.productId;
-                return record;
-            });
+                records.push(record);
+            }));
 
             const submitBtn = document.getElementById('treatmentSubmitBtn');
             treatmentSaveInProgress = true;
@@ -4631,6 +5228,9 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                     : await saveNewTreatmentRecordsToDb(records);
                 if (saved === false) return;
                 closeTreatmentModal();
+                if (editingTreatmentId === null) {
+                    records.forEach(record => void writeMobileModuleActivityReceipt('Treatment', record.id));
+                }
             } catch (err) {
                 console.error('Firestore treatment write error:', err);
                 alert('Treatment could not be saved to cloud data. Please try again.' + (err?.code ? '\n\nCode: ' + err.code : '') + (err?.message ? '\n\nMessage: ' + err.message : ''));
@@ -5081,7 +5681,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                         selectedTreatmentProductId = item.productId || null;
                         listEl.classList.add('hidden');
                         setTreatmentRowUnitBadge(row, unit);
-                        row.querySelector('.treatment-row-qty').focus();
+                        row.querySelector('.treatment-pond-qty')?.focus();
                     };
                     listEl.appendChild(opt);
                 });
@@ -5095,12 +5695,15 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             const modalTitle = document.getElementById('treatmentModalTitleText');
             const submitBtn = document.getElementById('treatmentSubmitBtn');
             const addRowBtn = document.getElementById('treatmentAddRowBtn');
+            const pondPickerButton = document.getElementById('treatmentPondPickerButton');
 
             if (id !== null) {
                 editingTreatmentId = id;
                 modalTitle.innerText = "Edit Treatment Entry";
                 submitBtn.innerText = "Update Treatment";
                 addRowBtn?.classList.add('hidden');
+                pondPickerButton?.setAttribute('disabled', 'disabled');
+                pondPickerButton?.classList.add('opacity-60');
                 const treat = getActiveTreatmentEntries().find(t =>
                     String(t.id) === String(id) ||
                     String(t.firestoreId || '') === String(id) ||
@@ -5109,8 +5712,10 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                 if (treat) {
                     document.getElementById('treatmentItemsRows').innerHTML = '';
                     document.getElementById('treatmentDate').value = treat.date;
-                    document.getElementById('treatmentPond').value = treat.pond;
-                    const row = addTreatmentRow({ category: treat.category || 'Probiotics', product: treat.product, productId: treat.productId || '', qty: treat.qty, unit: treat.unit || determineUnit(treat.product) }, { removable: false });
+                    treatmentSelectedPondIds = [String(treat.pond)];
+                    treatmentPondSelectionDraft = [...treatmentSelectedPondIds];
+                    updateTreatmentPondPickerLabel();
+                    const row = addTreatmentRow({ category: treat.category || 'Probiotics', product: treat.product, productId: treat.productId || '', qtyByPond: { [String(treat.pond)]: treat.qty }, unit: treat.unit || determineUnit(treat.product) }, { removable: false });
                     selectedTreatmentProductId = treat.productId || null;
                     setTreatmentRowUnitBadge(row, treat.unit || determineUnit(treat.product));
                     document.getElementById('treatmentPurpose').value = treat.purpose;
@@ -5119,19 +5724,26 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             } else {
                 editingTreatmentId = null;
                 modalTitle.innerText = "Add Pond Treatment";
-                submitBtn.innerText = "Save All";
+                submitBtn.innerText = "Save Treatment";
                 addRowBtn?.classList.remove('hidden');
+                pondPickerButton?.removeAttribute('disabled');
+                pondPickerButton?.classList.remove('opacity-60');
                 document.getElementById('treatmentForm').reset();
                 document.getElementById('treatmentItemsRows').innerHTML = '';
                 selectedTreatmentProductId = null;
                 document.getElementById('treatmentDate').value = getSystemLatestDate();
+                const eligible = getEligibleTreatmentPonds();
+                const preferred = eligible.find(pond => String(pond.id) === String(currentPond)) || eligible[0];
+                treatmentSelectedPondIds = preferred ? [String(preferred.id)] : [];
+                treatmentPondSelectionDraft = [...treatmentSelectedPondIds];
+                updateTreatmentPondPickerLabel();
                 addTreatmentRow({ category: 'Probiotics' }, { removable: false });
-                if (ponds.length > 0) document.getElementById('treatmentPond').value = currentPond || ponds[0].id;
             }
         }
 
         function closeTreatmentModal() {
             document.getElementById('treatmentModal').classList.add('hidden');
+            cancelTreatmentPondPicker();
             document.querySelectorAll('.treatment-row-options').forEach(list => list.classList.add('hidden'));
             resetMobileContentScroll();
         }
@@ -6189,7 +6801,17 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
     return openRecordWithPond('samplingPondFilterSelect',openSamplingModal,'samplingPond','sampling');
   };
   window.blueCrestOpenTreatmentRecord=function(){
-    return openRecordWithPond('treatmentPondFilterSelect',openTreatmentModal,'treatmentPond','treatment');
+    const filter=document.getElementById('treatmentPondFilterSelect')?.value||'ALL';
+    const c=activeC();
+    const p=(filter==='ALL' ? getOpenPondForAllPonds() : getActivePonds().find(x=>String(x.id)===String(filter)&&!isPondClosed(x.id,c.id)));
+    if(!p){alert(`No open pond is available for treatment in ${c.year} • ${c.crop}.`);return;}
+    if(!blueCrestEntryGuard(p.id)) return;
+    const result=openTreatmentModal();
+    treatmentSelectedPondIds=[String(p.id)];
+    treatmentPondSelectionDraft=[...treatmentSelectedPondIds];
+    updateTreatmentPondPickerLabel();
+    refreshTreatmentPondQuantityRows();
+    return result;
   };
   window.blueCrestOpenHarvestRecord=function(){
     return openRecordWithPond('harvestPondFilterSelect',openHarvestModal,'harvestPond','harvest');
@@ -6217,7 +6839,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
 
   function installGuards(){
     guardForm('sampleForm',()=>({pondId:document.getElementById('samplePond')?.value,cycleId:activeC().id}));
-    guardForm('treatmentForm',()=>({pondId:document.getElementById('treatmentPondSelect')?.value,cycleId:activeC().id}));
+    guardForm('treatmentForm',()=>({pondId:treatmentSelectedPondIds[0],cycleId:activeC().id}));
     guardForm('harvestModalForm',()=>({pondId:document.getElementById('harvestPondSelect')?.value,cycleId:activeC().id}));
     guardForm('stockTransferForm',()=>({pondId:document.getElementById('stockTransferFrom')?.value||document.getElementById('stockTransferTo')?.value,cycleId:activeC().id}));
     guardForm('pondForm',()=>({cycleId:activeC().id}));
