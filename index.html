@@ -151,7 +151,7 @@
 .app-fixed-header button[id^="tab"].text-blue-600{background:#eff6ff!important;color:#075eae!important;border-radius:12px!important;}
 .app-scroll-content{padding-bottom:5.55rem!important;}
 .app-scroll-content.mobile-home-scroll{overflow:hidden!important;padding:0 0 5.55rem!important;max-width:32rem!important;}
-.app-scroll-content.mobile-sampling-scroll{display:flex!important;flex-direction:column;overflow:hidden!important;padding:.75rem .75rem 5.55rem!important;}
+.app-scroll-content.mobile-sampling-scroll{display:flex!important;flex-direction:column;overflow:hidden!important;padding:.75rem .75rem var(--sampling-bottom-nav-inset,5.55rem)!important;}
 .app-scroll-content.mobile-sampling-scroll #samplingView:not(.hidden){flex:1 1 0;height:auto;min-height:0;}
 .mobile-home-scroll #homeView{height:100%;min-height:0;padding:.5rem .9rem 0;display:flex;flex-direction:column;gap:.6rem;}
 #allPondsDashboardContainer{height:auto;min-height:0;flex:1;display:flex;flex-direction:column;gap:.42rem!important;}
@@ -3583,6 +3583,19 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             trigger?.setAttribute('aria-expanded', String(isOpen));
         }
 
+        function syncSamplingBottomNavigationInset() {
+            const scrollContent = document.querySelector('.app-scroll-content');
+            const bottomNavigation = document.getElementById('bottomActionBar');
+            if (!scrollContent || !bottomNavigation) return;
+            scrollContent.style.setProperty('--sampling-bottom-nav-inset', `${Math.ceil(bottomNavigation.getBoundingClientRect().height)}px`);
+        }
+
+        window.addEventListener('resize', () => {
+            if (document.querySelector('.app-scroll-content')?.classList.contains('mobile-sampling-scroll')) {
+                requestAnimationFrame(syncSamplingBottomNavigationInset);
+            }
+        });
+
         function switchTab(tab) {
             const scrollContent = document.querySelector('.app-scroll-content');
             if (tab !== 'sampling') closeSamplingHistoryFullscreen();
@@ -3591,6 +3604,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                 scrollContent.classList.toggle('mobile-home-scroll', tab === 'home');
                 scrollContent.classList.toggle('mobile-sampling-scroll', tab === 'sampling');
             }
+            if (tab === 'sampling') requestAnimationFrame(syncSamplingBottomNavigationInset);
             placeMobileCycleControls();
             // Every tab opens from the top of the shared scroll area.
             if (scrollContent) scrollContent.scrollTop = 0;
