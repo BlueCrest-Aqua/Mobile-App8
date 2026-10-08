@@ -119,7 +119,8 @@
         #samplingHistoryAction { display:flex!important; min-height:46px; align-items:center; justify-content:space-between; padding:.5rem .75rem!important; border:1px solid #e2e8f0!important; border-radius:.75rem!important; background:#fff!important; color:#334155!important; box-shadow:0 1px 2px rgba(15,23,42,.05)!important; font-size:.875rem!important; line-height:1.1!important; }
         #samplingHistoryAction .sampling-history-icon { color:#2563eb; font-size:1rem; }
         #samplingHistoryAction .sampling-history-arrow { color:#94a3b8; font-size:1.35rem; font-weight:400; }
-        #samplingHistoryTools { display:grid; flex:0 0 auto; grid-template-columns:minmax(0,1.12fr) minmax(0,.88fr); gap:.4rem; align-items:stretch; padding:.45rem; border-top:1px solid #e2e8f0; background:#fff; }
+        #samplingHistoryTools { position:fixed; left:50%; bottom:var(--sampling-bottom-nav-inset,5.55rem); z-index:44; display:none; width:min(calc(100% - 1.5rem),28rem); box-sizing:border-box; grid-template-columns:minmax(0,1.12fr) minmax(0,.88fr); gap:.4rem; align-items:stretch; transform:translateX(-50%); }
+        #samplingHistoryTools.sampling-tools-visible { display:grid; }
         #samplingTipsBar { display:flex; min-height:46px; align-items:center; gap:.35rem; padding:.4rem .5rem; border:1px solid #dbeafe; border-radius:.75rem; background:#eff6ff; color:#334155; font-size:.66rem; line-height:1.2; }
         #samplingTipsBar strong { color:#1d4ed8; }
         .sampling-attention-sheet { position:fixed; inset:0; z-index:80; display:flex; align-items:flex-end; background:rgba(15,23,42,.42); }
@@ -151,7 +152,7 @@
 .app-fixed-header button[id^="tab"].text-blue-600{background:#eff6ff!important;color:#075eae!important;border-radius:12px!important;}
 .app-scroll-content{padding-bottom:5.55rem!important;}
 .app-scroll-content.mobile-home-scroll{overflow:hidden!important;padding:0 0 5.55rem!important;max-width:32rem!important;}
-.app-scroll-content.mobile-sampling-scroll{display:flex!important;flex-direction:column;overflow:hidden!important;padding:.75rem .75rem var(--sampling-bottom-nav-inset,5.55rem)!important;}
+.app-scroll-content.mobile-sampling-scroll{display:flex!important;flex-direction:column;overflow:hidden!important;padding:.75rem .75rem calc(var(--sampling-bottom-nav-inset,5.55rem) + var(--sampling-tools-height,0px) + .5rem)!important;}
 .app-scroll-content.mobile-sampling-scroll #samplingView:not(.hidden){flex:1 1 0;height:auto;min-height:0;}
 .mobile-home-scroll #homeView{height:100%;min-height:0;padding:.5rem .9rem 0;display:flex;flex-direction:column;gap:.6rem;}
 #allPondsDashboardContainer{height:auto;min-height:0;flex:1;display:flex;flex-direction:column;gap:.42rem!important;}
@@ -770,12 +771,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                         <h4 class="text-xs font-bold uppercase tracking-wide text-slate-500">Latest Pond Sampling</h4>
                     </div>
                     <div id="latestPondSamplingList" class="overflow-hidden"></div>
-                    <div id="samplingHistoryTools">
-                        <button id="samplingHistoryAction" type="button" onclick="openSamplingHistoryFullscreen()" class="text-left font-bold active:bg-blue-50">
-                            <span><span class="sampling-history-icon" aria-hidden="true">▥</span> Sampling History</span><span class="sampling-history-arrow" aria-hidden="true">›</span>
-                        </button>
-                        <div id="samplingTipsBar"><span aria-hidden="true">💡</span><span><strong>Tips</strong> Tap ⓘ to see why a pond needs attention.</span></div>
-                    </div>
+
                 </div>
             </div>
 
@@ -888,6 +884,13 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                 </div>
             </div>
 
+        </div>
+
+        <div id="samplingHistoryTools">
+            <button id="samplingHistoryAction" type="button" onclick="openSamplingHistoryFullscreen()" class="text-left font-bold active:bg-blue-50">
+                <span><span class="sampling-history-icon" aria-hidden="true">▥</span> Sampling History</span><span class="sampling-history-arrow" aria-hidden="true">›</span>
+            </button>
+            <div id="samplingTipsBar"><span aria-hidden="true">💡</span><span><strong>Tips</strong> Tap ⓘ to see why a pond needs attention.</span></div>
         </div>
 
         <!-- Record Harvest Event Modal (Matches User Screenshot) -->
@@ -3583,16 +3586,22 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             trigger?.setAttribute('aria-expanded', String(isOpen));
         }
 
-        function syncSamplingBottomNavigationInset() {
+        function setSamplingHistoryToolsVisible(visible) {
+            document.getElementById('samplingHistoryTools')?.classList.toggle('sampling-tools-visible', Boolean(visible));
+        }
+
+        function syncSamplingViewportInsets() {
             const scrollContent = document.querySelector('.app-scroll-content');
             const bottomNavigation = document.getElementById('bottomActionBar');
-            if (!scrollContent || !bottomNavigation) return;
+            const samplingTools = document.getElementById('samplingHistoryTools');
+            if (!scrollContent || !bottomNavigation || !samplingTools) return;
             scrollContent.style.setProperty('--sampling-bottom-nav-inset', `${Math.ceil(bottomNavigation.getBoundingClientRect().height)}px`);
+            scrollContent.style.setProperty('--sampling-tools-height', `${Math.ceil(samplingTools.getBoundingClientRect().height)}px`);
         }
 
         window.addEventListener('resize', () => {
             if (document.querySelector('.app-scroll-content')?.classList.contains('mobile-sampling-scroll')) {
-                requestAnimationFrame(syncSamplingBottomNavigationInset);
+                requestAnimationFrame(syncSamplingViewportInsets);
             }
         });
 
@@ -3604,7 +3613,8 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                 scrollContent.classList.toggle('mobile-home-scroll', tab === 'home');
                 scrollContent.classList.toggle('mobile-sampling-scroll', tab === 'sampling');
             }
-            if (tab === 'sampling') requestAnimationFrame(syncSamplingBottomNavigationInset);
+            setSamplingHistoryToolsVisible(tab === 'sampling');
+            if (tab === 'sampling') requestAnimationFrame(syncSamplingViewportInsets);
             placeMobileCycleControls();
             // Every tab opens from the top of the shared scroll area.
             if (scrollContent) scrollContent.scrollTop = 0;
@@ -4340,6 +4350,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             samplingPondFilter = pondId;
             const panel = document.getElementById('samplingHistoryFullscreen');
             if (!panel) return;
+            setSamplingHistoryToolsVisible(false);
             // Keep this viewport overlay outside the overflow-controlled app surface.
             if (panel.parentElement !== document.body) document.body.appendChild(panel);
             panel.classList.remove('hidden');
@@ -4350,6 +4361,10 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             const panel = document.getElementById('samplingHistoryFullscreen');
             panel?.classList.add('hidden');
             panel?.setAttribute('aria-hidden', 'true');
+            if (currentMobileTab === 'sampling') {
+                setSamplingHistoryToolsVisible(true);
+                requestAnimationFrame(syncSamplingViewportInsets);
+            }
         }
 
         function renderSamplingList() {
