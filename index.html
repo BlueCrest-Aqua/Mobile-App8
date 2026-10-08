@@ -108,16 +108,17 @@
         .status-on-track .sampling-priority-status { color:#15803d; } .status-watch .sampling-priority-status { color:#a16207; } .status-attention .sampling-priority-status { color:#b91c1c; } .status-insufficient .sampling-priority-status { color:#64748b; }
         .sampling-fullscreen { position:fixed; inset:0; z-index:70; display:flex; flex-direction:column; background:#f8fafc; }
         .sampling-fullscreen.hidden { display:none; }
+        #samplingHistoryFullscreen > header { padding-top:max(.75rem, env(safe-area-inset-top))!important; }
         .sampling-fullscreen-body { flex:1 1 auto; min-height:0; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch; padding:12px 12px calc(20px + env(safe-area-inset-bottom)); }
-        #samplingView:not(.hidden) { height:100%; min-height:0; display:flex; flex-direction:column; gap:.5rem; }
+        #samplingView:not(.hidden) { height:100%; min-height:0; display:flex; flex-direction:column; gap:.5rem; overflow:hidden; }
         #samplingView:not(.hidden) > :not([hidden]) ~ :not([hidden]) { margin-top:0!important; }
-        #samplingLatestSection { flex:1 1 auto; min-height:0; display:flex; flex-direction:column; }
+        #samplingLatestSection { flex:1 1 0; min-height:0; display:flex; flex-direction:column; overflow:hidden; }
         #latestPondSamplingList { flex:1 1 auto; min-height:0; max-height:none; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch; overscroll-behavior-y:contain; background:#fff; }
         #latestPondSamplingList > .sampling-priority-header { position:sticky; top:0; z-index:1; }
         #samplingHistoryAction { display:flex!important; min-height:46px; align-items:center; justify-content:space-between; padding:.5rem .75rem!important; border:1px solid #e2e8f0!important; border-radius:.75rem!important; background:#fff!important; color:#334155!important; box-shadow:0 1px 2px rgba(15,23,42,.05)!important; font-size:.875rem!important; line-height:1.1!important; }
         #samplingHistoryAction .sampling-history-icon { color:#2563eb; font-size:1rem; }
         #samplingHistoryAction .sampling-history-arrow { color:#94a3b8; font-size:1.35rem; font-weight:400; }
-        #samplingHistoryTools { display:grid; grid-template-columns:minmax(0,1.12fr) minmax(0,.88fr); gap:.4rem; align-items:stretch; }
+        #samplingHistoryTools { display:grid; flex:0 0 auto; grid-template-columns:minmax(0,1.12fr) minmax(0,.88fr); gap:.4rem; align-items:stretch; }
         #samplingTipsBar { display:flex; min-height:46px; align-items:center; gap:.35rem; padding:.4rem .5rem; border:1px solid #dbeafe; border-radius:.75rem; background:#eff6ff; color:#334155; font-size:.66rem; line-height:1.2; }
         #samplingTipsBar strong { color:#1d4ed8; }
         .sampling-attention-sheet { position:fixed; inset:0; z-index:80; display:flex; align-items:flex-end; background:rgba(15,23,42,.42); }
@@ -3082,26 +3083,40 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
 
         // FIFO is calculated only by Laptop. Mobile accepts this reporting cache
         // only when it completely and consistently describes the active records.
-        function getValidMobileTreatmentReporting(activeEntries = getActiveTreatmentEntries()) {
+        // Diagnostic classification only; never relax FIFO report acceptance.
+        function getMobileTreatmentReportingStatus(activeEntries = getActiveTreatmentEntries()) {
             const reporting = mobileCropFinancialSummary?.treatmentReporting;
-            if (!reporting || reporting.calculationVersion !== 1 || reporting.source !== 'laptop-treatment-fifo' ||
+            if (!reporting) return { report: null, message: 'FIFO report not received from Laptop.' };
+            if (reporting.calculationVersion !== 1 || reporting.source !== 'laptop-treatment-fifo' ||
                 typeof reporting.treatmentCount !== 'number' || !Number.isFinite(reporting.treatmentCount) || reporting.treatmentCount < 0 ||
                 typeof reporting.totalFifoCost !== 'number' || !Number.isFinite(reporting.totalFifoCost) || reporting.totalFifoCost < 0 ||
-                !reporting.rowFifoCosts || typeof reporting.rowFifoCosts !== 'object' || Array.isArray(reporting.rowFifoCosts) ||
-                Number(reporting.treatmentCount) !== activeEntries.length) return null;
-
+                !reporting.rowFifoCosts || typeof reporting.rowFifoCosts !== 'object' || Array.isArray(reporting.rowFifoCosts)) {
+                return { report: null, message: 'FIFO report needs verification on Laptop.' };
+            }
+            if (reporting.treatmentCount !== activeEntries.length) {
+                return { report: null, message: `Treatment data mismatch: Mobile has ${activeEntries.length} records; FIFO report has ${reporting.treatmentCount}. Check Laptop treatment records.` };
+            }
             let rowTotal = 0;
             for (const item of activeEntries) {
                 const id = String(item?.id || item?.firestoreId || item?.legacyRecordId || '');
-                if (!id || !Object.prototype.hasOwnProperty.call(reporting.rowFifoCosts, id)) return null;
+                if (!id || !Object.prototype.hasOwnProperty.call(reporting.rowFifoCosts, id)) {
+                    return { report: null, message: 'Treatment cost needs verification: a record is missing from the Laptop FIFO report.' };
+                }
                 const cost = reporting.rowFifoCosts[id];
-                if (typeof cost !== 'number' || !Number.isFinite(cost) || cost < 0) return null;
-                rowTotal += cost;
+                if (typeof cost !== 'number' || !Number.isFinite(cost) || cost < 0) {
+                    return { report: null, message: 'Treatment cost needs verification: a record has an invalid FIFO cost.' };
+                }
+                rowTotal += cost; // Zero is a valid numeric cost.
             }
             const total = reporting.totalFifoCost;
-            return Math.abs(rowTotal - total) <= 1e-9 * Math.max(1, Math.abs(rowTotal), Math.abs(total))
-                ? reporting
-                : null;
+            if (Math.abs(rowTotal - total) > 1e-9 * Math.max(1, Math.abs(rowTotal), Math.abs(total))) {
+                return { report: null, message: 'FIFO reconciliation mismatch: treatment costs do not match the report total.' };
+            }
+            return { report: reporting, message: '' };
+        }
+
+        function getValidMobileTreatmentReporting(activeEntries = getActiveTreatmentEntries()) {
+            return getMobileTreatmentReportingStatus(activeEntries).report;
         }
 
         async function saveTreatmentToDb(treatObj) {
@@ -3568,6 +3583,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
 
         function switchTab(tab) {
             const scrollContent = document.querySelector('.app-scroll-content');
+            if (tab !== 'sampling') closeSamplingHistoryFullscreen();
             currentMobileTab = tab;
             if (scrollContent) scrollContent.classList.toggle('mobile-home-scroll', tab === 'home');
             placeMobileCycleControls();
@@ -4300,8 +4316,22 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             target.querySelectorAll('[data-sampling-detail-id]').forEach(row => row.addEventListener('click', () => openSamplingDetail(row.dataset.samplingDetailId)));
         }
 
-        function openSamplingHistoryFullscreen(pondId = 'ALL') { samplingPondFilter = pondId; const panel = document.getElementById('samplingHistoryFullscreen'); panel?.classList.remove('hidden'); panel?.setAttribute('aria-hidden', 'false'); renderSamplingList(); }
-        function closeSamplingHistoryFullscreen() { const panel = document.getElementById('samplingHistoryFullscreen'); panel?.classList.add('hidden'); panel?.setAttribute('aria-hidden', 'true'); }
+        function openSamplingHistoryFullscreen(pondId = 'ALL') {
+            if (currentMobileTab !== 'sampling') switchTab('sampling');
+            samplingPondFilter = pondId;
+            const panel = document.getElementById('samplingHistoryFullscreen');
+            if (!panel) return;
+            // Keep this viewport overlay outside the overflow-controlled app surface.
+            if (panel.parentElement !== document.body) document.body.appendChild(panel);
+            panel.classList.remove('hidden');
+            panel.setAttribute('aria-hidden', 'false');
+            renderSamplingList();
+        }
+        function closeSamplingHistoryFullscreen() {
+            const panel = document.getElementById('samplingHistoryFullscreen');
+            panel?.classList.add('hidden');
+            panel?.setAttribute('aria-hidden', 'true');
+        }
 
         function renderSamplingList() {
             const container = document.getElementById('samplingCardsList');
@@ -4325,7 +4355,8 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                 ? activeEntries
                 : activeEntries.filter(item => item.pond === treatmentPondFilter);
             if (totalCountEl) totalCountEl.innerText = `${filteredEntries.length} Records Logged`;
-            const treatmentReporting = getValidMobileTreatmentReporting(activeEntries);
+            const reportingStatus = getMobileTreatmentReportingStatus(activeEntries);
+            const treatmentReporting = reportingStatus.report;
             const costOf = item => treatmentReporting
                 ? Number(treatmentReporting.rowFifoCosts[String(item.id)])
                 : null;
@@ -4335,7 +4366,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             const totalEl = document.getElementById('treatmentMobileTotalCost');
             if (totalEl) totalEl.textContent = treatmentReporting
                 ? `₹${Math.round(filteredTotalCost).toLocaleString('en-IN')}`
-                : 'FIFO unavailable';
+                : reportingStatus.message;
             if (!filteredEntries.length) { container.innerHTML = '<div class="p-6 text-center text-slate-400 text-sm">No treatment records found.</div>'; return; }
             const badge = pond => { const n = Number(String(pond).match(/\d+/)?.[0] || 0); const colors=['bg-sky-100 text-sky-700','bg-amber-100 text-amber-700','bg-emerald-100 text-emerald-700','bg-cyan-100 text-cyan-700','bg-violet-100 text-violet-700']; return colors[(Math.max(1,n)-1)%colors.length]; };
             const date = value => { const d = new Date(`${value}T00:00:00`); return Number.isNaN(d) ? '—' : d.toLocaleDateString('en-GB',{day:'numeric',month:'short'}); };
