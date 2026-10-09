@@ -10,6 +10,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-functions-compat.js"></script>
 
     <style>
         /* Keep the pond selector/header permanently visible on mobile.
@@ -51,6 +52,13 @@
         }
         #mobileTechnicianPondFormBackdrop[hidden] {
             display: none !important;
+        }
+        #mobileTechnicianPondFormBackdrop {
+            z-index: 10003;
+            padding-bottom: calc(.75rem + env(safe-area-inset-bottom));
+        }
+        #mobileTechnicianPondForm {
+            max-height: calc(100dvh - 1.5rem - env(safe-area-inset-bottom));
         }
 
         #mobileTechFarmMobile[aria-invalid="true"],
@@ -720,9 +728,8 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
   </section>
   <section id="mobileTechnicianCropsScreen" hidden class="mx-auto w-full max-w-md pb-8" aria-label="Technician crops">
     <header class="mobile-technician-header mobile-technician-subheader"><button id="mobileTechnicianCropBack" type="button" class="mobile-header-action" aria-label="Back to farm details">‹</button><div class="mobile-technician-brand"><p class="mobile-technician-branding">BlueCrest</p><h2 class="mobile-technician-title">Crops</h2><p id="mobileTechnicianCropFarmName" class="mobile-technician-name"></p></div><button id="mobileTechnicianCropsSignOut" type="button" class="mobile-header-action" aria-label="Sign out" title="Sign out">🔒</button></header>
-    <div class="mobile-technician-crop-note">Crop records are not saved in Stage 2. Stage 3 will enable secure creation after rules deployment.</div>
     <div id="mobileTechnicianCropList" class="mt-3 space-y-2"><div class="mobile-technician-empty-state">No saved Technician crops yet.</div></div>
-    <section class="mobile-technician-crop-builder" aria-label="Start new crop"><div class="flex items-center justify-between gap-3"><div><h3>Start New Crop</h3><p>Select the crop and review pond activity. Nothing is saved in this stage.</p></div><span class="mobile-technician-stage-pill">Stage 2 preview</span></div><div class="mobile-technician-crop-fields"><label>Year<select id="mobileTechnicianCropYear"></select></label><label>Crop<select id="mobileTechnicianCropNumber"><option value="1">Crop 1</option><option value="2">Crop 2</option></select></label><label>Start date<input id="mobileTechnicianCropStartDate" type="date"></label></div><div class="mobile-technician-pond-summary"><strong id="mobileTechnicianCropPondSummary">0 Active · 0 Inactive</strong><span>Crop-specific pond selection</span></div><div id="mobileTechnicianCropPondList" class="mobile-technician-crop-pond-list"><div class="mobile-technician-empty-state">No permanent pond profiles are available for selection.</div></div><button id="mobileTechnicianCropReview" type="button" class="mobile-technician-primary-action">Review Selection</button><div id="mobileTechnicianCropReviewPanel" hidden class="mobile-technician-crop-review"><strong id="mobileTechnicianCropReviewTitle">Crop review</strong><p id="mobileTechnicianCropReviewCopy"></p><button type="button" disabled>Save unavailable until Stage 3</button></div></section>
+    <section class="mobile-technician-crop-builder" aria-label="Start new crop"><div><h3>Start New Crop</h3><p>Select the crop and review pond activity.</p></div><div class="mobile-technician-crop-fields"><label>Year<select id="mobileTechnicianCropYear"></select></label><label>Crop<select id="mobileTechnicianCropNumber"><option value="1">Crop 1</option><option value="2">Crop 2</option></select></label><label>Start date<input id="mobileTechnicianCropStartDate" type="date"></label></div><div class="mobile-technician-pond-summary"><strong id="mobileTechnicianCropPondSummary">0 Active · 0 Inactive</strong><span>Crop-specific pond selection</span></div><div id="mobileTechnicianCropPondList" class="mobile-technician-crop-pond-list"><div class="mobile-technician-empty-state">No permanent pond profiles are available for selection.</div></div><button id="mobileTechnicianCropReview" type="button" class="mobile-technician-primary-action">Review Selection</button><div id="mobileTechnicianCropReviewPanel" hidden class="mobile-technician-crop-review"><strong id="mobileTechnicianCropReviewTitle">Crop review</strong><p id="mobileTechnicianCropReviewCopy"></p><button type="button" disabled aria-disabled="true">Save Crop</button></div></section>
   </section>
   <div id="mobileTechnicianFarmFormBackdrop" hidden class="fixed inset-0 z-10 flex items-end bg-slate-900/45 p-3 sm:items-center sm:justify-center" role="presentation">
     <form id="mobileTechnicianFarmForm" novalidate class="max-h-[calc(100vh-1.5rem)] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-5 shadow-2xl" aria-label="Add technician farm">
@@ -1187,7 +1194,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
         </div>
 
         <!-- Add/Edit Sampling Modal -->
-        <div id="samplingModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-50">
+        <div id="samplingModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-[80]">
             <div class="bg-white w-full h-full max-w-none max-h-none overflow-y-auto p-5 shadow-2xl">
                 <div class="flex justify-between items-center border-b pb-3 mb-4">
                     <div>
@@ -1215,7 +1222,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                             <input type="number" step="0.1" id="sampleWeight" placeholder="e.g. 1000" required oninput="calcABW()" class="w-full border border-slate-200 p-2.5 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-xs">
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-slate-600 mb-1">Shrimp Count (Pcs) *</label>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Shrimp Sampled (pcs) *</label>
                             <input type="number" id="sampleCount" placeholder="e.g. 53" required oninput="calcABW()" class="w-full border border-slate-200 p-2.5 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-xs">
                         </div>
                     </div>
@@ -1232,11 +1239,20 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
                         </div>
                     </div>
 
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Average Body Weight (ABW)</label>
-                        <div class="relative">
-                            <input type="text" id="sampleABW" readonly placeholder="Auto calculated (Weight ÷ Count)" class="w-full border border-slate-200 p-2.5 rounded-lg bg-emerald-50/70 text-emerald-700 font-extrabold outline-none text-sm">
-                            <span class="absolute right-3 top-2.5 text-xs text-emerald-600 font-semibold">gm/shrimp</span>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Average Body Weight (ABW)</label>
+                            <div class="relative">
+                                <input type="text" id="sampleABW" readonly placeholder="Auto calculated (Weight ÷ Count)" class="w-full border border-slate-200 p-2.5 rounded-lg bg-emerald-50/70 text-emerald-700 font-extrabold outline-none text-sm">
+                                <span class="absolute right-3 top-2.5 text-xs text-emerald-600 font-semibold">gm/shrimp</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Count/kg</label>
+                            <div class="relative">
+                                <input type="text" id="sampleCountPerKg" readonly placeholder="Auto calculated" class="w-full border border-slate-200 p-2.5 rounded-lg bg-emerald-50/70 text-emerald-700 font-extrabold outline-none text-sm">
+                                <span class="absolute right-3 top-2.5 text-xs text-emerald-600 font-semibold">pcs/kg</span>
+                            </div>
                         </div>
                     </div>
 
@@ -1260,7 +1276,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
         </div>
 
         <!-- Sampling Detail Modal -->
-        <div id="samplingDetailModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-50">
+        <div id="samplingDetailModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-[80]">
             <div class="bg-white w-full h-full max-w-none max-h-none overflow-y-auto p-5 shadow-2xl">
                 <div class="flex justify-between items-center border-b pb-3 mb-4">
                     <h2 class="text-base font-bold text-slate-800">Sampling Detail</h2>
@@ -2114,6 +2130,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
         let mobileTechnicianSelectedFarm=null;
         let mobileTechnicianRegisteredPonds=[];
         let mobileTechnicianCropDraft=null;
+        let mobileTechnicianCropReviewVersion=0;
         let mobileTechnicianActiveTab='home';
         function renderMobileTechnicianSavedCrops(state='',message=''){const list=document.getElementById('mobileTechnicianCropList');if(!list)return;list.replaceChildren();if(state==='loading'||state==='error'){const status=document.createElement('div');status.className=`mobile-technician-empty-state${state==='error'?' text-red-600':''}`;status.textContent=message||(state==='loading'?'Loading saved crops…':'Could not load saved crops.');list.append(status);return;}if(!mobileTechnicianSavedCrops.length){const empty=document.createElement('div');empty.className='mobile-technician-empty-state';empty.textContent='No saved Technician crops yet.';list.append(empty);return;}mobileTechnicianSavedCrops.forEach(({data})=>{const card=document.createElement('article');card.className='rounded-2xl border border-slate-200 bg-white p-3 shadow-sm';const heading=document.createElement('div');heading.className='flex items-center justify-between gap-3';const title=document.createElement('strong');title.className='text-sm font-black text-slate-800';title.textContent=`${data.year||'—'} · Crop ${data.cropNumber||'—'}`;const status=document.createElement('span');status.className=`rounded-full px-2 py-1 text-[10px] font-black ${data.status==='completed'?'bg-slate-100 text-slate-600':'bg-emerald-50 text-emerald-700'}`;status.textContent=data.status==='completed'?'Completed':'Active';heading.append(title,status);const start=document.createElement('p');start.className='mt-1 text-xs font-semibold text-slate-500';const date=data.startDate&&typeof data.startDate.toDate==='function'?data.startDate.toDate():(data.startDate instanceof Date?data.startDate:null);start.textContent=`Start date: ${date&&!Number.isNaN(date.getTime())?date.toLocaleDateString(undefined,{day:'2-digit',month:'short',year:'numeric'}):'—'}`;card.append(heading,start);list.append(card);});}
         function stopMobileTechnicianCropListener(){mobileTechnicianCropListenerVersion++;if(mobileTechnicianCropsUnsubscribe){mobileTechnicianCropsUnsubscribe();mobileTechnicianCropsUnsubscribe=null;}mobileTechnicianSavedCrops=[];renderMobileTechnicianSavedCrops();}
@@ -2129,24 +2146,32 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
         function renderMobileTechnicianPonds(){const list=document.getElementById('mobileTechnicianPondsList');if(!list)return;list.replaceChildren();if(!mobileTechnicianRegisteredPonds.length){list.innerHTML='<div class="mobile-technician-empty-state">No permanent pond profiles registered. Add ponds before crop setup.</div>';return;}mobileTechnicianRegisteredPonds.forEach(pond=>{const row=document.createElement('button');row.type='button';row.className='mobile-technician-pond-toggle-row w-full text-left';row.innerHTML=`<strong>${mobileRegistrationEscapeHtml(pond.data.displayName||pond.id)}</strong><span class="text-xs font-bold text-slate-500">${mobileTechnicianPondAreaText(pond.data.pondArea)}${pond.data.pondArea?' · ':''}Edit ›</span>`;row.addEventListener('click',()=>openMobileTechnicianPondForm([pond]));list.append(row);});}
         function startMobileTechnicianPondListener(uid,farmId){stopMobileTechnicianPondListener();if(!uid||!farmId||!db)return;setMobileTechnicianPondsStatus('Loading ponds…');mobileTechnicianPondsUnsubscribe=db.collection('technicians').doc(uid).collection('managedFarms').doc(farmId).collection('ponds').onSnapshot(snapshot=>{mobileTechnicianRegisteredPonds=snapshot.docs.map(doc=>{const data=doc.data()||{};return{id:doc.id,data};}).filter(item=>item.id&&String(item.data.pondId||item.id)===item.id).sort((a,b)=>String(a.data.displayName||a.id).localeCompare(String(b.data.displayName||b.id)));renderMobileTechnicianFarmDetails();renderMobileTechnicianPonds();renderMobileTechnicianCropPonds();setMobileTechnicianPondsStatus('');},error=>{mobileTechnicianRegisteredPonds=[];renderMobileTechnicianFarmDetails();renderMobileTechnicianPonds();renderMobileTechnicianCropPonds();setMobileTechnicianPondsStatus(error?.code==='permission-denied'?'You do not have permission to read permanent ponds.':'Could not load permanent ponds. Check your connection.',true);});}
         function openMobileTechnicianFarmDetails(id,data){stopMobileTechnicianCropListener();mobileTechnicianSelectedFarm={id,data:{...(data||{})}};mobileTechnicianCropDraft=null;renderMobileTechnicianFarmDetails();showMobileTechnicianWorkspace('detail');startMobileTechnicianPondListener(firebase.auth().currentUser?.uid,id);}
-        function resetMobileTechnicianCropDraft(){const now=new Date(),today=now.toISOString().slice(0,10);mobileTechnicianCropDraft={year:now.getFullYear(),cropNumber:1,startDate:today,pondStates:new Map(mobileTechnicianRegisteredPonds.map(pond=>[pond.id,true]))};const year=document.getElementById('mobileTechnicianCropYear'),crop=document.getElementById('mobileTechnicianCropNumber'),date=document.getElementById('mobileTechnicianCropStartDate');if(year){year.replaceChildren(...[now.getFullYear()-1,now.getFullYear(),now.getFullYear()+1,now.getFullYear()+2].map(value=>{const option=document.createElement('option');option.value=String(value);option.textContent=String(value);return option;}));year.value=String(mobileTechnicianCropDraft.year);}if(crop)crop.value='1';if(date)date.value=today;const review=document.getElementById('mobileTechnicianCropReviewPanel');if(review)review.hidden=true;}
+        function resetMobileTechnicianCropDraft(){const now=new Date(),today=now.toISOString().slice(0,10);mobileTechnicianCropDraft={year:now.getFullYear(),cropNumber:1,startDate:today,pondStates:new Map(mobileTechnicianRegisteredPonds.map(pond=>[pond.id,true]))};const year=document.getElementById('mobileTechnicianCropYear'),crop=document.getElementById('mobileTechnicianCropNumber'),date=document.getElementById('mobileTechnicianCropStartDate');if(year){year.replaceChildren(...[now.getFullYear()-1,now.getFullYear(),now.getFullYear()+1,now.getFullYear()+2].map(value=>{const option=document.createElement('option');option.value=String(value);option.textContent=String(value);return option;}));year.value=String(mobileTechnicianCropDraft.year);}if(crop)crop.value='1';if(date)date.value=today;invalidateMobileTechnicianCropReview();}
         function currentMobileTechnicianCropDraft(){if(!mobileTechnicianCropDraft)resetMobileTechnicianCropDraft();const year=Number(document.getElementById('mobileTechnicianCropYear')?.value),cropNumber=Number(document.getElementById('mobileTechnicianCropNumber')?.value),startDate=document.getElementById('mobileTechnicianCropStartDate')?.value||'';mobileTechnicianCropDraft.year=year;mobileTechnicianCropDraft.cropNumber=cropNumber;mobileTechnicianCropDraft.startDate=startDate;return mobileTechnicianCropDraft;}
-        function renderMobileTechnicianCropPonds(){const list=document.getElementById('mobileTechnicianCropPondList'),summary=document.getElementById('mobileTechnicianCropPondSummary');if(!list||!summary)return;const draft=currentMobileTechnicianCropDraft(),pondById=new Map(mobileTechnicianRegisteredPonds.map(pond=>[pond.id,pond]));const ids=[...pondById.keys()];ids.forEach(id=>{if(!draft.pondStates.has(id))draft.pondStates.set(id,true);});[...draft.pondStates.keys()].filter(id=>!ids.includes(id)).forEach(id=>draft.pondStates.delete(id));const active=ids.filter(id=>draft.pondStates.get(id)!==false).length;summary.textContent=`${active} Active · ${ids.length-active} Inactive`;list.replaceChildren();if(!ids.length){const empty=document.createElement('div');empty.className='mobile-technician-empty-state';empty.textContent='No permanent pond profiles are available for selection.';list.appendChild(empty);return;}ids.forEach(id=>{const active=draft.pondStates.get(id)!==false,pond=pondById.get(id);const row=document.createElement('div');row.className='mobile-technician-pond-toggle-row';const label=document.createElement('strong');label.textContent=pond?.data?.displayName||id;const control=document.createElement('button');control.type='button';control.className='mobile-technician-toggle-control';control.dataset.pondId=id;control.setAttribute('aria-label',`${label.textContent} ${active?'active':'inactive'}`);const toggle=document.createElement('span');toggle.className='mobile-technician-toggle';toggle.setAttribute('role','switch');toggle.setAttribute('aria-checked',String(active));const text=document.createElement('span');text.textContent=active?'Active':'Inactive';control.append(toggle,text);row.append(label,control);list.append(row);});}
+        function invalidateMobileTechnicianCropReview(){mobileTechnicianCropReviewVersion++;const panel=document.getElementById('mobileTechnicianCropReviewPanel');if(panel)panel.hidden=true;}
+        function showMobileTechnicianCropReviewMessage(titleText,message,isError=false){const panel=document.getElementById('mobileTechnicianCropReviewPanel'),title=document.getElementById('mobileTechnicianCropReviewTitle'),copy=document.getElementById('mobileTechnicianCropReviewCopy');if(!panel||!title||!copy)return;title.textContent=titleText;copy.textContent=message;title.classList.toggle('text-red-700',isError);copy.classList.toggle('text-red-700',isError);panel.hidden=false;}
+        function mobileTechnicianCropStartTimestamp(value){const match=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value||''));if(!match)return null;const year=Number(match[1]),month=Number(match[2]),day=Number(match[3]),localDate=new Date(year,month-1,day,12,0,0,0);if(!Number.isInteger(year)||localDate.getFullYear()!==year||localDate.getMonth()!==month-1||localDate.getDate()!==day)return null;const Timestamp=firebase?.firestore?.Timestamp;return Timestamp&&typeof Timestamp.fromDate==='function'?Timestamp.fromDate(localDate):null;}
+        function mobileTechnicianValidPermanentPondId(pondId){return typeof pondId==='string'&&(/^[A-Za-z0-9_-]{20}$/.test(pondId)||/^P[1-9][0-9]*$/.test(pondId));}
+        function prepareMobileTechnicianCropPayload(){const draft=currentMobileTechnicianCropDraft(),uid=String(firebase.auth().currentUser?.uid||'').trim(),farm=mobileTechnicianSelectedFarm,yearSelect=document.getElementById('mobileTechnicianCropYear'),supportedYears=new Set([...(yearSelect?.options||[])].map(option=>Number(option.value))),cropId=`${draft.year}-c${draft.cropNumber}`,errors=[];if(!farm?.id)errors.push('Select a Technician farm before reviewing this crop.');if(!uid||farm?.data?.technicianUid!==uid)errors.push('The selected farm is not owned by this Technician.');if(!/^\d{4}$/.test(String(draft.year))||!supportedYears.has(draft.year))errors.push('Select a valid year.');if(![1,2].includes(draft.cropNumber))errors.push('Select Crop 1 or Crop 2.');const startDate=mobileTechnicianCropStartTimestamp(draft.startDate);if(!startDate)errors.push('Select a valid start date.');const ponds=mobileTechnicianRegisteredPonds.slice(),pondIds=ponds.map(pond=>pond?.id);if(!ponds.length)errors.push('Register at least one permanent pond before reviewing this crop.');if(new Set(pondIds).size!==pondIds.length)errors.push('Permanent pond IDs must be unique.');if(ponds.some(pond=>!mobileTechnicianValidPermanentPondId(pond?.id)||pond?.data?.pondId!==pond.id))errors.push('A registered pond has an invalid permanent identity.');if(pondIds.some(id=>!mobileTechnicianCropDraft?.pondStates?.has(id)))errors.push('Every registered pond must have a crop activity state.');if(mobileTechnicianSavedCrops.some(crop=>crop.id===cropId||crop.data?.cropId===cropId))errors.push(`${cropId} already exists for this farm.`);if(errors.length)return{error:errors[0]};const serverTimestamp=firebase?.firestore?.FieldValue?.serverTimestamp;if(typeof serverTimestamp!=='function')return{error:'Crop verification is unavailable. Please reload and try again.'};const pondStates=ponds.map(pond=>({technicianUid:uid,pondId:pond.id,isActive:draft.pondStates.get(pond.id)!==false,createdAt:serverTimestamp(),createdBy:uid,updatedAt:serverTimestamp(),updatedBy:uid}));return{cropId,activeCount:pondStates.filter(state=>state.isActive).length,crop:{cropId,technicianUid:uid,farmId:farm.id,year:draft.year,cropNumber:draft.cropNumber,startDate,status:'active',createdAt:serverTimestamp(),createdBy:uid},pondStates};}
+        function renderMobileTechnicianCropPonds(){const list=document.getElementById('mobileTechnicianCropPondList'),summary=document.getElementById('mobileTechnicianCropPondSummary');if(!list||!summary)return;const draft=currentMobileTechnicianCropDraft(),pondById=new Map(mobileTechnicianRegisteredPonds.map(pond=>[pond.id,pond])),ids=[...pondById.keys()];ids.forEach(id=>{if(!draft.pondStates.has(id))draft.pondStates.set(id,true);});[...draft.pondStates.keys()].filter(id=>!ids.includes(id)).forEach(id=>draft.pondStates.delete(id));const active=ids.filter(id=>draft.pondStates.get(id)!==false).length;summary.textContent=active+' Active · '+(ids.length-active)+' Inactive';list.replaceChildren();if(!ids.length){const empty=document.createElement('div');empty.className='mobile-technician-empty-state';empty.textContent='No permanent pond profiles are available for selection.';list.append(empty);return;}ids.forEach(id=>{const pond=pondById.get(id),enabled=draft.pondStates.get(id)!==false,row=document.createElement('div'),label=document.createElement('strong'),control=document.createElement('button'),toggle=document.createElement('span'),text=document.createElement('span');row.className='mobile-technician-pond-toggle-row';label.textContent=pond?.data?.displayName||id;control.type='button';control.className='mobile-technician-toggle-control';control.dataset.pondId=id;control.setAttribute('aria-label',label.textContent+' '+(enabled?'active':'inactive'));toggle.className='mobile-technician-toggle';toggle.setAttribute('role','switch');toggle.setAttribute('aria-checked',String(enabled));text.textContent=enabled?'Active':'Inactive';control.append(toggle,text);row.append(label,control);list.append(row);});}
+
         function openMobileTechnicianCrops(){if(!mobileTechnicianSelectedFarm)return;showMobileTechnicianWorkspace('crops');startMobileTechnicianCropListener(firebase.auth().currentUser?.uid,mobileTechnicianSelectedFarm.id);resetMobileTechnicianCropDraft();renderMobileTechnicianFarmDetails();renderMobileTechnicianCropPonds();}
         let mobileTechnicianPondSaveInProgress=false;
         function openMobileTechnicianPonds(){if(!mobileTechnicianSelectedFarm)return;showMobileTechnicianWorkspace('ponds');renderMobileTechnicianFarmDetails();renderMobileTechnicianPonds();}
         function closeMobileTechnicianPondForm(){if(!mobileTechnicianPondSaveInProgress)document.getElementById('mobileTechnicianPondFormBackdrop').hidden=true;}
-        function mobileTechnicianRefreshAreaHint(row){const input=row.querySelector('[data-pond-area]'),unit=row.querySelector('[data-pond-unit]'),hint=row.querySelector('[data-pond-equivalent]'),value=Number(input.value);if(!hint)return;hint.textContent=Number.isFinite(value)&&value>0?(unit.value==='acres'?`${(value*MOBILE_TECH_ACRE_TO_SQM).toLocaleString(undefined,{maximumFractionDigits:2})} m²`:`${(value/MOBILE_TECH_ACRE_TO_SQM).toFixed(4)} acres`):'';}
-        function mobileTechnicianPondAreaMarkup(area=''){return `<label class="mt-2 block text-xs font-black text-slate-700">Pond Area <span class="font-normal text-slate-400">optional</span><div class="mt-1 flex gap-2"><input data-pond-area class="min-w-0 flex-1 rounded-lg border-2 border-slate-200 px-3 py-2 text-sm" type="number" min="0.000001" step="any" value="${area}"><select data-pond-unit class="rounded-lg border-2 border-slate-200 px-2 text-xs font-black"><option value="sqm">m²</option><option value="acres">Acres</option></select></div><small data-pond-equivalent class="mt-1 block text-slate-500"></small></label>`;}
-        function openMobileTechnicianPondForm(existing=[]){const rows=document.getElementById('mobileTechnicianPondRows'),backdrop=document.getElementById('mobileTechnicianPondFormBackdrop'),title=document.getElementById('mobileTechnicianPondFormTitle');if(!rows||!backdrop)return;const count=existing.length?existing.length:1;title.textContent=existing.length?'Edit Pond':'Add Pond';rows.replaceChildren();for(let i=0;i<count;i++){const pond=existing[i],suggestion=pond?.data?.displayName||`P${mobileTechnicianRegisteredPonds.length+i+1}`,area=pond?.data?.pondArea||'';const row=document.createElement('div');row.className='rounded-xl border border-slate-200 p-3';row.dataset.pondId=pond?.id||'';row.dataset.originalArea=area;row.innerHTML=`<label class="block text-xs font-black text-slate-700">Pond name<input data-pond-name class="mt-1 w-full rounded-lg border-2 border-slate-200 px-3 py-2 text-sm" maxlength="80" value="${mobileRegistrationEscapeHtml(suggestion)}"></label>${mobileTechnicianPondAreaMarkup(area)}<p data-pond-error class="mt-1 hidden text-xs font-semibold text-red-600"></p>`;rows.append(row);mobileTechnicianRefreshAreaHint(row);}backdrop.hidden=false;rows.querySelector('[data-pond-name]')?.focus();}
-        function openMobileTechnicianMultiplePondForm(){const remaining=Math.max(0,(Number(mobileTechnicianSelectedFarm?.data?.numberOfPonds)||0)-mobileTechnicianRegisteredPonds.length);if(!remaining){setMobileTechnicianPondsStatus('All declared ponds are already registered. Add another only after confirming the farm count.',true);return;}const rows=document.getElementById('mobileTechnicianPondRows'),backdrop=document.getElementById('mobileTechnicianPondFormBackdrop'),title=document.getElementById('mobileTechnicianPondFormTitle');rows.replaceChildren();title.textContent='Register Multiple Ponds';for(let i=0;i<remaining;i++){const row=document.createElement('div');row.className='rounded-xl border border-slate-200 p-3';row.innerHTML=`<label class="block text-xs font-black text-slate-700">Pond name<input data-pond-name class="mt-1 w-full rounded-lg border-2 border-slate-200 px-3 py-2 text-sm" maxlength="80" value="P${mobileTechnicianRegisteredPonds.length+i+1}"></label>${mobileTechnicianPondAreaMarkup()}<p data-pond-error class="mt-1 hidden text-xs font-semibold text-red-600"></p>`;rows.append(row);mobileTechnicianRefreshAreaHint(row);}backdrop.hidden=false;}
-        async function saveMobileTechnicianPonds(event){event.preventDefault();if(mobileTechnicianPondSaveInProgress||!mobileTechnicianSelectedFarm)return;const uid=firebase.auth().currentUser?.uid,rows=[...document.querySelectorAll('#mobileTechnicianPondRows > div')],existingNames=new Set(mobileTechnicianRegisteredPonds.map(p=>String(p.data.displayName||'').trim().toLowerCase())),seen=new Set();let valid=true;const entries=rows.map(row=>{const name=row.querySelector('[data-pond-name]').value.trim(),areaText=row.querySelector('[data-pond-area]').value.trim(),unit=row.querySelector('[data-pond-unit]').value,entered=areaText===''?null:Number(areaText),area=entered===null?null:(unit==='acres'?entered*MOBILE_TECH_ACRE_TO_SQM:entered),id=row.dataset.pondId||'';const error=!name?'Pond name is required.':name.length>80?'Pond name must be 80 characters or fewer.':(!id&&existingNames.has(name.toLowerCase()))||seen.has(name.toLowerCase())?'A pond with this name already exists.':entered!==null&&(!Number.isFinite(entered)||entered<=0)?'Enter a positive pond area.':'';seen.add(name.toLowerCase());const hint=row.querySelector('[data-pond-error]');hint.textContent=error;hint.hidden=!error;row.querySelector('[data-pond-name]').style.borderColor=error?'#dc2626':'';if(error)valid=false;return{id,name,area,areaChanged:areaText!==String(row.dataset.originalArea||'')||unit!=='sqm'};});if(!valid){rows.find(r=>!r.querySelector('[data-pond-error]').hidden)?.querySelector('[data-pond-name]')?.focus();return;}const button=document.getElementById('mobileTechnicianPondSave'),status=document.getElementById('mobileTechnicianPondFormStatus');mobileTechnicianPondSaveInProgress=true;button.disabled=true;button.textContent='Saving…';status.textContent='';try{const farmRef=db.collection('technicians').doc(uid).collection('managedFarms').doc(mobileTechnicianSelectedFarm.id),batch=db.batch();entries.forEach(entry=>{const ref=entry.id?farmRef.collection('ponds').doc(entry.id):farmRef.collection('ponds').doc();const payload=entry.id?{displayName:entry.name,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:uid}:{technicianUid:uid,pondId:ref.id,displayName:entry.name,createdAt:firebase.firestore.FieldValue.serverTimestamp(),createdBy:uid,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:uid};if(entry.area!==null&&(!entry.id||entry.areaChanged))payload.pondArea=entry.area;else if(entry.id&&entry.areaChanged)payload.pondArea=firebase.firestore.FieldValue.delete();batch.set(ref,payload,entry.id?{merge:true}:undefined);});await batch.commit();document.getElementById('mobileTechnicianPondFormBackdrop').hidden=true;setMobileTechnicianPondsStatus('Permanent pond profiles saved.');}catch(error){status.textContent=error?.code==='permission-denied'?'You do not have permission to save these ponds.':error?.message||'Pond save failed. Please retry.';}finally{mobileTechnicianPondSaveInProgress=false;button.disabled=false;button.textContent='Confirm & Save';}}
-        function reviewMobileTechnicianCrop(){const draft=currentMobileTechnicianCropDraft(),panel=document.getElementById('mobileTechnicianCropReviewPanel'),title=document.getElementById('mobileTechnicianCropReviewTitle'),copy=document.getElementById('mobileTechnicianCropReviewCopy');if(!panel||!title||!copy)return;const pondTotal=mobileTechnicianRegisteredPonds.length,active=mobileTechnicianRegisteredPonds.filter(pond=>draft.pondStates.get(pond.id)!==false).length,cropId=`${draft.year}-c${draft.cropNumber}`;title.textContent=`${draft.year} Crop ${draft.cropNumber} · ${cropId}`;copy.textContent=`Start date: ${draft.startDate||'not selected'}. Active ponds: ${active}. Inactive ponds: ${pondTotal-active}. This is a review only; no crop or pond state is saved until Stage 3.`;panel.hidden=false;}        function setMobileTechnicianFarmFieldError(field,message=''){const input=document.getElementById(`mobileTechFarm${field}`),hint=document.getElementById(`mobileTechFarm${field}Error`);if(input){input.style.borderColor=message?'#dc2626':'';input.setAttribute('aria-invalid',message?'true':'false');}if(hint){hint.textContent=message;hint.hidden=!message;}}
+        function mobileTechnicianRefreshAreaHint(row){const input=row.querySelector('[data-pond-area]'),unit=row.querySelector('[data-pond-unit]'),hint=row.querySelector('[data-pond-equivalent]'),value=Number(input.value);if(!hint)return;hint.textContent=Number.isFinite(value)&&value>0?(unit.value==='acres'?(value*MOBILE_TECH_ACRE_TO_SQM).toLocaleString(undefined,{maximumFractionDigits:2})+' m²':(value/MOBILE_TECH_ACRE_TO_SQM).toFixed(4)+' acres'):'';}
+        function mobileTechnicianPondAreaMarkup(area=''){return '<label class="mt-2 block text-xs font-black text-slate-700">Pond Area <span class="font-normal text-slate-400">optional</span><div class="mt-1 flex gap-2"><input data-pond-area class="min-w-0 flex-1 rounded-lg border-2 border-slate-200 px-3 py-2 text-sm" type="number" min="0.000001" step="any" value="'+area+'"><select data-pond-unit class="rounded-lg border-2 border-slate-200 px-2 text-xs font-black"><option value="sqm">m²</option><option value="acres">Acres</option></select></div><small data-pond-equivalent class="mt-1 block text-slate-500"></small></label>';}
+        function openMobileTechnicianPondForm(existing=[]){const rows=document.getElementById('mobileTechnicianPondRows'),backdrop=document.getElementById('mobileTechnicianPondFormBackdrop'),title=document.getElementById('mobileTechnicianPondFormTitle');if(!rows||!backdrop)return;title.textContent=existing.length?'Edit Pond':'Add Pond';rows.replaceChildren();const count=existing.length||1;for(let i=0;i<count;i++){const pond=existing[i],suggestion=pond?.data?.displayName||'P'+(mobileTechnicianRegisteredPonds.length+i+1),area=pond?.data?.pondArea||'',row=document.createElement('div');row.className='rounded-xl border border-slate-200 p-3';row.dataset.pondId=pond?.id||'';row.dataset.originalArea=area;row.innerHTML='<label class="block text-xs font-black text-slate-700">Pond name<input data-pond-name class="mt-1 w-full rounded-lg border-2 border-slate-200 px-3 py-2 text-sm" maxlength="80" value="'+mobileRegistrationEscapeHtml(suggestion)+'"></label>'+mobileTechnicianPondAreaMarkup(area)+'<p data-pond-error class="mt-1 hidden text-xs font-semibold text-red-600"></p>';rows.append(row);mobileTechnicianRefreshAreaHint(row);}backdrop.hidden=false;rows.querySelector('[data-pond-name]')?.focus();}
+        function openMobileTechnicianMultiplePondForm(){const remaining=Math.max(0,(Number(mobileTechnicianSelectedFarm?.data?.numberOfPonds)||0)-mobileTechnicianRegisteredPonds.length);if(!remaining){setMobileTechnicianPondsStatus('All declared ponds are already registered. Add another only after confirming the farm count.',true);return;}const rows=document.getElementById('mobileTechnicianPondRows'),backdrop=document.getElementById('mobileTechnicianPondFormBackdrop'),title=document.getElementById('mobileTechnicianPondFormTitle');rows.replaceChildren();title.textContent='Register Multiple Ponds';for(let i=0;i<remaining;i++){const row=document.createElement('div');row.className='rounded-xl border border-slate-200 p-3';row.innerHTML='<label class="block text-xs font-black text-slate-700">Pond name<input data-pond-name class="mt-1 w-full rounded-lg border-2 border-slate-200 px-3 py-2 text-sm" maxlength="80" value="P'+(mobileTechnicianRegisteredPonds.length+i+1)+'"></label>'+mobileTechnicianPondAreaMarkup()+'<p data-pond-error class="mt-1 hidden text-xs font-semibold text-red-600"></p>';rows.append(row);mobileTechnicianRefreshAreaHint(row);}backdrop.hidden=false;}
+	        async function saveMobileTechnicianPonds(event){event.preventDefault();if(mobileTechnicianPondSaveInProgress||!mobileTechnicianSelectedFarm)return;const uid=firebase.auth().currentUser?.uid,rows=[...document.querySelectorAll('#mobileTechnicianPondRows > div')],existingNames=new Set(mobileTechnicianRegisteredPonds.map(p=>String(p.data.displayName||'').trim().toLowerCase())),seen=new Set();let valid=true;const entries=rows.map(row=>{const name=row.querySelector('[data-pond-name]').value.trim(),areaText=row.querySelector('[data-pond-area]').value.trim(),unit=row.querySelector('[data-pond-unit]').value,entered=areaText===''?null:Number(areaText),area=entered===null?null:(unit==='acres'?entered*MOBILE_TECH_ACRE_TO_SQM:entered),id=row.dataset.pondId||'';const error=!name?'Pond name is required.':name.length>80?'Pond name must be 80 characters or fewer.':(!id&&existingNames.has(name.toLowerCase()))||seen.has(name.toLowerCase())?'A pond with this name already exists.':entered!==null&&(!Number.isFinite(entered)||entered<=0)?'Enter a positive pond area.':'';seen.add(name.toLowerCase());const hint=row.querySelector('[data-pond-error]');hint.textContent=error;hint.hidden=!error;row.querySelector('[data-pond-name]').style.borderColor=error?'#dc2626':'';if(error)valid=false;return{id,name,area,areaChanged:areaText!==String(row.dataset.originalArea||'')||unit!=='sqm'};});if(!valid){rows.find(r=>!r.querySelector('[data-pond-error]').hidden)?.querySelector('[data-pond-name]')?.focus();return;}const button=document.getElementById('mobileTechnicianPondSave'),status=document.getElementById('mobileTechnicianPondFormStatus');mobileTechnicianPondSaveInProgress=true;button.disabled=true;button.textContent='Saving…';status.textContent='';try{const existing=entries.filter(entry=>entry.id),created=entries.filter(entry=>!entry.id),farmRef=db.collection('technicians').doc(uid).collection('managedFarms').doc(mobileTechnicianSelectedFarm.id);if(existing.length){const batch=db.batch();existing.forEach(entry=>{const payload={displayName:entry.name,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:uid};if(entry.area!==null&&entry.areaChanged)payload.pondArea=entry.area;else if(entry.areaChanged)payload.pondArea=firebase.firestore.FieldValue.delete();batch.set(farmRef.collection('ponds').doc(entry.id),payload,{merge:true});});await batch.commit();}if(created.length){const callable=firebase.functions().httpsCallable('registerTechnicianPonds');await callable({farmId:mobileTechnicianSelectedFarm.id,ponds:created.map(entry=>({pondId:farmRef.collection('ponds').doc().id,displayName:entry.name,...(entry.area!==null?{pondArea:entry.area}:{})}))});}document.getElementById('mobileTechnicianPondFormBackdrop').hidden=true;setMobileTechnicianPondsStatus('Permanent pond profiles saved.');}catch(error){status.textContent=error?.code==='permission-denied'?'You do not have permission to save these ponds.':error?.message||'Pond save failed. Please retry.';}finally{mobileTechnicianPondSaveInProgress=false;button.disabled=false;button.textContent='Confirm & Save';}}
+        async function reviewMobileTechnicianCrop(){const version=++mobileTechnicianCropReviewVersion,proposal=prepareMobileTechnicianCropPayload();if(proposal.error){showMobileTechnicianCropReviewMessage('Crop details need attention',proposal.error,true);return;}if(!db){showMobileTechnicianCropReviewMessage('Crop verification unavailable','Could not verify whether this crop already exists. Please check your connection and try again.',true);return;}try{const snapshot=await db.collection('technicians').doc(proposal.crop.technicianUid).collection('managedFarms').doc(proposal.crop.farmId).collection('crops').doc(proposal.cropId).get({source:'server'});if(version!==mobileTechnicianCropReviewVersion||mobileTechnicianSelectedFarm?.id!==proposal.crop.farmId)return;if(snapshot.exists){showMobileTechnicianCropReviewMessage('Crop already exists',proposal.cropId+' already exists for this farm. Choose a different Year or Crop.',true);return;}const inactive=proposal.pondStates.length-proposal.activeCount;showMobileTechnicianCropReviewMessage(proposal.crop.year+' Crop '+proposal.crop.cropNumber+' · '+proposal.cropId,'Start date: '+proposal.crop.startDate.toDate().toLocaleDateString(undefined,{day:'2-digit',month:'short',year:'numeric'})+'. Active ponds: '+proposal.activeCount+'. Inactive ponds: '+inactive+'.');}catch(error){if(version!==mobileTechnicianCropReviewVersion||mobileTechnicianSelectedFarm?.id!==proposal.crop.farmId)return;showMobileTechnicianCropReviewMessage('Crop verification unavailable',error?.code==='permission-denied'?'You do not have permission to verify saved crops.':'Could not verify whether this crop already exists. Check your connection and try again.',true);}}
+        function setMobileTechnicianFarmFieldError(field,message=''){const input=document.getElementById('mobileTechFarm'+field),hint=document.getElementById('mobileTechFarm'+field+'Error');if(input){input.style.borderColor=message?'#dc2626':'';input.setAttribute('aria-invalid',message?'true':'false');}if(hint){hint.textContent=message;hint.hidden=!message;}}
         function clearMobileTechnicianFarmErrors(){['FarmerName','Name','Village','Mobile','Area','PondCount'].forEach(field=>setMobileTechnicianFarmFieldError(field));const status=document.getElementById('mobileTechFarmFormStatus');if(status)status.textContent='';}
         function openMobileTechnicianFarmForm(){mobileTechnicianFarmValidationShown=false;clearMobileTechnicianFarmErrors();const backdrop=document.getElementById('mobileTechnicianFarmFormBackdrop');if(backdrop)backdrop.hidden=false;requestAnimationFrame(()=>document.getElementById('mobileTechFarmFarmerName')?.focus());}
-        function closeMobileTechnicianFarmForm(){if(mobileTechnicianFarmSaveInProgress)return;const backdrop=document.getElementById('mobileTechnicianFarmFormBackdrop');if(backdrop)backdrop.hidden=true;}
-        function validateMobileTechnicianFarmForm(focusFirst=true){const values={FarmerName:document.getElementById('mobileTechFarmFarmerName')?.value.trim()||'',Village:document.getElementById('mobileTechFarmVillage')?.value.trim()||'',Mobile:(document.getElementById('mobileTechFarmMobile')?.value||'').trim(),Area:document.getElementById('mobileTechFarmArea')?.value||'',PondCount:document.getElementById('mobileTechFarmPondCount')?.value||''};const messages={};if(!values.FarmerName)messages.FarmerName='Please fill this field.';if(!values.Village)messages.Village='Please fill this field.';if(!values.Mobile)messages.Mobile='Please fill this field.';else if(!/^\d{10}$/.test(values.Mobile))messages.Mobile='Enter a valid 10-digit mobile number.';const area=Number(values.Area);if(!values.Area)messages.Area='Please fill this field.';else if(!Number.isFinite(area)||area<=0)messages.Area='Enter a farm area greater than zero.';const ponds=Number(values.PondCount);if(!values.PondCount)messages.PondCount='Please fill this field.';else if(!Number.isInteger(ponds)||ponds<=0)messages.PondCount='Enter a positive whole number.';['FarmerName','Village','Mobile','Area','PondCount'].forEach(field=>setMobileTechnicianFarmFieldError(field,messages[field]||''));const first=Object.keys(messages)[0];if(first&&focusFirst){const input=document.getElementById(`mobileTechFarm${first}`);input?.scrollIntoView({block:'center',behavior:'smooth'});input?.focus();}if(first)return null;return{farmerName:values.FarmerName,village:values.Village,mobile:values.Mobile,totalFarmAreaAcres:area,numberOfPonds:ponds};}
-        async function mobileBridgeSignOut() { stopMobileTechnicianFarmListener(); stopMobileTechnicianPondListener(); stopMobileTechnicianCropListener(); mobileTechnicianSelectedFarm=null; mobileTechnicianCropDraft=null; stopOperationalMigrationControlListener(); stopFoundationMigrationControlListener(); clearOperationalRuntimeForFarmSwitch(); clearFoundationRuntimeForFarmSwitch(); blueCrestSession=null; isSyncInitialized=false; if (mobileCropFinancialSummaryUnsubscribe) { mobileCropFinancialSummaryUnsubscribe(); mobileCropFinancialSummaryUnsubscribe=null; } stopFarmListeners(); await firebase.auth().signOut(); location.reload(); }
+        function closeMobileTechnicianFarmForm(){if(!mobileTechnicianFarmSaveInProgress)document.getElementById('mobileTechnicianFarmFormBackdrop').hidden=true;}
+        function validateMobileTechnicianFarmForm(focusFirst=true){const values={FarmerName:document.getElementById('mobileTechFarmFarmerName')?.value.trim()||'',Village:document.getElementById('mobileTechFarmVillage')?.value.trim()||'',Mobile:(document.getElementById('mobileTechFarmMobile')?.value||'').trim(),Area:document.getElementById('mobileTechFarmArea')?.value||'',PondCount:document.getElementById('mobileTechFarmPondCount')?.value||''},messages={};if(!values.FarmerName)messages.FarmerName='Please fill this field.';if(!values.Village)messages.Village='Please fill this field.';if(!values.Mobile)messages.Mobile='Please fill this field.';else if(!/^\d{10}$/.test(values.Mobile))messages.Mobile='Enter a valid 10-digit mobile number.';const area=Number(values.Area);if(!values.Area)messages.Area='Please fill this field.';else if(!Number.isFinite(area)||area<=0)messages.Area='Enter a farm area greater than zero.';const ponds=Number(values.PondCount);if(!values.PondCount)messages.PondCount='Please fill this field.';else if(!Number.isInteger(ponds)||ponds<=0)messages.PondCount='Enter a positive whole number.';['FarmerName','Village','Mobile','Area','PondCount'].forEach(field=>setMobileTechnicianFarmFieldError(field,messages[field]||''));const first=Object.keys(messages)[0];if(first&&focusFirst){const input=document.getElementById('mobileTechFarm'+first);input?.scrollIntoView({block:'center',behavior:'smooth'});input?.focus();}if(first)return null;return{farmerName:values.FarmerName,village:values.Village,mobile:values.Mobile,totalFarmAreaAcres:area,numberOfPonds:ponds};}
+        async function mobileBridgeSignOut(){stopMobileTechnicianFarmListener();stopMobileTechnicianPondListener();stopMobileTechnicianCropListener();mobileTechnicianSelectedFarm=null;mobileTechnicianCropDraft=null;stopOperationalMigrationControlListener();stopFoundationMigrationControlListener();clearOperationalRuntimeForFarmSwitch();clearFoundationRuntimeForFarmSwitch();blueCrestSession=null;isSyncInitialized=false;if(mobileCropFinancialSummaryUnsubscribe){mobileCropFinancialSummaryUnsubscribe();mobileCropFinancialSummaryUnsubscribe=null;}stopFarmListeners();await firebase.auth().signOut();location.reload();}
+
         loadRememberedEmail();
         authEmailInput?.addEventListener('focus',showRememberedEmailSuggestions);
         authEmailInput?.addEventListener('input',showRememberedEmailSuggestions);
@@ -2177,8 +2202,8 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
         document.getElementById('mobileTechnicianPondRows')?.addEventListener('input',event=>{const row=event.target.closest('#mobileTechnicianPondRows > div');if(row&&event.target.matches('[data-pond-area]'))mobileTechnicianRefreshAreaHint(row);});
         document.getElementById('mobileTechnicianPondRows')?.addEventListener('change',event=>{if(!event.target.matches('[data-pond-unit]'))return;const row=event.target.closest('#mobileTechnicianPondRows > div'),input=row?.querySelector('[data-pond-area]'),next=event.target.value,previous=input?.dataset.displayUnit||'sqm',value=Number(input?.value);if(input&&Number.isFinite(value)&&value>0)input.value=String(next==='acres'?(previous==='sqm'?value/MOBILE_TECH_ACRE_TO_SQM:value):(previous==='acres'?value*MOBILE_TECH_ACRE_TO_SQM:value));if(input)input.dataset.displayUnit=next;mobileTechnicianRefreshAreaHint(row);});
         document.getElementById('mobileTechnicianFarmMenuTrigger')?.addEventListener('click',()=>{const menu=document.getElementById('mobileTechnicianFarmMenu'),trigger=document.getElementById('mobileTechnicianFarmMenuTrigger');if(!menu||!trigger)return;menu.hidden=!menu.hidden;trigger.setAttribute('aria-expanded',String(!menu.hidden));});
-        document.getElementById('mobileTechnicianCropPondList')?.addEventListener('click',event=>{const control=event.target.closest('button[data-pond-id]');if(!control)return;const draft=currentMobileTechnicianCropDraft(),pondId=control.dataset.pondId;draft.pondStates.set(pondId,draft.pondStates.get(pondId)===false);const review=document.getElementById('mobileTechnicianCropReviewPanel');if(review)review.hidden=true;renderMobileTechnicianCropPonds();});
-        ['mobileTechnicianCropYear','mobileTechnicianCropNumber','mobileTechnicianCropStartDate'].forEach(id=>document.getElementById(id)?.addEventListener('change',()=>{currentMobileTechnicianCropDraft();const review=document.getElementById('mobileTechnicianCropReviewPanel');if(review)review.hidden=true;renderMobileTechnicianCropPonds();}));
+        document.getElementById('mobileTechnicianCropPondList')?.addEventListener('click',event=>{const control=event.target.closest('button[data-pond-id]');if(!control)return;const draft=currentMobileTechnicianCropDraft(),pondId=control.dataset.pondId;draft.pondStates.set(pondId,draft.pondStates.get(pondId)===false);invalidateMobileTechnicianCropReview();renderMobileTechnicianCropPonds();});
+        ['mobileTechnicianCropYear','mobileTechnicianCropNumber','mobileTechnicianCropStartDate'].forEach(id=>document.getElementById(id)?.addEventListener('change',()=>{currentMobileTechnicianCropDraft();invalidateMobileTechnicianCropReview();renderMobileTechnicianCropPonds();}));
         document.getElementById('mobileTechnicianCropReview')?.addEventListener('click',reviewMobileTechnicianCrop);
         document.getElementById('mobileTechnicianAddFarm')?.addEventListener('click',openMobileTechnicianFarmForm);
         document.getElementById('mobileTechnicianHomeAddFarm')?.addEventListener('click',openMobileTechnicianFarmForm);
@@ -4288,6 +4313,25 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             updateHeaderDate();
         }
 
+        function getSamplingCountPerKg(sample) {
+            const sampleWeight = Number(sample?.sampleWeight);
+            const testWeight = Number(sample?.testWeight);
+            const rawWeight = Number.isFinite(sampleWeight) && sampleWeight > 0
+                ? sampleWeight
+                : (Number.isFinite(testWeight) && testWeight > 0 ? testWeight : null);
+            const rawShrimpCount = Number(sample?.count);
+            if (rawWeight !== null && Number.isFinite(rawShrimpCount) && rawShrimpCount > 0) {
+                return (rawShrimpCount * 1000) / rawWeight;
+            }
+            const abw = Number(sample?.abw);
+            return Number.isFinite(abw) && abw > 0 ? 1000 / abw : null;
+        }
+
+        function formatSamplingCountPerKg(sample) {
+            const countPerKg = getSamplingCountPerKg(sample);
+            return Number.isFinite(countPerKg) ? String(Math.round(countPerKg)) : '—';
+        }
+
         function getSamplingAdg(sample) {
             const c = getActiveCycle();
             const targetDate = new Date(`${sample?.date || ''}T00:00:00`).getTime();
@@ -4339,89 +4383,253 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
 
         // Read-only Mobile counterpart of Laptop's Pond Attention calculation.
         // It deliberately keeps the same thresholds, precedence and input rules.
-        function getPondAttentionDecision({ hasPreviousSample, adg, targetAdg, growthTrend, feedStatus, survivalTrend, persistentPoorGrowth = false }) {
-            const growthPoor = adg !== null && targetAdg !== null && adg < targetAdg * .7;
-            const growthEvaluated = !!hasPreviousSample && adg !== null && targetAdg !== null;
-            const growthAbnormal = growthEvaluated && (growthPoor || growthTrend === 'Slowing');
-            const feedEvaluated = ['Adequate', 'Below requirement', 'Above range'].includes(feedStatus);
-            const feedAbnormal = feedEvaluated && feedStatus !== 'Adequate';
-            const survivalEvaluated = ['Stable', 'Declining'].includes(survivalTrend);
-            const survivalAbnormal = survivalEvaluated && survivalTrend === 'Declining';
-            const evaluatedSignals = [growthEvaluated, feedEvaluated, survivalEvaluated].filter(Boolean).length;
-            const abnormalSignals = [growthAbnormal, feedAbnormal, survivalAbnormal].filter(Boolean).length;
-            if (!evaluatedSignals) return { status: 'Insufficient Data', message: 'More biological sampling data is needed before current pond status can be assessed.' };
-            if (persistentPoorGrowth) return { status: 'Attention', message: 'Growth has remained below the approved target across two consecutive sampling intervals.' };
-            if (survivalAbnormal) return { status: 'Attention', message: 'Estimated survival has declined beyond the established practical tolerance.' };
-            if (abnormalSignals >= 3) return { status: 'Attention', message: 'Growth, feed response and survival require immediate attention.' };
-            if (abnormalSignals === 2) {
-                return growthPoor && feedStatus === 'Below requirement'
-                    ? { status: 'Check Feeding', message: 'Feed is below the chart requirement; check feeding before judging pond growth.' }
-                    : { status: 'Watch', message: 'Two biological signals need review at the next sampling.' };
-            }
-            return { status: 'On Track', message: 'Growth, feed response and estimated survival are within the current expected range.' };
+        
+        function piV1Text(value) { return String(value ?? '').trim(); }
+        function piV1Crop(value) { return piV1Text(value).toLowerCase(); }
+        function piV1Has(value) { return value !== undefined && value !== null && value !== ''; }
+        function piV1Finite(value, positive = false) { const n = Number(value); return Number.isFinite(n) && (positive ? n > 0 : n >= 0) ? n : null; }
+        function piV1Date(value) {
+          const raw = piV1Text(value);
+          const match = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+          if (match) {
+            const y = Number(match[1]), m = Number(match[2]), d = Number(match[3]);
+            const ms = Date.UTC(y, m - 1, d);
+            const check = new Date(ms);
+            if (check.getUTCFullYear() !== y || check.getUTCMonth() !== m - 1 || check.getUTCDate() !== d) return null;
+            return { ms, key: raw.slice(0, 10) };
+          }
+          const ms = Date.parse(raw);
+          if (!Number.isFinite(ms)) return null;
+          const date = new Date(ms);
+          return { ms: Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()), key: date.toISOString().slice(0, 10) };
         }
-
+        function piV1SavedMillis(record) {
+          for (const key of ['updatedAt', 'savedAt', 'createdAt', 'timestamp']) {
+            const value = record?.[key];
+            if (value && typeof value.toMillis === 'function') { const ms = Number(value.toMillis()); if (Number.isFinite(ms)) return ms; }
+            if (value instanceof Date) { const ms = value.getTime(); if (Number.isFinite(ms)) return ms; }
+            if (typeof value === 'number' && Number.isFinite(value)) return value;
+            if (typeof value === 'string' && value.trim()) { const ms = Date.parse(value); if (Number.isFinite(ms)) return ms; }
+          }
+          return null;
+        }
+        function piV1RecordId(record) { return piV1Text(record?.firestoreId ?? record?.id ?? record?.legacyRecordId); }
+        function piV1ParseCycle(value) {
+          const match = piV1Text(value).match(/^(\d{4})\|(.+)$/i);
+          if (!match) return null;
+          const year = Number(match[1]), crop = piV1Crop(match[2]);
+          return Number.isInteger(year) && year >= 2000 && crop ? { year, crop, id: year + '|' + crop } : null;
+        }
+        function piV1Ref(value) {
+          const raw = piV1Text(value);
+          if (!raw) return null;
+          let match = raw.match(/^POND_(\d{4})_CROP_(\d+)_(P\d+)$/i);
+          if (match) return { key: match[3].toUpperCase(), embedded: { year: Number(match[1]), crop: 'crop ' + Number(match[2]) } };
+          match = raw.match(/^(\d{4})\|crop\s*(\d+)__(P\d+)$/i);
+          if (match) return { key: match[3].toUpperCase(), embedded: { year: Number(match[1]), crop: 'crop ' + Number(match[2]) } };
+          if (/^P\d+$/i.test(raw)) return { key: raw.toUpperCase(), embedded: null };
+          return { key: raw.toLowerCase(), embedded: null };
+        }
+        function piV1PondRefs(pond) {
+          return [pond?.id, pond?.name, pond?.pondName].map(piV1Ref).filter(Boolean);
+        }
+        function piV1PondMatchesValues(pond, values) {
+          const refs = (values || []).map(piV1Ref).filter(Boolean);
+          if (!refs.length) return false;
+          const pondRefs = piV1PondRefs(pond);
+          return refs.every(ref => pondRefs.some(candidate => candidate.key === ref.key));
+        }
+        function piV1RecordRefs(record, transfer = false) {
+          return transfer ? [record?.toPondId, record?.toPond] : [record?.pondId, record?.pond, record?.pondName];
+        }
+        function piV1RecordMatchesPond(record, pond, transfer = false) { return piV1PondMatchesValues(pond, piV1RecordRefs(record, transfer)); }
+        function piV1ExplicitCycle(record) {
+          const years = ['year', 'cropYear'].filter(key => piV1Has(record?.[key])).map(key => Number(record[key]));
+          const crops = ['crop', 'cropCycle'].filter(key => piV1Has(record?.[key])).map(key => piV1Crop(record[key]));
+          if (years.some(year => !Number.isInteger(year) || year < 2000) || crops.some(crop => !crop)) return { invalid: true };
+          if (new Set(years).size > 1 || new Set(crops).size > 1) return { invalid: true };
+          return { year: years[0] ?? null, crop: crops[0] ?? null };
+        }
+        function piV1ResolveCycle(record, activeCycle, allPonds, transfer = false) {
+          const explicit = piV1ExplicitCycle(record);
+          if (explicit.invalid) return null;
+          const recordRefs = piV1RecordRefs(record, transfer).map(piV1Ref).filter(Boolean);
+          const embeddedCycles = recordRefs.map(ref => ref.embedded).filter(Boolean);
+          if (embeddedCycles.length && new Set(embeddedCycles.map(c => c.year + '|' + c.crop)).size > 1) return null;
+          const embedded = embeddedCycles[0] || null;
+          const parsed = piV1ParseCycle(record?.cycleId);
+          const candidates = [
+            explicit.year !== null && explicit.crop ? { year: explicit.year, crop: explicit.crop } : null,
+            parsed,
+            embedded
+          ].filter(Boolean);
+          if (candidates.length && new Set(candidates.map(c => c.year + '|' + c.crop)).size > 1) return null;
+          let resolved = candidates[0] || null;
+          if (!resolved) {
+            const matches = (Array.isArray(allPonds) ? allPonds : []).filter(pond => piV1RecordMatchesPond(record, pond, transfer));
+            const cycles = matches.map(pond => {
+              const year = Number(pond?.year ?? pond?.cropYear);
+              const crop = piV1Crop(pond?.crop ?? pond?.cropCycle);
+              return Number.isInteger(year) && year >= 2000 && crop ? { year, crop } : null;
+            }).filter(Boolean);
+            if (cycles.length !== 1) return null;
+            resolved = cycles[0];
+          }
+          if (explicit.year !== null && explicit.year !== resolved.year) return null;
+          if (explicit.crop !== null && explicit.crop !== resolved.crop) return null;
+          const active = { year: Number(activeCycle?.year), crop: piV1Crop(activeCycle?.crop) };
+          if (!Number.isInteger(active.year) || !active.crop || resolved.year !== active.year || resolved.crop !== active.crop) return null;
+          return { ...resolved, id: resolved.year + '|' + resolved.crop };
+        }
+        function piV1Abw(record) {
+          const weightFields = ['sampleWeight', 'testWeight'].filter(key => piV1Has(record?.[key]));
+          const weights = weightFields.map(key => piV1Finite(record[key], true));
+          const count = piV1Finite(record?.count, true);
+          const validWeights = weights.filter(value => value !== null);
+          if (validWeights.length > 1 && validWeights.some(value => Math.abs(value - validWeights[0]) > 1e-9)) return null;
+          if (validWeights.length && count !== null) return validWeights[0] / count;
+          const saved = piV1Finite(record?.abw, true);
+          return saved === null ? null : saved;
+        }
+        function piV1FeedValue(record, primary, alias) {
+          const present = [primary, alias].filter(key => piV1Has(record?.[key]));
+          if (!present.length) return null;
+          const values = present.map(key => piV1Finite(record[key], false));
+          if (values.some(value => value === null)) return null;
+          return values.every(value => Math.abs(value - values[0]) <= 1e-9) ? values[0] : null;
+        }
+        function piV1Feed(record) {
+          const previous = piV1FeedValue(record, 'prevCumulativeFeed', 'lastFeed');
+          const current = piV1FeedValue(record, 'currCumulativeFeed', 'currentFeed');
+          if (previous === null || current === null || current < previous) return { previous, current, net: null };
+          return { previous, current, net: current - previous };
+        }
+        function piV1ChooseSameDate(records) {
+          const groups = new Map();
+          records.forEach(record => { const list = groups.get(record.dateKey) || []; list.push(record); groups.set(record.dateKey, list); });
+          return [...groups.values()].map(list => {
+            if (list.length === 1) return list[0];
+            const identifiable = list.filter(item => piV1RecordId(item.sample));
+            if (identifiable.length !== list.length) return null;
+            return identifiable.sort((a, b) => {
+              const at = piV1SavedMillis(a.sample), bt = piV1SavedMillis(b.sample);
+              if (at !== null || bt !== null) {
+                if (at === null) return 1;
+                if (bt === null) return -1;
+                if (at !== bt) return bt - at;
+              }
+              return piV1RecordId(b.sample).localeCompare(piV1RecordId(a.sample));
+            })[0];
+          }).filter(Boolean).sort((a, b) => a.dateMs - b.dateMs || piV1RecordId(a.sample).localeCompare(piV1RecordId(b.sample)));
+        }
+        function piV1StockedPopulation(pond, dateKey, activeCycle, allPonds, transfers) {
+          const type = piV1Crop(pond?.pondType ?? pond?.type).replace(/\s+/g, '');
+          if (type === 'transferin') {
+            return (Array.isArray(transfers) ? transfers : []).filter(transfer => piV1ResolveCycle(transfer, activeCycle, allPonds, true) && piV1RecordMatchesPond(transfer, pond, true) && (!piV1Date(transfer?.date) || piV1Date(transfer.date).key <= dateKey)).reduce((sum, transfer) => sum + Number(transfer.number ?? transfer.transferredNumber ?? transfer.count ?? 0), 0) || null;
+          }
+          for (const key of ['initialStockingNumber', 'stockingCount', 'stockedCount', 'pieces']) {
+            if (piV1Has(pond?.[key])) { const value = piV1Finite(pond[key], false); return value !== null && value > 0 ? value : null; }
+          }
+          return null;
+        }
+        function piV1HarvestPieces(harvest) {
+          const stored = Number(harvest?.totalPieces ?? harvest?.pieces);
+          if (Number.isFinite(stored) && stored > 0) return stored;
+          const biomass = Number(harvest?.biomass ?? harvest?.biomassKg ?? harvest?.weight);
+          const count = Number(harvest?.count ?? harvest?.piecesPerKg);
+          return Number.isFinite(biomass) && biomass > 0 && Number.isFinite(count) && count > 0 ? biomass * count : 0;
+        }
+        function piV1Decision(input) {
+          const missing = [!input.feedAvailable && 'Feed Unavailable', !input.survivalAvailable && 'Survival Unavailable'].filter(Boolean);
+          const suffix = missing.length ? ' ' + missing.join('. ') + '.' : '';
+          const fmt = value => Number.isFinite(value) ? value.toFixed(2) : '—';
+          if (!input.hasAdg) return { status: 'Insufficient Data', message: 'At least two valid chronological sampling records with calculable ADG are required.' + suffix };
+          if (input.persistentPoorGrowth) return { status: 'Attention', message: 'ADG ' + fmt(input.adg) + ' g/day stayed below 70% of target for two consecutive valid intervals.' + suffix };
+          if (input.repeatedSurvivalDecline) return { status: 'Attention', message: 'Estimated survival declined by at least 15 percentage points in two consecutive valid intervals.' + suffix };
+          if (input.growthPoor && input.feedStatus === 'Above range') return { status: 'Attention', message: 'ADG ' + fmt(input.adg) + ' g/day is below target while feed is above the requirement.' + suffix };
+          if (input.growthPoor && input.feedStatus === 'Below requirement' && input.survivalDecline) return { status: 'Watch', message: 'ADG is below target, feed is below requirement, and estimated survival declined by ' + Math.abs(input.survivalChange).toFixed(1) + ' percentage points. Recheck the next valid sampling before escalation.' + suffix };
+          if (input.growthPoor && input.feedStatus === 'Below requirement') return { status: 'Check Feeding', message: 'ADG ' + fmt(input.adg) + ' g/day is below target while feed is below the chart requirement.' + suffix };
+          if (input.growthPoor && input.survivalDecline) return { status: 'Attention', message: 'ADG ' + fmt(input.adg) + ' g/day is below target and estimated survival declined by ' + Math.abs(input.survivalChange).toFixed(1) + ' percentage points.' + suffix };
+          if (input.growthPoor) return { status: 'Watch', message: 'ADG ' + fmt(input.adg) + ' g/day is below 70% of the ' + fmt(input.targetAdg) + ' g/day target.' + suffix };
+          if (input.feedStatus === 'Below requirement') return { status: 'Watch', message: 'Feed is below 80% of the present requirement.' + suffix };
+          if (input.feedStatus === 'Above range') return { status: 'Watch', message: 'Feed is above 120% of the present requirement.' + suffix };
+          if (input.survivalDecline) return { status: 'Watch', message: 'Estimated survival declined by ' + Math.abs(input.survivalChange).toFixed(1) + ' percentage points.' + suffix };
+          return { status: 'On Track', message: 'Available growth, feed and estimated-survival indicators are within the approved range.' + suffix };
+        }
+        function piV1Build(pond, config) {
+          const { activeCycle, allPonds, samples, harvests, transfers, expectedFeedPerLakh, isClosed } = config;
+          const candidates = (Array.isArray(samples) ? samples : []).map(sample => {
+            const cycle = piV1ResolveCycle(sample, activeCycle, allPonds, false);
+            const date = piV1Date(sample?.date);
+            const abw = piV1Abw(sample);
+            return cycle && date && abw !== null && piV1RecordMatchesPond(sample, pond, false) ? { sample, dateMs: date.ms, dateKey: date.key, abw } : null;
+          }).filter(Boolean);
+          const selected = piV1ChooseSameDate(candidates);
+          const records = selected.map(item => item.sample);
+          const samePondHarvests = (Array.isArray(harvests) ? harvests : []).filter(harvest => piV1ResolveCycle(harvest, activeCycle, allPonds, false) && piV1RecordMatchesPond(harvest, pond, false));
+          const harvestedThrough = dateKey => samePondHarvests.filter(h => { const date = piV1Date(h?.date); return date && date.key <= dateKey; }).reduce((sum, h) => sum + piV1HarvestPieces(h), 0);
+          const history = [];
+          selected.forEach((entry, index) => {
+            const previous = history[index - 1] || null;
+            const priorDateKey = previous?.dateKey || piV1Date(pond?.stockingDate)?.key || null;
+            const priorDateMs = previous?.dateMs ?? piV1Date(pond?.stockingDate)?.ms ?? null;
+            const feedIntervalDays = priorDateMs !== null ? Math.max(1, Math.round((entry.dateMs - priorDateMs) / 86400000)) : null;
+            const feed = piV1Feed(entry.sample);
+            const actualFeedPerDay = feed.net !== null && feed.net > 0 && feedIntervalDays ? feed.net / feedIntervalDays : null;
+            const chartFeedPerLakh = entry.abw >= 3 && entry.abw <= 30 ? Number(expectedFeedPerLakh(entry.abw)) : null;
+            const estimatedLivePieces = actualFeedPerDay !== null && Number.isFinite(chartFeedPerLakh) && chartFeedPerLakh > 0 ? actualFeedPerDay / chartFeedPerLakh * 100000 : null;
+            const denominator = piV1StockedPopulation(pond, entry.dateKey, activeCycle, allPonds, transfers);
+            const estimatedSurvivalPct = estimatedLivePieces !== null && denominator !== null ? (estimatedLivePieces + harvestedThrough(entry.dateKey)) / denominator * 100 : null;
+            const intervalDays = previous ? (entry.dateMs - previous.dateMs) / 86400000 : null;
+            const hasAdg = !!previous && Number.isFinite(intervalDays) && intervalDays > 0;
+            const gain = hasAdg ? entry.abw - previous.abw : null;
+            const adg = hasAdg ? gain / intervalDays : null;
+            const targetAdg = hasAdg ? (previous.abw < 5 ? .18 : previous.abw < 10 ? .21 : .29) : null;
+            const growthPoor = Number.isFinite(adg) && targetAdg !== null && adg < targetAdg * .7;
+            const previousAdg = index > 1 ? history[index - 1].adg : null;
+            const growthTrend = !Number.isFinite(adg) || !Number.isFinite(previousAdg) ? '—' : adg > previousAdg + .03 ? 'Improving' : adg < previousAdg - .03 ? 'Slowing' : 'Stable';
+            const intervalHarvestedPieces = previous ? samePondHarvests.filter(h => { const date = piV1Date(h?.date); return date && date.key > previous.dateKey && date.key <= entry.dateKey; }).reduce((sum, h) => sum + piV1HarvestPieces(h), 0) : harvestedThrough(entry.dateKey);
+            let expectedPopulationBasis = previous?.estimatedLivePieces ?? denominator;
+            if (expectedPopulationBasis !== null) expectedPopulationBasis -= intervalHarvestedPieces;
+            if (!(expectedPopulationBasis >= 0)) expectedPopulationBasis = null;
+            const expectedFeedPerDay = Number.isFinite(chartFeedPerLakh) && expectedPopulationBasis !== null ? chartFeedPerLakh * expectedPopulationBasis / 100000 : null;
+            const feedRatio = actualFeedPerDay !== null && expectedFeedPerDay !== null && expectedFeedPerDay > 0 ? actualFeedPerDay / expectedFeedPerDay : null;
+            const feedStatus = entry.abw > 30 ? 'Outside feed-chart range' : feedRatio === null ? 'Feed Unavailable' : feedRatio < .8 ? 'Below requirement' : feedRatio > 1.2 ? 'Above range' : 'Adequate';
+            const survivalChange = estimatedSurvivalPct !== null && previous?.estimatedSurvivalPct != null ? estimatedSurvivalPct - previous.estimatedSurvivalPct : null;
+            const survivalDecline = survivalChange !== null && survivalChange <= -15;
+            const survivalTrend = survivalChange === null ? 'Survival Unavailable' : survivalDecline ? 'Declining' : 'Stable';
+            const decision = piV1Decision({ hasAdg: Number.isFinite(adg), adg, targetAdg, growthPoor, persistentPoorGrowth: growthPoor && previous?.growthPoor === true, feedStatus, feedAvailable: feedRatio !== null, survivalAvailable: estimatedSurvivalPct !== null, survivalDecline, repeatedSurvivalDecline: survivalDecline && previous?.survivalDecline === true, survivalChange });
+            history.push({ sample: entry.sample, date: entry.sample.date, dateKey: entry.dateKey, dateMs: entry.dateMs, abw: entry.abw, gain, adg, targetAdg, growthTrend, growthPoor, persistentPoorGrowth: growthPoor && previous?.growthPoor === true, actualFeedPerDay, chartFeedPerLakh, expectedFeedPerDay, expectedPopulationBasis, feedStatus, feedRatio, feedAvailable: feedRatio !== null, estimatedLivePieces, estimatedSurvivalPct, effectiveStockedPopulation: denominator, survivalChange, survivalTrend, survivalDecline, repeatedSurvivalDecline: survivalDecline && previous?.survivalDecline === true, intervalDays, intervalFeed: feed.net, cumulativeFeed: feed.current, previousEstimatedLivePieces: previous?.estimatedLivePieces ?? null, intervalHarvestedPieces, cumulativeHarvestedPieces: harvestedThrough(entry.dateKey), pondAttention: decision.status, pondAttentionMessage: decision.message });
+          });
+          const latestRow = history[history.length - 1] || null;
+          const previousRow = history[history.length - 2] || null;
+          const finalHarvest = samePondHarvests.some(h => ['full', 'final harvest'].includes(piV1Crop(h?.type ?? h?.harvestType)));
+          const closed = !!isClosed || finalHarvest;
+          if (!latestRow) return { pond, records: [], history: [], latest: null, previous: null, status: 'Insufficient Data', message: 'No valid sampling data is available for this pond.', due: !closed, isClosed: closed, samplingStatus: closed ? 'Closed / Not Due' : 'Sampling required' };
+          const due = !closed && Math.floor((Date.now() - latestRow.dateMs) / 86400000) > 7;
+          return { pond, records, history, latest: latestRow.sample, previous: previousRow?.sample || null, abw: latestRow.abw, doc: null, adg: latestRow.adg, target: latestRow.targetAdg, growthTrend: latestRow.growthTrend, actualFeed: latestRow.actualFeedPerDay, expectedFeed: latestRow.expectedFeedPerDay, feedStatus: latestRow.feedStatus, feedRatio: latestRow.feedRatio, survival: latestRow.estimatedSurvivalPct, survivalTrend: latestRow.survivalTrend, survivalChange: latestRow.survivalChange, status: latestRow.pondAttention, message: latestRow.pondAttentionMessage, due, isClosed: closed, samplingStatus: closed ? 'Closed / Not Due' : due ? 'Sampling Due' : 'Current', previousEstimatedLivePieces: previousRow?.estimatedLivePieces ?? null, intervalHarvestedPieces: latestRow.intervalHarvestedPieces, expectedPopulationBasis: latestRow.expectedPopulationBasis, estimatedLivePieces: latestRow.estimatedLivePieces, cumulativeHarvestedPieces: latestRow.cumulativeHarvestedPieces, chartFeedPerLakh: latestRow.chartFeedPerLakh };
+        }
+        
+        function getPondAttentionDecision(input) { return piV1Decision(input || {}); }
         function mobilePondSamplingIntelligence(pond, samplesForCycle, harvestsForCycle, transfersForCycle) {
-            const dayMs = 86400000;
-            const pondId = logicalPondIdFromRef(pond.id);
-            // Use the established Sampling ADG/history Year/Crop matching rather
-            // than relying on an optional stored cycleId.
-            const c = getActiveCycle();
-            const cropKey = String(c.crop || '').trim().toLowerCase();
-            const records = samplingEntries.filter(record => logicalPondIdFromRef(record.pondId || record.pond || record.pondName) === pondId &&
-                Number(record.year || record.cropYear) === Number(c.year) &&
-                String(record.crop || record.cropCycle || '').trim().toLowerCase() === cropKey
-            ).sort((a, b) => new Date(a.date) - new Date(b.date));
-            const samePondHarvests = (harvestsForCycle || []).filter(harvest => logicalPondIdFromRef(harvest.pondId || harvest.pond || harvest.pondName) === pondId);
-            const harvestPieces = harvest => {
-                const stored = Number(harvest.totalPieces || harvest.pieces || 0);
-                return stored > 0 ? stored : Number(harvest.biomass ?? harvest.biomassKg ?? harvest.weight ?? 0) * Number(harvest.count ?? harvest.piecesPerKg ?? 0);
-            };
-            const harvestedThrough = date => samePondHarvests.filter(h => String(h.date || '') <= String(date || '')).reduce((total, h) => total + harvestPieces(h), 0);
-            const chartFeed = abw => Number.isFinite(abw) && abw >= 3 && abw <= 30 ? Number(mobileExpectedFeedPer1Lakh(abw)) : null;
-            const initialPopulation = date => {
-                const transferIn = String(pond.pondType || '').trim() === 'transferIn';
-                const stocked = transferIn
-                    ? getPondTransferInSummary(pond.id, date, pond).number
-                    : Number(pond.stockingCount || pond.initialStockingNumber || 0);
-                return stocked > 0 ? stocked : null;
-            };
-            const history = [];
-            records.forEach((sample, index) => {
-                const previousSample = index ? records[index - 1] : null;
-                const previous = index ? history[index - 1] : null;
-                const abw = Number(sample.abw != null ? sample.abw : Number(sample.sampleWeight || sample.testWeight) / Number(sample.count));
-                const priorDate = previousSample?.date || pond.stockingDate;
-                const feedIntervalDays = priorDate && sample.date ? Math.max(1, Math.round((new Date(sample.date) - new Date(priorDate)) / dayMs)) : null;
-                const netFeed = Number(sample.currentFeed || sample.currCumulativeFeed || 0) - Number(sample.lastFeed || sample.prevCumulativeFeed || 0);
-                const actualFeedPerDay = feedIntervalDays && netFeed > 0 ? netFeed / feedIntervalDays : null;
-                const chartFeedPerLakh = chartFeed(abw);
-                const estimatedLivePieces = actualFeedPerDay !== null && chartFeedPerLakh !== null ? actualFeedPerDay / chartFeedPerLakh * 100000 : null;
-                const denominator = initialPopulation(sample.date);
-                const estimatedSurvivalPct = estimatedLivePieces !== null && denominator !== null ? (estimatedLivePieces + harvestedThrough(sample.date)) / denominator * 100 : null;
-                const intervalDays = previousSample ? Math.round((new Date(sample.date) - new Date(previousSample.date)) / dayMs) : null;
-                const gain = previousSample ? abw - previous.abw : null;
-                const adg = previousSample && intervalDays > 0 ? gain / intervalDays : null;
-                const targetAdg = previousSample ? (previous.abw < 5 ? .18 : previous.abw < 10 ? .21 : .29) : null;
-                const previousAdg = index > 1 ? history[index - 1].adg : null;
-                const growthTrend = adg === null || previousAdg === null ? '—' : adg > previousAdg + .03 ? 'Improving' : adg < previousAdg - .03 ? 'Slowing' : 'Stable';
-                const intervalHarvestedPieces = previousSample ? samePondHarvests.filter(h => String(h.date || '') > String(previousSample.date || '') && String(h.date || '') <= String(sample.date || '')).reduce((total, h) => total + harvestPieces(h), 0) : harvestedThrough(sample.date);
-                let expectedPopulationBasis = previous?.estimatedLivePieces ?? initialPopulation(sample.date);
-                if (expectedPopulationBasis !== null) expectedPopulationBasis -= intervalHarvestedPieces;
-                if (!(expectedPopulationBasis >= 0)) expectedPopulationBasis = null;
-                const expectedFeedPerDay = chartFeedPerLakh !== null && expectedPopulationBasis !== null ? chartFeedPerLakh * expectedPopulationBasis / 100000 : null;
-                const feedStatus = abw > 30 ? 'Outside feed-chart range' : chartFeedPerLakh === null || actualFeedPerDay === null || expectedFeedPerDay === null ? 'Insufficient data' : actualFeedPerDay < expectedFeedPerDay * .8 ? 'Below requirement' : actualFeedPerDay > expectedFeedPerDay * 1.2 ? 'Above range' : 'Adequate';
-                const survivalChange = estimatedSurvivalPct !== null && previous?.estimatedSurvivalPct != null ? estimatedSurvivalPct - previous.estimatedSurvivalPct : null;
-                const survivalTrend = survivalChange === null ? 'Insufficient Data' : survivalChange <= -10 ? 'Declining' : 'Stable';
-                const growthPoor = adg !== null && targetAdg !== null && adg < targetAdg * .7;
-                const persistentPoorGrowth = growthPoor && previous?.growthPoor === true;
-                const decision = getPondAttentionDecision({ hasPreviousSample: !!previousSample, adg, targetAdg, growthTrend, feedStatus, survivalTrend, persistentPoorGrowth });
-                history.push({ sample, abw, gain, adg, estimatedSurvivalPct, estimatedLivePieces, effectiveStockedPopulation: denominator, growthTrend, feedStatus, survivalTrend, growthPoor, persistentPoorGrowth, pondAttention: decision.status, pondAttentionMessage: decision.message });
-            });
-            return history[history.length - 1] || { sample: null, abw: null, gain: null, adg: null, estimatedSurvivalPct: null, estimatedLivePieces: null, effectiveStockedPopulation: null, pondAttention: 'Insufficient Data', pondAttentionMessage: 'No sampling data has been recorded for this pond.' };
+          const c = getActiveCycle();
+          const model = piV1Build(pond, {
+            activeCycle: c,
+            allPonds: ponds,
+            samples: Array.isArray(samplingEntries) ? samplingEntries : samplesForCycle,
+            harvests: Array.isArray(harvestEntries) ? harvestEntries : harvestsForCycle,
+            transfers: Array.isArray(stockTransfers) ? stockTransfers : transfersForCycle,
+            expectedFeedPerLakh: mobileExpectedFeedPer1Lakh,
+            isClosed: typeof window.blueCrestIsPondClosed === 'function' && window.blueCrestIsPondClosed(pond.id, c.id)
+          });
+          if (model.latest) {
+            const latest = model.history[model.history.length - 1];
+            return { sample: model.latest, abw: model.abw, gain: model.history[model.history.length - 1]?.gain ?? null, adg: model.adg, targetAdg: model.target, estimatedSurvivalPct: model.survival, estimatedLivePieces: model.estimatedLivePieces, effectiveStockedPopulation: latest?.effectiveStockedPopulation ?? null, growthTrend: model.growthTrend, feedStatus: model.feedStatus, feedRatio: model.feedRatio, survivalTrend: model.survivalTrend, survivalChange: model.survivalChange, growthPoor: latest?.growthPoor === true, persistentPoorGrowth: latest?.persistentPoorGrowth === true, survivalDecline: latest?.survivalDecline === true, repeatedSurvivalDecline: latest?.repeatedSurvivalDecline === true, pondAttention: model.status, pondAttentionMessage: model.message, feedAvailable: latest?.feedAvailable === true, survivalAvailable: model.survival !== null };
+          }
+          return { sample: null, abw: null, gain: null, adg: null, targetAdg: null, estimatedSurvivalPct: null, estimatedLivePieces: null, effectiveStockedPopulation: null, growthTrend: '—', feedStatus: 'Feed Unavailable', survivalTrend: 'Survival Unavailable', growthPoor: false, persistentPoorGrowth: false, survivalDecline: false, repeatedSurvivalDecline: false, pondAttention: 'Insufficient Data', pondAttentionMessage: model.message, feedAvailable: false, survivalAvailable: false };
         }
-
-        function samplingCycleEntries() {
+        
+                function samplingCycleEntries() {
             const c = getActiveCycle();
             return samplingEntries.filter(item => String(item.cycleId || `${Number(item.year || DEFAULT_CYCLE_YEAR)}|${String(item.crop || DEFAULT_CYCLE_CROP).toLowerCase()}`) === String(c.id));
         }
@@ -4433,7 +4641,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
 
         function getSamplingMainConcern(latest) {
             const concerns = [
-                (latest.growthPoor || latest.growthTrend === 'Slowing') && 'Growth',
+                latest.growthPoor === true && 'Growth',
                 (latest.feedStatus === 'Below requirement' || latest.feedStatus === 'Above range') && 'Feed',
                 latest.survivalTrend === 'Declining' && 'Survival'
             ].filter(Boolean);
@@ -4495,14 +4703,14 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
         function openSamplingAttentionInfo(pond, latest) {
             const sheet = document.getElementById('samplingAttentionSheet');
             if (!sheet || !latest) return;
-            const growthAbnormal = latest.growthPoor || latest.growthTrend === 'Slowing';
+            const growthAbnormal = latest.growthPoor === true;
             const feedAbnormal = latest.feedStatus === 'Below requirement' || latest.feedStatus === 'Above range';
-            const survivalAbnormal = latest.survivalTrend === 'Declining';
-            const growthText = latest.persistentPoorGrowth ? 'Below target for 2 consecutive sampling periods.' : growthAbnormal ? (latest.growthPoor ? 'Below target for the current sampling period.' : 'Growth is slowing compared with the previous interval.') : latest.adg === null ? 'Not enough data to assess.' : 'Within expected range.';
-            const feedText = latest.feedStatus === 'Below requirement' ? 'Below the present biomass requirement.' : latest.feedStatus === 'Above range' ? 'Above the present biomass requirement.' : latest.feedStatus === 'Adequate' ? 'As per requirement.' : 'Not enough data to assess.';
-            const survivalText = survivalAbnormal ? 'Estimated survival declined beyond the established tolerance.' : latest.survivalTrend === 'Stable' ? 'Within normal range.' : 'Not enough data to assess.';
+            const survivalAbnormal = latest.survivalDecline === true;
+            const growthText = latest.persistentPoorGrowth ? 'Below target for 2 consecutive valid sampling intervals.' : growthAbnormal ? 'Below 70% of the growth target for the current interval.' : latest.adg === null ? 'Not enough valid data to assess.' : latest.growthTrend === 'Slowing' ? 'Slowing compared with the previous interval, while remaining within the target range.' : 'Within expected range.';
+            const feedText = latest.feedStatus === 'Below requirement' ? 'Below 80% of the present biomass requirement.' : latest.feedStatus === 'Above range' ? 'Above 120% of the present biomass requirement.' : latest.feedStatus === 'Adequate' ? 'Within the 80%–120% requirement range.' : 'Feed data is unavailable.';
+            const survivalText = survivalAbnormal ? 'Estimated survival declined by ' + Math.abs(Number(latest.survivalChange) || 0).toFixed(1) + ' percentage points.' : latest.survivalTrend === 'Stable' ? 'No decline of 15 percentage points or more.' : 'Survival data is unavailable.';
             const mainConcern = getSamplingMainConcern(latest);
-            const mainText = latest.persistentPoorGrowth ? 'Growth has remained below target for 2 consecutive sampling periods.' : survivalAbnormal ? 'Estimated survival has declined beyond the established tolerance.' : feedAbnormal && growthAbnormal ? 'Growth is below target and feed response needs review.' : 'Current status is based on the latest available biological signals.';
+            const mainText = latest.pondAttentionMessage || 'Current status is based on the latest available biological signals.';
             const factor = (icon, label, text, abnormal) => `<div class="sampling-attention-detail"><span class="text-base">${abnormal ? '🔴' : icon}</span><strong>${label}</strong><span>${text}</span></div>`;
             document.getElementById('samplingAttentionTitle').textContent = `${logicalPondIdFromRef(pond.id)} — ${latest.pondAttention}`;
             document.getElementById('samplingAttentionMain').innerHTML = `<strong class="block text-base text-rose-700">Main Concern: ${mainConcern}</strong><span class="mt-1 block">${mainText}</span>`;
@@ -4566,15 +4774,16 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             if (!target) return;
             const visible = preview ? rows.slice(0, 5) : rows;
             if (!visible.length) { target.innerHTML = '<div class="p-6 text-center text-slate-400 text-sm">No sampling records found.</div>'; return; }
-            const header = '<colgroup><col style="width:22%"><col style="width:12%"><col style="width:12%"><col style="width:17%"><col style="width:18%"><col style="width:19%"></colgroup><thead class="bg-slate-50 text-[9px] uppercase tracking-wide text-slate-500"><tr><th class="px-1 py-2 text-left">Date</th><th class="px-1 py-2 text-left">Pond</th><th class="px-1 py-2 text-right">DOC</th><th class="px-1 py-2 text-right">Count</th><th class="px-1 py-2 text-right">ABW</th><th class="px-1 py-2 text-right">ADG</th></tr></thead>';
+            const header = '<colgroup><col style="width:22%"><col style="width:12%"><col style="width:12%"><col style="width:17%"><col style="width:18%"><col style="width:19%"></colgroup><thead class="bg-slate-50 text-[9px] uppercase tracking-wide text-slate-500"><tr><th class="px-1 py-2 text-left">Date</th><th class="px-1 py-2 text-left">Pond</th><th class="px-1 py-2 text-right">DOC</th><th class="px-1 py-2 text-right">Count/kg</th><th class="px-1 py-2 text-right">ABW</th><th class="px-1 py-2 text-right">ADG</th></tr></thead>';
             const badge = pond => { const n = Number(String(pond).match(/\d+/)?.[0] || 0); const colors = ['bg-sky-100 text-sky-700','bg-amber-100 text-amber-700','bg-emerald-100 text-emerald-700','bg-cyan-100 text-cyan-700','bg-violet-100 text-violet-700']; return colors[(Math.max(1, n) - 1) % colors.length]; };
             const body = visible.map(item => {
                 const pond = getActivePonds().find(p => String(p.id) === String(item.pond || item.pondId));
                 const doc = pond ? calculateDOC(pond.stockingDate, item.date) : '—';
                 const abw = Number(item.abw != null ? item.abw : Number(item.sampleWeight || item.testWeight) / Number(item.count));
                 const adg = getSamplingAdg(item);
+                const countPerKg = formatSamplingCountPerKg(item);
                 const id = String(item.id).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
-                return `<tr data-sampling-detail-id="${id}" class="border-t border-slate-100 cursor-pointer active:bg-blue-50"><td class="px-1 py-3 whitespace-nowrap text-[11px] font-medium text-slate-700">${formatSamplingTableDate(item.date)}</td><td class="px-1 py-3"><span class="inline-block rounded-full px-1 py-0.5 text-[10px] font-bold ${badge(item.pond || item.pondId)}">${logicalPondIdFromRef(item.pond || item.pondId)}</span></td><td class="px-1 py-3 text-right text-[11px] text-slate-600">${doc}</td><td class="px-1 py-3 text-right text-[11px] text-slate-700">${item.count || '—'}</td><td class="px-1 py-3 text-right text-[11px] font-semibold text-slate-700">${Number.isFinite(abw) ? abw.toFixed(2) : '—'}</td><td class="px-1 py-3 text-right text-[11px] font-semibold text-slate-700">${adg !== null ? adg.toFixed(3) : '—'}</td></tr>`;
+                return `<tr data-sampling-detail-id="${id}" class="border-t border-slate-100 cursor-pointer active:bg-blue-50"><td class="px-1 py-3 whitespace-nowrap text-[11px] font-medium text-slate-700">${formatSamplingTableDate(item.date)}</td><td class="px-1 py-3"><span class="inline-block rounded-full px-1 py-0.5 text-[10px] font-bold ${badge(item.pond || item.pondId)}">${logicalPondIdFromRef(item.pond || item.pondId)}</span></td><td class="px-1 py-3 text-right text-[11px] text-slate-600">${doc}</td><td class="px-1 py-3 text-right text-[11px] text-slate-700">${countPerKg}</td><td class="px-1 py-3 text-right text-[11px] font-semibold text-slate-700">${Number.isFinite(abw) ? abw.toFixed(2) : '—'}</td><td class="px-1 py-3 text-right text-[11px] font-semibold text-slate-700">${adg !== null ? adg.toFixed(3) : '—'}</td></tr>`;
             }).join('');
             target.innerHTML = `<table class="w-full table-fixed border-collapse">${header}<tbody>${body}</tbody></table>`;
             target.querySelectorAll('[data-sampling-detail-id]').forEach(row => row.addEventListener('click', () => openSamplingDetail(row.dataset.samplingDetailId)));
@@ -5366,15 +5575,19 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             e.preventDefault();
             const date = document.getElementById('samplingDate').value;
             const pond = document.getElementById('samplingPond').value;
-            const sampleWeight = parseFloat(document.getElementById('sampleWeight').value) || 0;
-            const count = parseInt(document.getElementById('sampleCount').value, 10) || 0;
+            const sampleWeight = Number(document.getElementById('sampleWeight').value);
+            const count = Number(document.getElementById('sampleCount').value);
             const prevCumulativeFeed = parseFloat(document.getElementById('prevCumulativeFeed').value) || 0;
             const currCumulativeFeed = parseFloat(document.getElementById('currCumulativeFeed').value) || 0;
             const netFeed = parseFloat((currCumulativeFeed - prevCumulativeFeed).toFixed(1));
             const notes = document.getElementById('samplingNotes').value.trim();
 
-            if (count <= 0) {
-                alert("Please enter a valid count greater than zero.");
+            if (!Number.isFinite(sampleWeight) || sampleWeight <= 0) {
+                alert("Please enter a valid sample weight greater than zero.");
+                return;
+            }
+            if (!Number.isFinite(count) || count <= 0) {
+                alert("Please enter a valid shrimp sampled value greater than zero.");
                 return;
             }
 
@@ -6112,6 +6325,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             const doc = pond ? calculateDOC(pond.stockingDate, sample.date) : '—';
             const laptopMetrics = mobileSamplingDetailMetrics(sample);
             const abw = Number(sample.abw != null ? sample.abw : Number(sample.sampleWeight || sample.testWeight) / Number(sample.count));
+            const countPerKg = formatSamplingCountPerKg(sample);
             const gain = laptopMetrics.growth !== null ? { hasPrev: true, text: `${laptopMetrics.growth >= 0 ? '+' : ''}${laptopMetrics.growth.toFixed(2)} gm` } : getGrowthFromLastSample(sample);
             const adg = getSamplingAdg(sample);
             const prevFeed = sample.prevCumulativeFeed ?? sample.lastFeed ?? 0;
@@ -6121,7 +6335,7 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
             const metric = (label, value) => `<div class="rounded-xl border border-slate-100 bg-slate-50 p-3"><span class="block text-[10px] font-semibold uppercase tracking-wide text-slate-400">${label}</span><strong class="mt-1 block text-sm text-slate-700">${value}</strong></div>`;
             document.getElementById('samplingDetailContent').innerHTML = `
                 <div class="rounded-xl bg-blue-50 p-3 text-xs text-blue-800"><strong>${safe(logicalPondIdFromRef(sample.pond || sample.pondId))}</strong> <span class="mx-1">•</span> ${safe(formatDateDisplay(sample.date))} <span class="mx-1">•</span> DOC ${safe(doc)}</div>
-                <div class="grid grid-cols-2 gap-2">${metric('Count', `${safe(sample.count)} pcs`)}${metric('Sample Weight', `${safe(sample.sampleWeight ?? sample.testWeight)} gm`)}${metric('ABW', Number.isFinite(abw) ? `${abw.toFixed(2)} gm` : '—')}${metric('Gain', gain.hasPrev ? safe(gain.text) : '—')}${metric('ADG', adg !== null ? `${adg.toFixed(3)} g/day` : '—')}${metric('Estimated FCR', laptopMetrics.fcr !== null ? laptopMetrics.fcr.toFixed(2) : '—')}${metric('Estimated Survival', laptopMetrics.survival !== null ? `${laptopMetrics.survival.toFixed(1)}%` : '—')}${metric('Previous Cumulative Feed', `${safe(prevFeed)} kg`)}${metric('Current Cumulative Feed', currentFeed !== null && currentFeed !== undefined && currentFeed !== '' ? `${safe(currentFeed)} kg` : '—')}${metric('Net Feed', Number.isFinite(netFeed) ? `${netFeed.toFixed(1)} kg` : '—')}${metric('Period Feed', Number.isFinite(laptopMetrics.netFeed) && laptopMetrics.netFeed > 0 ? `${laptopMetrics.netFeed.toFixed(2)} kg` : '—')}${metric('Average Feed/day', laptopMetrics.dailyFeed > 0 ? `${laptopMetrics.dailyFeed.toFixed(2)} kg/day` : '—')}</div>
+                <div class="grid grid-cols-2 gap-2">${metric('Sample Weight', `${safe(sample.sampleWeight ?? sample.testWeight)} g`)}${metric('Shrimp Sampled', `${safe(sample.count)} pcs`)}${metric('ABW', Number.isFinite(abw) ? `${abw.toFixed(2)} g` : '—')}${metric('Count/kg', countPerKg === '—' ? '—' : `${countPerKg} pcs/kg`)}${metric('Gain', gain.hasPrev ? safe(gain.text) : '—')}${metric('ADG', adg !== null ? `${adg.toFixed(3)} g/day` : '—')}${metric('Estimated FCR', laptopMetrics.fcr !== null ? laptopMetrics.fcr.toFixed(2) : '—')}${metric('Estimated Survival', laptopMetrics.survival !== null ? `${laptopMetrics.survival.toFixed(1)}%` : '—')}${metric('Previous Cumulative Feed', `${safe(prevFeed)} kg`)}${metric('Current Cumulative Feed', currentFeed !== null && currentFeed !== undefined && currentFeed !== '' ? `${safe(currentFeed)} kg` : '—')}${metric('Net Feed', Number.isFinite(netFeed) ? `${netFeed.toFixed(1)} kg` : '—')}${metric('Period Feed', Number.isFinite(laptopMetrics.netFeed) && laptopMetrics.netFeed > 0 ? `${laptopMetrics.netFeed.toFixed(2)} kg` : '—')}${metric('Average Feed/day', laptopMetrics.dailyFeed > 0 ? `${laptopMetrics.dailyFeed.toFixed(2)} kg/day` : '—')}</div>
                 <div class="rounded-xl border border-slate-100 bg-slate-50 p-3"><span class="block text-[10px] font-semibold uppercase tracking-wide text-slate-400">Notes</span><p class="mt-1 text-sm text-slate-700 whitespace-pre-wrap">${sample.notes ? safe(sample.notes) : '—'}</p></div>
                 <div class="grid grid-cols-2 gap-3 pt-1"><button type="button" data-sampling-detail-edit class="rounded-xl bg-blue-600 py-3 text-sm font-bold text-white">Edit</button><button type="button" data-sampling-detail-delete class="rounded-xl border border-rose-200 bg-rose-50 py-3 text-sm font-bold text-rose-700">Delete</button></div>`;
             document.querySelector('[data-sampling-detail-edit]').addEventListener('click', () => { closeSamplingDetail(); blueCrestEditSampling(String(sample.id)); });
@@ -6130,9 +6344,11 @@ input:focus,select:focus,textarea:focus{border-color:#4d91b8!important;box-shado
         }
 
         function calcABW() {
-            const weight = parseFloat(document.getElementById('sampleWeight').value) || 0;
-            const count = parseInt(document.getElementById('sampleCount').value, 10) || 0;
-            document.getElementById('sampleABW').value = (weight > 0 && count > 0) ? (weight / count).toFixed(2) : '';
+            const weight = Number(document.getElementById('sampleWeight').value);
+            const count = Number(document.getElementById('sampleCount').value);
+            const validRawSample = Number.isFinite(weight) && weight > 0 && Number.isFinite(count) && count > 0;
+            document.getElementById('sampleABW').value = validRawSample ? (weight / count).toFixed(2) : '';
+            document.getElementById('sampleCountPerKg').value = validRawSample ? String(Math.round((count * 1000) / weight)) : '';
         }
 
         function openPondModal(pondId = null) {
